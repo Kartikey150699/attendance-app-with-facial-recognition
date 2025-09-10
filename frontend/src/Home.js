@@ -7,6 +7,7 @@ function Home() {
   const [dateTime, setDateTime] = useState(new Date());
   const [showCamera, setShowCamera] = useState(false);
   const [faces, setFaces] = useState([]);
+  const [statusMessage, setStatusMessage] = useState(null); // 👈 New state
   const [action, setAction] = useState("checkin");
   const webcamRef = useRef(null);
   const navigate = useNavigate();
@@ -51,15 +52,16 @@ function Home() {
       );
 
       const data = await response.json();
-      handleBackendResponse(data);
+      handleBackendResponse(data, mode);
     } catch (error) {
       console.error("Error sending frame:", error);
     }
   };
 
-  const handleBackendResponse = (data) => {
+  const handleBackendResponse = (data, mode) => {
     if (data.error) {
       setFaces([{ name: "Unknown", status: "unknown", box: [50, 50, 100, 100] }]);
+      setStatusMessage("❌ Unknown face detected");
       return;
     }
 
@@ -70,14 +72,36 @@ function Home() {
         box: face.box,
       }));
       setFaces(mappedFaces);
+
+      // 👇 Only show status when action = mark
+      if (mode === "mark" && mappedFaces.length > 0) {
+        const face = mappedFaces[0];
+        if (face.status === "checked_in") {
+          setStatusMessage(`✅ ${face.name} marked Present`);
+        } else if (face.status === "already_checked_in") {
+          setStatusMessage(`⚠️ ${face.name} already Checked In`);
+        } else if (face.status === "checked_out") {
+          setStatusMessage(`✅ ${face.name} Checked Out`);
+        } else if (face.status === "already_checked_out") {
+          setStatusMessage(`⚠️ ${face.name} already Checked Out`);
+        } else if (face.status === "checkin_missing") {
+          setStatusMessage(`⚠️ Checkout failed → No Check-In found`);
+        } else if (face.status === "unknown") {
+          setStatusMessage("❌ Unknown face detected");
+        } else {
+          setStatusMessage("ℹ️ Action processed");
+        }
+      }
     }
   };
 
   const getBoxColor = (status) => {
-    if (status === "marked") return "border-green-500";        // success
-    if (status === "already_marked") return "border-yellow-400"; // duplicate
-    if (status === "unknown") return "border-red-600";         // not recognized
-    if (status === "preview") return "border-green-300";       // live preview
+    if (status === "checked_in") return "border-green-500";
+    if (status === "already_checked_in") return "border-yellow-400";
+    if (status === "checked_out") return "border-blue-500";
+    if (status === "already_checked_out") return "border-yellow-400";
+    if (status === "unknown") return "border-red-600";
+    if (status === "preview") return "border-green-300";
     return "border-gray-300";
   };
 
@@ -142,55 +166,73 @@ function Home() {
             </button>
           </div>
         ) : (
-          <div className="relative flex flex-col items-center flex-grow justify-center">
-            <Webcam
-              audio={false}
-              ref={webcamRef}
-              screenshotFormat="image/jpeg"
-              className="rounded-lg shadow-lg transform scale-x-[-1]" // mirror feed
-              videoConstraints={{
-                width: videoWidth,
-                height: videoHeight,
-                facingMode: "user",
-              }}
-            />
-
-            {/* Face Boxes */}
-            {faces.map((face, index) => (
-              <div
-                key={index}
-                className={`absolute border-4 ${getBoxColor(
-                  face.status
-                )} rounded-lg flex items-end justify-center`}
-                style={{
-                  top: `${face.box[1]}px`,
-                  left: `${videoWidth - face.box[0] - face.box[2]}px`,
-                  width: `${face.box[2]}px`,
-                  height: `${face.box[3]}px`,
+          <div className="flex w-full justify-center gap-6 mt-10">
+            {/* Camera */}
+            <div className="relative">
+              <Webcam
+                audio={false}
+                ref={webcamRef}
+                screenshotFormat="image/jpeg"
+                className="rounded-lg shadow-lg transform scale-x-[-1]" // mirror feed
+                videoConstraints={{
+                  width: videoWidth,
+                  height: videoHeight,
+                  facingMode: "user",
                 }}
-              >
-                <span className="bg-black text-white px-2 py-1 rounded-b-lg font-bold">
-                  {face.name}
-                </span>
+              />
+
+              {/* Face Boxes */}
+              {faces.map((face, index) => (
+                <div
+                  key={index}
+                  className={`absolute border-4 ${getBoxColor(
+                    face.status
+                  )} rounded-lg flex items-end justify-center`}
+                  style={{
+                    top: `${face.box[1]}px`,
+                    left: `${videoWidth - face.box[0] - face.box[2]}px`,
+                    width: `${face.box[2]}px`,
+                    height: `${face.box[3]}px`,
+                  }}
+                >
+                  <span className="bg-black text-white px-2 py-1 rounded-b-lg font-bold">
+                    {face.name}
+                  </span>
+                </div>
+              ))}
+
+              {/* Buttons */}
+              <div className="flex gap-4 mt-6 mb-4 justify-center">
+                <button
+                  onClick={() => captureAndSendFrame("mark")}
+                  className="px-6 py-3 bg-green-500 hover:bg-green-600 hover:scale-105 active:scale-95 transition-transform duration-200 text-white font-bold rounded-lg shadow"
+                >
+                  📸 Capture & Mark
+                </button>
+                <button
+                  onClick={() => {
+                    setShowCamera(false);
+                    setStatusMessage(null);
+                    setFaces([]);
+                  }}
+                  className="px-6 py-3 bg-red-500 hover:bg-red-600 hover:scale-105 active:scale-95 transition-transform duration-200 text-white font-bold rounded-lg shadow"
+                >
+                  Close Camera
+                </button>
               </div>
-            ))}
+            </div>
 
-            {/* Buttons side by side */}
-            <div className="flex gap-4 mt-6 mb-10">
-  <button
-    onClick={() => captureAndSendFrame("mark")}
-    className="px-6 py-3 bg-green-500 hover:bg-green-600 hover:scale-105 active:scale-95 transition-transform duration-200 text-white font-bold rounded-lg shadow"
-  >
-    📸 Capture & Mark
-  </button>
-  <button
-    onClick={() => setShowCamera(false)}
-    className="px-6 py-3 bg-red-500 hover:bg-red-600 hover:scale-105 active:scale-95 transition-transform duration-200 text-white font-bold rounded-lg shadow"
-  >
-    Close Camera
-  </button>
-</div>
-
+            {/* Status Panel */}
+            <div className="w-1/3 bg-white rounded-xl shadow-lg p-6 flex flex-col justify-center items-center">
+              <h2 className="text-xl font-bold text-indigo-700 mb-4">
+                Attendance Status
+              </h2>
+              {statusMessage ? (
+                <p className="text-lg font-semibold">{statusMessage}</p>
+              ) : (
+                <p className="text-gray-500">📌 Capture to see status</p>
+              )}
+            </div>
           </div>
         )}
       </div>

@@ -139,7 +139,6 @@ async def mark_attendance(
                 if score > best_score:
                     best_match, best_score = user, score
 
-        # Debug
         print(f"➡️ Action: {action}, Match: {best_match.name if best_match else None}, Score: {best_score}")
 
         if best_match and best_score >= threshold:
@@ -153,13 +152,12 @@ async def mark_attendance(
                     status = "already_checked_in"
                 else:
                     if not record:
-                        record = Attendance(user_id=best_match.id, date=today)
+                        record = Attendance(user_id=best_match.id, date=today, status="present")
                         db.add(record)
                     record.check_in = datetime.now().strftime("%H:%M:%S")
-                    record.status = "checked_in"
+                    record.status = "present"   # ✅ always present after check-in
                     db.commit()
                     status = "checked_in"
-                    print(f"✅ Saved CHECK-IN for {best_match.name}")
 
             elif action == "checkout":
                 if not record or not record.check_in:
@@ -168,10 +166,9 @@ async def mark_attendance(
                     status = "already_checked_out"
                 else:
                     record.check_out = datetime.now().strftime("%H:%M:%S")
-                    record.status = "checked_out"
+                    # ⚠️ Do not change status, stays "present"
                     db.commit()
                     status = "checked_out"
-                    print(f"✅ Saved CHECK-OUT for {best_match.name}")
 
             else:
                 status = "invalid_action"
