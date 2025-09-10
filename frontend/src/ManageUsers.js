@@ -33,7 +33,7 @@ function ManageUsers() {
         </div>
 
         {/* Title */}
-        <h1 className="text-4xl font-bold text-blue-900">
+        <h1 className="text-5xl font-bold text-blue-900">
           FaceTrack Attendance
         </h1>
 
@@ -67,7 +67,7 @@ function ManageUsers() {
 
       {/* Footer */}
       <footer className="w-full py-4 bg-blue-900 text-center text-xl text-white mt-auto">
-        © 2025 FaceTrack. All rights reserved - Kartikey Koli
+        © 2025 FaceTrack. All rights reserved - Kartikey Koli - IFNET
       </footer>
     </div>
   );

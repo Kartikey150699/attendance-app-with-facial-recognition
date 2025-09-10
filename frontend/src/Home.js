@@ -7,7 +7,7 @@ function Home() {
   const [dateTime, setDateTime] = useState(new Date());
   const [showCamera, setShowCamera] = useState(false);
   const [faces, setFaces] = useState([]);
-  const [statusMessage, setStatusMessage] = useState(null); // 👈 New state
+  const [statusMessage, setStatusMessage] = useState(null);
   const [action, setAction] = useState("checkin");
   const webcamRef = useRef(null);
   const navigate = useNavigate();
@@ -73,23 +73,33 @@ function Home() {
       }));
       setFaces(mappedFaces);
 
-      // 👇 Only show status when action = mark
+      // Only show status when action = mark
       if (mode === "mark" && mappedFaces.length > 0) {
         const face = mappedFaces[0];
+        const currentDateTime = dateTime.toLocaleString("en-US", {
+          year: "numeric",
+          month: "short",
+          day: "numeric",
+          hour: "2-digit",
+          minute: "2-digit",
+          second: "2-digit",
+          hour12: true,
+        });
+
         if (face.status === "checked_in") {
-          setStatusMessage(`✅ ${face.name} marked Present`);
+          setStatusMessage(`✅ ${face.name} marked Present — ${currentDateTime}`);
         } else if (face.status === "already_checked_in") {
-          setStatusMessage(`⚠️ ${face.name} already Checked In`);
+          setStatusMessage(`⚠️ ${face.name} already Checked In — ${currentDateTime}`);
         } else if (face.status === "checked_out") {
-          setStatusMessage(`✅ ${face.name} Checked Out`);
+          setStatusMessage(`✅ ${face.name} Checked Out — ${currentDateTime}`);
         } else if (face.status === "already_checked_out") {
-          setStatusMessage(`⚠️ ${face.name} already Checked Out`);
+          setStatusMessage(`⚠️ ${face.name} already Checked Out — ${currentDateTime}`);
         } else if (face.status === "checkin_missing") {
-          setStatusMessage(`⚠️ Checkout failed → No Check-In found`);
+          setStatusMessage(`⚠️ Checkout failed → No Check-In found — ${currentDateTime}`);
         } else if (face.status === "unknown") {
           setStatusMessage("❌ Unknown face detected");
         } else {
-          setStatusMessage("ℹ️ Action processed");
+          setStatusMessage(`ℹ️ Action processed — ${currentDateTime}`);
         }
       }
     }
@@ -223,8 +233,11 @@ function Home() {
             </div>
 
             {/* Status Panel */}
-            <div className="w-1/3 bg-white rounded-xl shadow-lg p-6 flex flex-col justify-center items-center">
-              <h2 className="text-xl font-bold text-indigo-700 mb-4">
+            <div
+              className="w-1/3 bg-white rounded-xl shadow-lg p-6 flex flex-col items-center"
+              style={{ height: `${videoHeight}px` }}
+            >
+              <h2 className="text-2xl font-bold text-indigo-700 mb-6">
                 Attendance Status
               </h2>
               {statusMessage ? (

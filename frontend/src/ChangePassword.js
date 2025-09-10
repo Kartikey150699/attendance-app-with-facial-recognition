@@ -4,12 +4,15 @@ import { EyeIcon, EyeSlashIcon } from "@heroicons/react/24/solid";
 
 function ChangePassword() {
   const [dateTime, setDateTime] = useState(new Date());
+  const [username, setUsername] = useState(""); // ✅ Username state
   const [oldPassword, setOldPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [showOld, setShowOld] = useState(false);
   const [showNew, setShowNew] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
+  const [popupMessage, setPopupMessage] = useState("");
+  const [showPopup, setShowPopup] = useState(false);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -19,19 +22,55 @@ function ChangePassword() {
     return () => clearInterval(timer);
   }, []);
 
-  const handleSubmit = () => {
-    if (!oldPassword || !newPassword || !confirmPassword) {
-      alert("⚠️ Please fill in all fields");
+  const handleSubmit = async () => {
+    if (!username || !oldPassword || !newPassword || !confirmPassword) {
+      setPopupMessage("⚠️ Please fill in all fields");
+      setShowPopup(true);
       return;
     }
     if (newPassword !== confirmPassword) {
-      alert("⚠️ New passwords do not match");
+      setPopupMessage("⚠️ New passwords do not match");
+      setShowPopup(true);
       return;
     }
 
-    // Later: connect to backend API
-    alert("✅ Password changed successfully!");
-    navigate("/admin-dashboard");
+    try {
+      const formData = new FormData();
+      formData.append("username", username);
+      formData.append("old_password", oldPassword);
+      formData.append("new_password", newPassword);
+
+      const response = await fetch("http://localhost:8000/admin/change-password", {
+        method: "POST",
+        body: formData,
+      });
+
+      const data = await response.json();
+
+      if (data.error) {
+        setPopupMessage(`❌ ${data.error}`);
+        setShowPopup(true);
+      } else {
+        setPopupMessage("✅ Password updated successfully!");
+        setShowPopup(true);
+      }
+    } catch (err) {
+      console.error("Error changing password:", err);
+      setPopupMessage("❌ Failed to change password.");
+      setShowPopup(true);
+    }
+  };
+
+  const handlePopupOk = () => {
+    setShowPopup(false);
+    if (popupMessage.includes("successfully")) {
+      navigate("/admin-dashboard");
+    } else {
+      // clear fields on error
+      setOldPassword("");
+      setNewPassword("");
+      setConfirmPassword("");
+    }
   };
 
   return (
@@ -55,7 +94,7 @@ function ChangePassword() {
         </div>
 
         {/* Title */}
-        <h1 className="text-4xl font-bold text-blue-900">FaceTrack Attendance</h1>
+        <h1 className="text-5xl font-bold text-blue-900">FaceTrack Attendance</h1>
 
         {/* Back Button */}
         <div className="absolute right-10">
@@ -73,6 +112,17 @@ function ChangePassword() {
         <h2 className="text-2xl font-bold text-center mb-6 text-indigo-700">
           Change Password 🔒
         </h2>
+
+        {/* ✅ Username Field */}
+        <div className="relative w-full mb-4">
+          <input
+            type="text"
+            placeholder="Username"
+            value={username}
+            onChange={(e) => setUsername(e.target.value)}
+            className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-400"
+          />
+        </div>
 
         {/* Old Password */}
         <div className="relative w-full mb-4">
@@ -130,16 +180,32 @@ function ChangePassword() {
 
         {/* Submit Button */}
         <button
-          onClick={handleSubmit}
-          className="w-full py-2 bg-indigo-500 hover:bg-indigo-600 text-white font-bold rounded-lg shadow"
-        >
-          Change Password
-        </button>
+  onClick={handleSubmit}
+  className="w-full py-2 bg-indigo-500 hover:bg-indigo-600 hover:scale-105 active:scale-95 transition-transform duration-200 text-white font-bold rounded-lg shadow"
+>
+  Change Password
+</button>
+
       </div>
+
+      {/* Popup */}
+      {showPopup && (
+        <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-40">
+          <div className="bg-white p-6 rounded-xl shadow-lg text-center">
+            <p className="text-lg font-semibold text-gray-800 mb-4">{popupMessage}</p>
+            <button
+              onClick={handlePopupOk}
+              className="px-6 py-2 bg-indigo-500 hover:bg-indigo-600 text-white font-bold rounded-lg shadow"
+            >
+              OK
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* Footer */}
       <footer className="w-full py-4 bg-blue-900 text-center text-xl text-white mt-auto">
-        © 2025 FaceTrack. All rights reserved - Kartikey Koli
+        © 2025 FaceTrack. All rights reserved - Kartikey Koli - IFNET
       </footer>
     </div>
   );

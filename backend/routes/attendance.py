@@ -142,6 +142,7 @@ async def mark_attendance(
         print(f"➡️ Action: {action}, Match: {best_match.name if best_match else None}, Score: {best_score}")
 
         if best_match and best_score >= threshold:
+            # find today's record
             record = db.query(Attendance).filter(
                 Attendance.user_id == best_match.id,
                 Attendance.date == today
@@ -152,11 +153,12 @@ async def mark_attendance(
                     status = "already_checked_in"
                 else:
                     if not record:
-                        record = Attendance(user_id=best_match.id, date=today, status="present")
+                        record = Attendance(user_id=best_match.id, date=today)
                         db.add(record)
                     record.check_in = datetime.now().strftime("%H:%M:%S")
-                    record.status = "present"   # ✅ always present after check-in
+                    record.status = "Present"
                     db.commit()
+                    db.refresh(record)
                     status = "checked_in"
 
             elif action == "checkout":
@@ -166,8 +168,9 @@ async def mark_attendance(
                     status = "already_checked_out"
                 else:
                     record.check_out = datetime.now().strftime("%H:%M:%S")
-                    # ⚠️ Do not change status, stays "present"
+                    record.status = "Present"
                     db.commit()
+                    db.refresh(record)
                     status = "checked_out"
 
             else:
