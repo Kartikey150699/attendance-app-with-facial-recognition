@@ -43,13 +43,17 @@ async def register_user(
             tmp_path = tmp.name
 
         try:
-            # 🔹 Use ArcFace + RetinaFace for embeddings
+            # 🔹 Use SAME model + detector as attendance
             rep = DeepFace.represent(
                 img_path=tmp_path,
-                model_name="ArcFace",
-                detector_backend="retinaface",
+                model_name="ArcFace",          # must match attendance.py
+                detector_backend="mtcnn", # must match attendance.py
                 enforce_detection=True
             )
+
+            if isinstance(rep, dict):   # normalize return type
+                rep = [rep]
+
             if rep and "embedding" in rep[0]:
                 embeddings.append(rep[0]["embedding"])
 
@@ -65,7 +69,7 @@ async def register_user(
 
     # Check against all existing users
     users = db.query(User).all()
-    threshold = 0.7  # similarity threshold (tune if needed)
+    threshold = 0.55  # similarity threshold (tune if needed)
 
     for user in users:
         stored_embedding = json.loads(user.embedding)

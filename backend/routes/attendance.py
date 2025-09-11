@@ -29,65 +29,48 @@ def cosine_similarity(vec1, vec2):
     return float(np.dot(v1, v2))
 
 
-# Utility: detect faces + embeddings (ArcFace + RetinaFace with fallback)
+# Utility: detect faces + embeddings (ArcFace + MTCNN only)
 def detect_faces(tmp_path):
     faces = []
     try:
         reps = DeepFace.represent(
             img_path=tmp_path,
-            model_name="ArcFace",          # strong embeddings
-            detector_backend="retinaface", # robust detector
+            model_name="ArcFace",     # strong embeddings
+            detector_backend="mtcnn", # always use MTCNN
             enforce_detection=False
         )
 
-        # DeepFace may return dict or list
         if isinstance(reps, dict):
             reps = [reps]
 
         for rep in reps:
             embedding = rep.get("embedding")
             box = rep.get("facial_area", {})
+            w, h = box.get("w", 0), box.get("h", 0)
+            confidence = rep.get("confidence", 1.0) 
+
+            # Skip false positives
+            if w < 50 or h < 50:   # too small → not a real face
+                continue
+            if w / (h + 1e-6) < 0.6 or w / (h + 1e-6) > 1.6:  # weird shape → skip
+                continue
+            if confidence < 0.90:  # low confidence → skip
+                continue
 
             faces.append({
                 "embedding": embedding,
                 "facial_area": {
                     "x": int(box.get("x", 0)),
                     "y": int(box.get("y", 0)),
-                    "w": int(box.get("w", 0)),
-                    "h": int(box.get("h", 0))
+                    "w": int(w),
+                    "h": int(h)
                 }
             })
 
     except Exception as e:
-        print("⚠️ RetinaFace failed, trying MTCNN:", e)
-        try:
-            reps = DeepFace.represent(
-                img_path=tmp_path,
-                model_name="ArcFace",
-                detector_backend="mtcnn",  # fallback detector
-                enforce_detection=False
-            )
-            if isinstance(reps, dict):
-                reps = [reps]
-
-            for rep in reps:
-                embedding = rep.get("embedding")
-                box = rep.get("facial_area", {})
-
-                faces.append({
-                    "embedding": embedding,
-                    "facial_area": {
-                        "x": int(box.get("x", 0)),
-                        "y": int(box.get("y", 0)),
-                        "w": int(box.get("w", 0)),
-                        "h": int(box.get("h", 0))
-                    }
-                })
-        except Exception as e2:
-            print("❌ Face detection failed completely:", e2)
+        print("❌ Face detection failed completely:", e)
 
     return faces
-
 
 # 🟢 Preview endpoint (NO DB writes)
 @router.post("/preview")
@@ -106,7 +89,7 @@ async def preview_faces(file: UploadFile = None, db: Session = Depends(get_db)):
 
     results = []
     users = db.query(User).all()
-    threshold = 0.6
+    threshold = 0.55
 
     for face in faces:
         embedding = face.get("embedding")
@@ -159,7 +142,7 @@ async def mark_attendance(
     today = date.today()
     action = action.lower().strip()
     users = db.query(User).all()
-    threshold = 0.6
+    threshold = 0.55
 
     for face in faces:
         embedding = face.get("embedding")
