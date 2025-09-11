@@ -8,9 +8,9 @@ import tempfile
 import json
 import numpy as np
 from datetime import date, datetime
-import cv2   # 👈 OpenCV
+import cv2   # OpenCV
 
-# Router definition
+# ✅ Router definition
 router = APIRouter(prefix="/attendance", tags=["Attendance"])
 
 
@@ -55,7 +55,7 @@ def detect_faces(tmp_path):
     return faces
 
 
-# Preview endpoint (NO DB writes)
+# 🟢 Preview endpoint (NO DB writes)
 @router.post("/preview")
 async def preview_faces(file: UploadFile = None, db: Session = Depends(get_db)):
     if not file:
@@ -102,10 +102,10 @@ async def preview_faces(file: UploadFile = None, db: Session = Depends(get_db)):
     return {"results": results}
 
 
-# Mark endpoint (DB write)
+# 🟡 Mark endpoint (DB write) — supports checkin, checkout, break_start, break_end
 @router.post("/mark")
 async def mark_attendance(
-    action: str = Form(...),  # "checkin" or "checkout"
+    action: str = Form(...),  # "checkin", "checkout", "break_start", "break_end"
     file: UploadFile = None,
     db: Session = Depends(get_db),
 ):
@@ -148,33 +148,50 @@ async def mark_attendance(
                 Attendance.date == today
             ).first()
 
+            if not record:
+                record = Attendance(user_id=best_match.id, date=today)
+                db.add(record)
+
+            # ✅ Handle actions
             if action == "checkin":
-                if record and record.check_in:
+                if record.check_in:
                     status = "already_checked_in"
                 else:
-                    if not record:
-                        record = Attendance(user_id=best_match.id, date=today)
-                        db.add(record)
                     record.check_in = datetime.now().strftime("%H:%M:%S")
-                    record.status = "Present"
-                    db.commit()
-                    db.refresh(record)
                     status = "checked_in"
 
+            elif action == "break_start":
+                if not record.check_in:
+                    status = "checkin_missing"
+                elif record.break_start:
+                    status = "already_on_break"
+                else:
+                    record.break_start = datetime.now().strftime("%H:%M:%S")
+                    status = "break_started"
+
+            elif action == "break_end":
+                if not record.break_start:
+                    status = "break_not_started"
+                elif record.break_end:
+                    status = "already_break_ended"
+                else:
+                    record.break_end = datetime.now().strftime("%H:%M:%S")
+                    status = "break_ended"
+
             elif action == "checkout":
-                if not record or not record.check_in:
+                if not record.check_in:
                     status = "checkin_missing"
                 elif record.check_out:
                     status = "already_checked_out"
                 else:
                     record.check_out = datetime.now().strftime("%H:%M:%S")
-                    record.status = "Present"
-                    db.commit()
-                    db.refresh(record)
                     status = "checked_out"
 
             else:
                 status = "invalid_action"
+
+            db.commit()
+            db.refresh(record)
 
             results.append({
                 "name": best_match.name,

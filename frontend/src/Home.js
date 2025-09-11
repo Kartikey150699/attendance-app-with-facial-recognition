@@ -1,5 +1,11 @@
 import { useState, useEffect, useRef } from "react";
-import { CheckCircleIcon, ClockIcon } from "@heroicons/react/24/solid";
+import {
+  CheckCircleIcon,
+  ClockIcon,
+  PauseCircleIcon,
+  PlayIcon,
+  StopIcon,
+} from "@heroicons/react/24/solid";
 import Webcam from "react-webcam";
 import { useNavigate } from "react-router-dom";
 
@@ -12,8 +18,8 @@ function Home() {
   const webcamRef = useRef(null);
   const navigate = useNavigate();
 
-  const videoWidth = 600;
-  const videoHeight = 370;
+  const videoWidth = 580;
+  const videoHeight = 343;
 
   // Update date & time every second
   useEffect(() => {
@@ -60,7 +66,9 @@ function Home() {
 
   const handleBackendResponse = (data, mode) => {
     if (data.error) {
-      setFaces([{ name: "Unknown", status: "unknown", box: [50, 50, 100, 100] }]);
+      setFaces([
+        { name: "Unknown", status: "unknown", box: [50, 50, 100, 100] },
+      ]);
       setStatusMessage("❌ Unknown face detected");
       return;
     }
@@ -87,15 +95,25 @@ function Home() {
         });
 
         if (face.status === "checked_in") {
-          setStatusMessage(`✅ ${face.name} marked Present — ${currentDateTime}`);
+          setStatusMessage(
+            `✅ ${face.name} marked Present — ${currentDateTime}`
+          );
         } else if (face.status === "already_checked_in") {
-          setStatusMessage(`⚠️ ${face.name} already Checked In — ${currentDateTime}`);
+          setStatusMessage(
+            `⚠️ ${face.name} already Checked In — ${currentDateTime}`
+          );
         } else if (face.status === "checked_out") {
-          setStatusMessage(`✅ ${face.name} Checked Out — ${currentDateTime}`);
+          setStatusMessage(
+            `✅ ${face.name} Checked Out — ${currentDateTime}`
+          );
         } else if (face.status === "already_checked_out") {
-          setStatusMessage(`⚠️ ${face.name} already Checked Out — ${currentDateTime}`);
+          setStatusMessage(
+            `⚠️ ${face.name} already Checked Out — ${currentDateTime}`
+          );
         } else if (face.status === "checkin_missing") {
-          setStatusMessage(`⚠️ Checkout failed → No Check-In found — ${currentDateTime}`);
+          setStatusMessage(
+            `⚠️ Checkout failed → No Check-In found — ${currentDateTime}`
+          );
         } else if (face.status === "unknown") {
           setStatusMessage("❌ Unknown face detected");
         } else {
@@ -152,13 +170,13 @@ function Home() {
       {/* Main Content */}
       <div className="flex flex-col items-center justify-center flex-grow">
         {!showCamera ? (
-          <div className="flex justify-between w-full px-32 mt-20">
+          <div className="flex justify-between w-full px-32 mt-20 gap-10">
             <button
               onClick={() => {
                 setAction("checkin");
                 setShowCamera(true);
               }}
-              className="w-96 h-48 bg-green-400 hover:bg-green-500 hover:scale-105 active:scale-95 transition-transform duration-200 text-5xl text-white font-semibold rounded-xl shadow-md flex flex-col items-center justify-center"
+              className="flex-1 h-48 bg-green-500 hover:bg-green-600 hover:scale-105 active:scale-95 transition-transform duration-200 text-4xl text-white font-semibold rounded-xl shadow-md flex flex-col items-center justify-center"
             >
               <CheckCircleIcon className="h-16 w-16 mb-4" />
               <span>Check In</span>
@@ -166,10 +184,21 @@ function Home() {
 
             <button
               onClick={() => {
+                setAction("break");
+                setShowCamera(true);
+              }}
+              className="flex-1 h-48 bg-yellow-400 hover:bg-yellow-500 hover:scale-105 active:scale-95 transition-transform duration-200 text-4xl text-white font-semibold rounded-xl shadow-md flex flex-col items-center justify-center"
+            >
+              <PauseCircleIcon className="h-16 w-16 mb-4" />
+              <span>Break</span>
+            </button>
+
+            <button
+              onClick={() => {
                 setAction("checkout");
                 setShowCamera(true);
               }}
-              className="w-96 h-48 bg-blue-400 hover:bg-blue-500 hover:scale-105 active:scale-95 transition-transform duration-200 text-5xl text-white font-semibold rounded-xl shadow-md flex flex-col items-center justify-center"
+              className="flex-1 h-48 bg-red-500 hover:bg-red-600 hover:scale-105 active:scale-95 transition-transform duration-200 text-4xl text-white font-semibold rounded-xl shadow-md flex flex-col items-center justify-center"
             >
               <ClockIcon className="h-16 w-16 mb-4" />
               <span>Check Out</span>
@@ -179,17 +208,19 @@ function Home() {
           <div className="flex w-full justify-center gap-6 mt-10">
             {/* Camera */}
             <div className="relative">
-              <Webcam
-                audio={false}
-                ref={webcamRef}
-                screenshotFormat="image/jpeg"
-                className="rounded-lg shadow-lg transform scale-x-[-1]" // mirror feed
-                videoConstraints={{
-                  width: videoWidth,
-                  height: videoHeight,
-                  facingMode: "user",
-                }}
-              />
+              <div className="relative border-[6px] border-blue-800 rounded-lg shadow-2xl inline-block">
+                <Webcam
+                  audio={false}
+                  ref={webcamRef}
+                  screenshotFormat="image/jpeg"
+                  className="transform scale-x-[-1]"
+                  videoConstraints={{
+                    width: videoWidth,
+                    height: videoHeight,
+                    facingMode: "user",
+                  }}
+                />
+              </div>
 
               {/* Face Boxes */}
               {faces.map((face, index) => (
@@ -213,12 +244,29 @@ function Home() {
 
               {/* Buttons */}
               <div className="flex gap-4 mt-6 mb-4 justify-center">
-                <button
-                  onClick={() => captureAndSendFrame("mark")}
-                  className="px-6 py-3 bg-green-500 hover:bg-green-600 hover:scale-105 active:scale-95 transition-transform duration-200 text-white font-bold rounded-lg shadow"
-                >
-                  📸 Capture & Mark
-                </button>
+                {action === "break" ? (
+                  <>
+                    <button
+                      className="px-6 py-3 bg-yellow-500 hover:bg-yellow-600 hover:scale-105 active:scale-95 transition-transform duration-200 text-white font-bold rounded-lg shadow flex items-center gap-2"
+                    >
+                      <PlayIcon className="h-5 w-5" />
+                      Start Break
+                    </button>
+                    <button
+                      className="px-6 py-3 bg-blue-500 hover:bg-blue-600 hover:scale-105 active:scale-95 transition-transform duration-200 text-white font-bold rounded-lg shadow flex items-center gap-2"
+                    >
+                      <StopIcon className="h-5 w-5" />
+                      End Break
+                    </button>
+                  </>
+                ) : (
+                  <button
+                    onClick={() => captureAndSendFrame("mark")}
+                    className="px-6 py-3 bg-green-500 hover:bg-green-600 hover:scale-105 active:scale-95 transition-transform duration-200 text-white font-bold rounded-lg shadow"
+                  >
+                    📸 Capture
+                  </button>
+                )}
                 <button
                   onClick={() => {
                     setShowCamera(false);
@@ -234,11 +282,15 @@ function Home() {
 
             {/* Status Panel */}
             <div
-              className="w-1/3 bg-white rounded-xl shadow-lg p-6 flex flex-col items-center"
-              style={{ height: `${videoHeight}px` }}
+              className="w-[37%] bg-white border-[6px] border-indigo-700 rounded-xl shadow-2xl p-6 flex flex-col items-center"
+              style={{ height: `${videoHeight + 12}px` }}
             >
               <h2 className="text-2xl font-bold text-indigo-700 mb-6">
-                Attendance Status
+                {action === "checkin"
+                  ? "Check In"
+                  : action === "checkout"
+                  ? "Check Out"
+                  : "Break"}
               </h2>
               {statusMessage ? (
                 <p className="text-lg font-semibold">{statusMessage}</p>
