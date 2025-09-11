@@ -10,7 +10,7 @@ import numpy as np
 from datetime import date, datetime
 import cv2   # 👈 OpenCV
 
-# ✅ Router definition
+# Router definition
 router = APIRouter(prefix="/attendance", tags=["Attendance"])
 
 
@@ -55,7 +55,7 @@ def detect_faces(tmp_path):
     return faces
 
 
-# 🟢 Preview endpoint (NO DB writes)
+# Preview endpoint (NO DB writes)
 @router.post("/preview")
 async def preview_faces(file: UploadFile = None, db: Session = Depends(get_db)):
     if not file:
@@ -102,7 +102,7 @@ async def preview_faces(file: UploadFile = None, db: Session = Depends(get_db)):
     return {"results": results}
 
 
-# 🟡 Mark endpoint (DB write)
+# Mark endpoint (DB write)
 @router.post("/mark")
 async def mark_attendance(
     action: str = Form(...),  # "checkin" or "checkout"

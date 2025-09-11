@@ -1,0 +1,16 @@
+# Ignore Python cache and compiled files
+__pycache__/
+*.pyc
+
+# Ignore Mac system files
+.DS_Store
+
+# Ignore virtual environments
+venv/
+
+# Ignore VS Code workspace settings
+*.code-workspace
+
+# Ignore Node.js dependencies
+frontend/node_modules/
+.gitignoretouch

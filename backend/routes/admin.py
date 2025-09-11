@@ -5,9 +5,7 @@ from models.Admin import Admin
 
 router = APIRouter(prefix="/admin", tags=["Admin"])
 
-# -------------------------
 # DB session dependency
-# -------------------------
 def get_db():
     db = SessionLocal()
     try:
@@ -15,9 +13,7 @@ def get_db():
     finally:
         db.close()
 
-# -------------------------
 # Create admin (plain password)
-# -------------------------
 @router.post("/create")
 def create_admin(
     username: str = Form(...),
@@ -50,9 +46,7 @@ def admin_login(
     
     return {"message": f"Welcome {username}!"}
 
-# -------------------------
 # Change password (username + old password required)
-# -------------------------
 @router.post("/change-password")
 def change_password(
     username: str = Form(...),
