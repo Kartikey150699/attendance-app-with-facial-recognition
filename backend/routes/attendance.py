@@ -8,7 +8,6 @@ import tempfile
 import json
 import numpy as np
 from datetime import date, datetime
-import cv2   # OpenCV
 
 # ✅ Router definition
 router = APIRouter(prefix="/attendance", tags=["Attendance"])
@@ -30,28 +29,63 @@ def cosine_similarity(vec1, vec2):
     return float(np.dot(v1, v2))
 
 
-# Utility: detect faces + embeddings
+# Utility: detect faces + embeddings (ArcFace + RetinaFace with fallback)
 def detect_faces(tmp_path):
-    img = cv2.imread(tmp_path)
-    gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
-
-    detector = cv2.CascadeClassifier(cv2.data.haarcascades + "haarcascade_frontalface_default.xml")
-    detected_faces = detector.detectMultiScale(gray, 1.3, 5)
-
     faces = []
-    for (x, y, w, h) in detected_faces:
-        face_crop = img[y:y+h, x:x+w]
+    try:
+        reps = DeepFace.represent(
+            img_path=tmp_path,
+            model_name="ArcFace",          # strong embeddings
+            detector_backend="retinaface", # robust detector
+            enforce_detection=False
+        )
 
+        # DeepFace may return dict or list
+        if isinstance(reps, dict):
+            reps = [reps]
+
+        for rep in reps:
+            embedding = rep.get("embedding")
+            box = rep.get("facial_area", {})
+
+            faces.append({
+                "embedding": embedding,
+                "facial_area": {
+                    "x": int(box.get("x", 0)),
+                    "y": int(box.get("y", 0)),
+                    "w": int(box.get("w", 0)),
+                    "h": int(box.get("h", 0))
+                }
+            })
+
+    except Exception as e:
+        print("⚠️ RetinaFace failed, trying MTCNN:", e)
         try:
-            rep = DeepFace.represent(face_crop, model_name="Facenet", enforce_detection=False)
-            embedding = rep[0]["embedding"]
-        except Exception:
-            embedding = None
+            reps = DeepFace.represent(
+                img_path=tmp_path,
+                model_name="ArcFace",
+                detector_backend="mtcnn",  # fallback detector
+                enforce_detection=False
+            )
+            if isinstance(reps, dict):
+                reps = [reps]
 
-        faces.append({
-            "embedding": embedding,
-            "facial_area": {"x": int(x), "y": int(y), "w": int(w), "h": int(h)}
-        })
+            for rep in reps:
+                embedding = rep.get("embedding")
+                box = rep.get("facial_area", {})
+
+                faces.append({
+                    "embedding": embedding,
+                    "facial_area": {
+                        "x": int(box.get("x", 0)),
+                        "y": int(box.get("y", 0)),
+                        "w": int(box.get("w", 0)),
+                        "h": int(box.get("h", 0))
+                    }
+                })
+        except Exception as e2:
+            print("❌ Face detection failed completely:", e2)
+
     return faces
 
 
@@ -142,7 +176,7 @@ async def mark_attendance(
         print(f"➡️ Action: {action}, Match: {best_match.name if best_match else None}, Score: {best_score}")
 
         if best_match and best_score >= threshold:
-            # find today's record
+            from models.Attendance import Attendance
             record = db.query(Attendance).filter(
                 Attendance.user_id == best_match.id,
                 Attendance.date == today
@@ -152,7 +186,6 @@ async def mark_attendance(
                 record = Attendance(user_id=best_match.id, date=today)
                 db.add(record)
 
-            # ✅ Handle actions
             if action == "checkin":
                 if record.check_in:
                     status = "already_checked_in"

@@ -43,14 +43,18 @@ async def register_user(
             tmp_path = tmp.name
 
         try:
+            # 🔹 Use ArcFace + RetinaFace for embeddings
             rep = DeepFace.represent(
                 img_path=tmp_path,
-                model_name="Facenet",
+                model_name="ArcFace",
+                detector_backend="retinaface",
                 enforce_detection=True
             )
             if rep and "embedding" in rep[0]:
                 embeddings.append(rep[0]["embedding"])
-        except Exception:
+
+        except Exception as e:
+            print(f"⚠️ Face not detected in one frame: {e}")
             continue
 
     if not embeddings:
