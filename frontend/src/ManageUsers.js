@@ -33,15 +33,18 @@ function ManageUsers() {
         </div>
 
         {/* Title */}
-        <h1 className="text-5xl font-bold text-blue-900">
-          FaceTrack Attendance
-        </h1>
+        <h1
+  onClick={() => navigate("/")}
+  className="text-5xl font-bold text-blue-900 cursor-pointer hover:text-blue-700 transition-colors"
+>
+  FaceTrack Attendance
+</h1>
 
         {/* Back Button */}
         <div className="absolute right-10">
           <button
             onClick={() => navigate("/admin-dashboard")}
-            className="px-6 py-3 bg-red-500 hover:bg-red-600 hover:scale-105 active:scale-95 transition-transform duration-200 text-white text-sm font-bold rounded-lg shadow"
+            className="w-40 px-6 py-3 bg-red-500 hover:bg-red-600 hover:scale-105 active:scale-95 transition-transform duration-200 text-white font-bold rounded-lg shadow"
           >
             🔙 Back
           </button>

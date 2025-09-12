@@ -8,8 +8,14 @@ function RegisterUser() {
   const [showPopup, setShowPopup] = useState(false);
   const [popupMessage, setPopupMessage] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [frameCount, setFrameCount] = useState(0); // 🔹 progress
+  const [frameCount, setFrameCount] = useState(0);
   const [buttonText, setButtonText] = useState("Register");
+
+  const [devices, setDevices] = useState([]);
+  const [selectedDeviceId, setSelectedDeviceId] = useState(
+    localStorage.getItem("selectedCamera") || ""
+  );
+
   const navigate = useNavigate();
   const webcamRef = useRef(null);
 
@@ -26,7 +32,6 @@ function RegisterUser() {
     return () => clearInterval(timer);
   }, []);
 
-  // 🔹 Cycle button text while submitting
   useEffect(() => {
     if (!isSubmitting) return;
     let i = 0;
@@ -37,6 +42,25 @@ function RegisterUser() {
     }, 1500);
     return () => clearInterval(interval);
   }, [isSubmitting]);
+
+  // Detect connected cameras
+  useEffect(() => {
+    async function fetchDevices() {
+      try {
+        const devices = await navigator.mediaDevices.enumerateDevices();
+        const videoDevices = devices.filter((d) => d.kind === "videoinput");
+        setDevices(videoDevices);
+
+        if (!selectedDeviceId && videoDevices.length > 0) {
+          setSelectedDeviceId(videoDevices[0].deviceId);
+          localStorage.setItem("selectedCamera", videoDevices[0].deviceId);
+        }
+      } catch (err) {
+        console.error("Error fetching devices:", err);
+      }
+    }
+    fetchDevices();
+  }, [selectedDeviceId]);
 
   const handleSubmit = async () => {
     if (isSubmitting) return;
@@ -58,7 +82,6 @@ function RegisterUser() {
       const formData = new FormData();
       formData.append("name", name);
 
-      // Capture 10 frames with delay
       for (let i = 0; i < 10; i++) {
         const imageSrc = webcamRef.current.getScreenshot();
         if (imageSrc) {
@@ -78,9 +101,11 @@ function RegisterUser() {
 
       if (data.error) {
         setPopupMessage(`❌ ${data.error}`);
-        setIsSubmitting(false); // allow retry
+        setIsSubmitting(false);
+        setName("");
       } else {
         setPopupMessage(`✅ ${data.message}`);
+        setName("");
       }
       setShowPopup(true);
     } catch (error) {
@@ -88,6 +113,7 @@ function RegisterUser() {
       setPopupMessage("❌ Failed to register user.");
       setShowPopup(true);
       setIsSubmitting(false);
+      setName("");
     }
   };
 
@@ -96,7 +122,7 @@ function RegisterUser() {
     if (popupMessage.includes("successfully")) {
       navigate("/admin-dashboard");
     } else {
-      setIsSubmitting(false); // re-enable if failed
+      setIsSubmitting(false);
       setButtonText("Register");
     }
   };
@@ -104,7 +130,7 @@ function RegisterUser() {
   return (
     <div className="flex flex-col min-h-screen bg-gradient-to-tr from-gray-100 via-indigo-100 to-blue-200">
       {/* Header */}
-      <div className="w-full flex items-center justify-center px-10 py-4 bg-indigo-300 shadow-md">
+      <div className="w-full flex items-center justify-center px-10 py-4 bg-indigo-300 shadow-md relative">
         <div className="absolute left-10 text-blue-800 text-xl font-bold">
           {dateTime.toLocaleDateString("en-US", {
             weekday: "short",
@@ -120,28 +146,51 @@ function RegisterUser() {
             hour12: true,
           })}
         </div>
+        <h1
+  onClick={() => navigate("/")}
+  className="text-5xl font-bold text-blue-900 cursor-pointer hover:text-blue-700 transition-colors"
+>
+  FaceTrack Attendance
+</h1>
+        <div className="absolute right-10 top-4 flex flex-col items-end">
+  <button
+    onClick={() => navigate("/admin-dashboard")}
+    className="w-40 px-6 py-3 bg-red-500 hover:bg-red-600 hover:scale-105 active:scale-95 transition-transform duration-200 text-white font-bold rounded-lg shadow"
+  >
+    🔙 Back
+  </button>
+          {/* Camera selection dropdown */}
+          <div className="flex flex-col items-center mt-6">
+  <label className="text-xl font-semibold text-indigo-700 mb-2">
+    Select Camera
+  </label>
+  <select
+    value={selectedDeviceId}
+    onChange={(e) => {
+      setSelectedDeviceId(e.target.value);
+      localStorage.setItem("selectedCamera", e.target.value);
+    }}
+    className="px-4 py-2 border-2 border-indigo-400 rounded-lg shadow-md text-base w-72 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+  >
+    {devices.map((device, idx) => (
+      <option key={idx} value={device.deviceId}>
+        {device.label || `Camera ${idx + 1}`}
+      </option>
+    ))}
+  </select>
+</div>
 
-        <h1 className="text-5xl font-bold text-blue-900">
-          FaceTrack Attendance
-        </h1>
 
-        <div className="absolute right-10">
-          <button
-            onClick={() => navigate("/admin-dashboard")}
-            className="px-6 py-3 bg-red-500 hover:bg-red-600 hover:scale-105 active:scale-95 transition-transform duration-200 text-white text-sm font-bold rounded-lg shadow"
-          >
-            🔙 Back
-          </button>
         </div>
       </div>
 
       {/* Body */}
-      <div className="flex flex-col items-center flex-grow py-6 overflow-hidden">
+      <div className="flex flex-col items-center flex-grow py-6">
         <h2 className="text-3xl font-bold text-indigo-700 mb-6">
           Register New User
         </h2>
 
-        <div className="flex w-full max-w-6xl px-10">
+        <div className="flex w-full max-w-6xl px-10 mt-20">
           {/* Camera */}
           <div className="relative flex justify-center items-center w-1/2">
             <div
@@ -155,20 +204,16 @@ function RegisterUser() {
                 screenshotFormat="image/jpeg"
                 className="rounded-lg transform scale-x-[-1]"
                 videoConstraints={{
-                  width: 480,
-                  height: 360,
-                  facingMode: "user",
+                  width: 520,
+                  height: 380,
+                  deviceId: selectedDeviceId,
                 }}
               />
-
-              {/* Scanning Line */}
               {isSubmitting && (
-  <div className="absolute top-0 left-0 w-full h-full overflow-hidden rounded-lg">
-    <div className="w-full h-1 animate-scan glow-line"></div>
-  </div>
-)}
-
-              {/* Overlay text */}
+                <div className="absolute top-0 left-0 w-full h-full overflow-hidden rounded-lg">
+                  <div className="w-full h-1 animate-scan glow-line"></div>
+                </div>
+              )}
               {isSubmitting && (
                 <div className="absolute bottom-2 w-full text-center text-white font-bold text-lg bg-black bg-opacity-40 py-1 rounded">
                   {frameCount < 10
@@ -189,7 +234,6 @@ function RegisterUser() {
               disabled={isSubmitting}
               className="w-80 px-4 py-2 mb-6 border rounded-lg shadow focus:outline-none focus:ring-2 focus:ring-indigo-400 disabled:bg-gray-200"
             />
-
             <button
               onClick={handleSubmit}
               disabled={isSubmitting}
@@ -229,21 +273,20 @@ function RegisterUser() {
 
       {/* Animations */}
       <style>{`
-  @keyframes scan {
-    0% { transform: translateY(0); }
-    50% { transform: translateY(350px); }
-    100% { transform: translateY(0); }
-  }
-  .animate-scan {
-    animation: scan 2s linear infinite;
-  }
-  .glow-line {
-    background: linear-gradient(90deg, transparent, #00ff99, transparent);
-    box-shadow: 0 0 10px #00ff99, 0 0 20px #00ff99;
-    height: 3px;
-  }
-`}</style>
-
+        @keyframes scan {
+          0% { transform: translateY(0); }
+          50% { transform: translateY(350px); }
+          100% { transform: translateY(0); }
+        }
+        .animate-scan {
+          animation: scan 2s linear infinite;
+        }
+        .glow-line {
+          background: linear-gradient(90deg, transparent, #00ff99, transparent);
+          box-shadow: 0 0 10px #00ff99, 0 0 20px #00ff99;
+          height: 3px;
+        }
+      `}</style>
     </div>
   );
 }

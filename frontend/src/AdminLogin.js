@@ -68,15 +68,18 @@ function AdminLogin() {
         </div>
 
         <div className="flex-1 flex justify-start pl-40">
-          <h1 className="text-5xl font-bold text-blue-900">
-            FaceTrack Attendance
-          </h1>
+          <h1
+  onClick={() => navigate("/")}
+  className="text-5xl font-bold text-blue-900 cursor-pointer hover:text-blue-700 transition-colors"
+>
+  FaceTrack Attendance
+</h1>
         </div>
 
         {/* Right → Back button */}
         <button
           onClick={() => navigate("/")}
-          className="w-40 px-6 py-3 bg-red-500 hover:bg-red-600 text-white font-bold rounded-lg shadow"
+          className="w-40 px-6 py-3 bg-red-500 hover:bg-red-600 hover:scale-105 active:scale-95 transition-transform duration-200 text-white font-bold rounded-lg shadow"
         >
           🔙 Back
         </button>
@@ -139,7 +142,7 @@ function AdminLogin() {
       </div>
 
       {/* Footer */}
-      <footer className="w-full py-4 bg-blue-900 text-center text-white mt-auto">
+      <footer className="w-full py-4 bg-blue-900 text-center text-xl text-white mt-auto">
         © 2025 FaceTrack. All rights reserved - Kartikey Koli - IFNET
       </footer>
     </div>
