@@ -7,6 +7,10 @@ class Attendance(Base):
     id = Column(Integer, primary_key=True, index=True)
     user_id = Column(Integer, ForeignKey("users.id"))
     date = Column(Date, nullable=False)
+
     check_in = Column(String(20), nullable=True)
+    break_start = Column(String(20), nullable=True)   
+    break_end = Column(String(20), nullable=True)    
     check_out = Column(String(20), nullable=True)
+
     status = Column(String(20), default="Present")

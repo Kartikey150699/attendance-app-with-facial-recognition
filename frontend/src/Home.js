@@ -13,7 +13,7 @@ function Home() {
   const [dateTime, setDateTime] = useState(new Date());
   const [showCamera, setShowCamera] = useState(false);
   const [faces, setFaces] = useState([]);
-  const [statusMessage, setStatusMessage] = useState(null);
+  const [statusMessages, setStatusMessages] = useState([]); // multiple status lines
   const [action, setAction] = useState("checkin");
   const webcamRef = useRef(null);
   const navigate = useNavigate();
@@ -37,91 +37,99 @@ function Home() {
   }, [showCamera, action]);
 
   // Generic function: mode = "preview" or "mark"
-  const captureAndSendFrame = async (mode = "preview") => {
-    if (!webcamRef.current) return;
+const captureAndSendFrame = async (mode = "preview", subAction = null) => {
+  if (!webcamRef.current) return;
 
-    const imageSrc = webcamRef.current.getScreenshot();
-    if (!imageSrc) return;
+  const imageSrc = webcamRef.current.getScreenshot();
+  if (!imageSrc) return;
 
-    const blob = await (await fetch(imageSrc)).blob();
-    const formData = new FormData();
-    formData.append("file", blob, "frame.jpg");
-    formData.append("action", action);
+  const blob = await (await fetch(imageSrc)).blob();
+  const formData = new FormData();
+  formData.append("file", blob, "frame.jpg");
 
-    try {
-      const response = await fetch(
-        `http://localhost:8000/attendance/${mode}`,
-        {
-          method: "POST",
-          body: formData,
-        }
-      );
+  // Send the real action
+  formData.append("action", subAction || action);
 
-      const data = await response.json();
-      handleBackendResponse(data, mode);
-    } catch (error) {
-      console.error("Error sending frame:", error);
-    }
-  };
+  try {
+    const response = await fetch(`http://localhost:8000/attendance/${mode}`, {
+      method: "POST",
+      body: formData,
+    });
 
-  const handleBackendResponse = (data, mode) => {
-    if (data.error) {
-      setFaces([
-        { name: "Unknown", status: "unknown", box: [50, 50, 100, 100] },
-      ]);
-      setStatusMessage("❌ Unknown face detected");
-      return;
-    }
+    const data = await response.json();
+    handleBackendResponse(data, mode);
+  } catch (error) {
+    console.error("Error sending frame:", error);
+  }
+};
 
-    if (data.results && Array.isArray(data.results)) {
-      const mappedFaces = data.results.map((face) => ({
-        name: face.name,
-        status: face.status,
-        box: face.box,
-      }));
-      setFaces(mappedFaces);
+const handleBackendResponse = (data, mode) => {
+  if (data.error) {
+    setFaces([{ name: "Unknown", status: "unknown", box: [50, 50, 100, 100] }]);
+    setStatusMessages(["❌ Unknown face detected"]);
+    return;
+  }
 
-      // Only show status when action = mark
-      if (mode === "mark" && mappedFaces.length > 0) {
-        const face = mappedFaces[0];
-        const currentDateTime = dateTime.toLocaleString("en-US", {
-          year: "numeric",
-          month: "short",
-          day: "numeric",
-          hour: "2-digit",
-          minute: "2-digit",
-          second: "2-digit",
-          hour12: true,
-        });
+  if (data.results && Array.isArray(data.results)) {
+    const mappedFaces = data.results.map((face) => ({
+      name: face.name,
+      status: face.status,
+      box: face.box,
+    }));
+    setFaces(mappedFaces);
 
+    // Show messages for ALL detected faces when action = mark
+    if (mode === "mark" && mappedFaces.length > 0) {
+      const currentDateTime = dateTime.toLocaleString("en-US", {
+        year: "numeric",
+        month: "short",
+        day: "numeric",
+        hour: "2-digit",
+        minute: "2-digit",
+        second: "2-digit",
+        hour12: true,
+      });
+
+      const msgs = mappedFaces.map((face) => {
         if (face.status === "checked_in") {
-          setStatusMessage(
-            `✅ ${face.name} marked Present — ${currentDateTime}`
-          );
+          return `✅ ${face.name} marked Present — ${currentDateTime}`;
         } else if (face.status === "already_checked_in") {
-          setStatusMessage(
-            `⚠️ ${face.name} already Checked In — ${currentDateTime}`
-          );
+          return `⚠️ ${face.name} already Checked In — ${currentDateTime}`;
         } else if (face.status === "checked_out") {
-          setStatusMessage(
-            `✅ ${face.name} Checked Out — ${currentDateTime}`
-          );
+          return `✅ ${face.name} Checked Out — ${currentDateTime}`;
         } else if (face.status === "already_checked_out") {
-          setStatusMessage(
-            `⚠️ ${face.name} already Checked Out — ${currentDateTime}`
-          );
+          return `⚠️ ${face.name} already Checked Out — ${currentDateTime}`;
+        } else if (face.status === "break_started") {
+          return `⏸️ ${face.name} started Break — ${currentDateTime}`;
+        } else if (face.status === "already_on_break") {
+          return `⚠️ ${face.name} is already on Break — ${currentDateTime}`;
+        } else if (face.status === "break_ended") {
+          return `▶️ ${face.name} ended Break — ${currentDateTime}`;
+        } else if (face.status === "already_break_ended") {
+          return `⚠️ ${face.name} already ended Break — ${currentDateTime}`;
+        } else if (face.status === "break_not_started") {
+          return `⚠️ ${face.name} cannot end Break (not started) — ${currentDateTime}`;
         } else if (face.status === "checkin_missing") {
-          setStatusMessage(
-            `⚠️ Checkout failed → No Check-In found — ${currentDateTime}`
-          );
+          return `⚠️ ${face.name} cannot proceed → No Check-In found — ${currentDateTime}`;
+        } else if (face.status === "cannot_checkout_on_break") {
+          return `⚠️ ${face.name} cannot Check Out while on Break — ${currentDateTime}`;
         } else if (face.status === "unknown") {
-          setStatusMessage("❌ Unknown face detected");
+          return `❌ Unknown face detected`;
         } else {
-          setStatusMessage(`ℹ️ Action processed — ${currentDateTime}`);
+          return `ℹ️ ${face.name} action processed — ${currentDateTime}`;
         }
-      }
+      });
+
+      setStatusMessages(msgs);
+
+      // auto-clear the panel message(s) after 2s
+      setTimeout(() => {
+        setStatusMessages([]);
+      }, 2000);
     }
-  };
+  }
+};
+
 
   const getBoxColor = (status) => {
     if (status === "checked_in") return "border-green-500";
@@ -244,33 +252,36 @@ function Home() {
 
               {/* Buttons */}
               <div className="flex gap-4 mt-6 mb-4 justify-center">
-                {action === "break" ? (
-                  <>
-                    <button
-                      className="px-6 py-3 bg-yellow-500 hover:bg-yellow-600 hover:scale-105 active:scale-95 transition-transform duration-200 text-white font-bold rounded-lg shadow flex items-center gap-2"
-                    >
-                      <PlayIcon className="h-5 w-5" />
-                      Start Break
-                    </button>
-                    <button
-                      className="px-6 py-3 bg-blue-500 hover:bg-blue-600 hover:scale-105 active:scale-95 transition-transform duration-200 text-white font-bold rounded-lg shadow flex items-center gap-2"
-                    >
-                      <StopIcon className="h-5 w-5" />
-                      End Break
-                    </button>
-                  </>
-                ) : (
-                  <button
-                    onClick={() => captureAndSendFrame("mark")}
-                    className="px-6 py-3 bg-green-500 hover:bg-green-600 hover:scale-105 active:scale-95 transition-transform duration-200 text-white font-bold rounded-lg shadow"
-                  >
-                    📸 Capture
-                  </button>
-                )}
+               {action === "break" ? (
+  <>
+    <button
+      onClick={() => captureAndSendFrame("mark", "break_start")}
+      className="px-6 py-3 bg-yellow-500 hover:bg-yellow-600 hover:scale-105 active:scale-95 transition-transform duration-200 text-white font-bold rounded-lg shadow flex items-center gap-2"
+    >
+      <PlayIcon className="h-5 w-5" />
+      Start Break
+    </button>
+
+    <button
+      onClick={() => captureAndSendFrame("mark", "break_end")}
+      className="px-6 py-3 bg-blue-500 hover:bg-blue-600 hover:scale-105 active:scale-95 transition-transform duration-200 text-white font-bold rounded-lg shadow flex items-center gap-2"
+    >
+      <StopIcon className="h-5 w-5" />
+      End Break
+    </button>
+  </>
+) : (
+  <button
+    onClick={() => captureAndSendFrame("mark")}
+    className="px-6 py-3 bg-green-500 hover:bg-green-600 hover:scale-105 active:scale-95 transition-transform duration-200 text-white font-bold rounded-lg shadow"
+  >
+    📸 Capture
+  </button>
+)}
                 <button
                   onClick={() => {
                     setShowCamera(false);
-                    setStatusMessage(null);
+                    setStatusMessages([]);
                     setFaces([]);
                   }}
                   className="px-6 py-3 bg-red-500 hover:bg-red-600 hover:scale-105 active:scale-95 transition-transform duration-200 text-white font-bold rounded-lg shadow"
@@ -279,27 +290,36 @@ function Home() {
                 </button>
               </div>
             </div>
+            
 
             {/* Status Panel */}
             <div
               className="w-[37%] bg-white border-[6px] border-indigo-700 rounded-xl shadow-2xl p-6 flex flex-col items-center"
               style={{ height: `${videoHeight + 12}px` }}
             >
-              <h2 className="text-2xl font-bold text-indigo-700 mb-6">
-                {action === "checkin"
-                  ? "Check In"
-                  : action === "checkout"
-                  ? "Check Out"
-                  : "Break"}
-              </h2>
-              {statusMessage ? (
-                <p className="text-lg font-semibold">{statusMessage}</p>
-              ) : (
-                <p className="text-gray-500">📌 Capture to see status</p>
-              )}
-            </div>
-          </div>
-        )}
+            <h2 className="text-2xl font-bold text-indigo-700 mb-6">
+              {action === "checkin"
+              ? "Check In"
+              : action === "checkout"
+              ? "Check Out"
+              : "Break"}
+            </h2>
+
+            {Array.isArray(statusMessages) && statusMessages.length > 0 ? (
+              <div className="space-y-2 text-center">
+                {statusMessages.map((msg, idx) => (
+                  <p key={idx} className="text-lg font-semibold">{msg}</p>
+                ))}
+              </div>
+            ) : (
+            <p className="text-gray-500">📌 Capture to see status</p>
+)}
+
+</div>
+
+
+</div>
+      )}
       </div>
 
       {/* Footer */}

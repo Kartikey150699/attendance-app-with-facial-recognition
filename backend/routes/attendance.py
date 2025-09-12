@@ -9,11 +9,8 @@ import json
 import numpy as np
 from datetime import date, datetime
 
-# ✅ Router definition
 router = APIRouter(prefix="/attendance", tags=["Attendance"])
 
-
-# DB session dependency
 def get_db():
     db = SessionLocal()
     try:
@@ -21,22 +18,18 @@ def get_db():
     finally:
         db.close()
 
-
-# Cosine similarity function
 def cosine_similarity(vec1, vec2):
     v1, v2 = np.array(vec1, dtype=float), np.array(vec2, dtype=float)
     v1, v2 = v1 / np.linalg.norm(v1), v2 / np.linalg.norm(v2)
     return float(np.dot(v1, v2))
 
-
-# Utility: detect faces + embeddings (ArcFace + MTCNN only)
 def detect_faces(tmp_path):
     faces = []
     try:
         reps = DeepFace.represent(
             img_path=tmp_path,
-            model_name="ArcFace",     # strong embeddings
-            detector_backend="mtcnn", # always use MTCNN
+            model_name="ArcFace",
+            detector_backend="mtcnn",
             enforce_detection=False
         )
 
@@ -47,14 +40,13 @@ def detect_faces(tmp_path):
             embedding = rep.get("embedding")
             box = rep.get("facial_area", {})
             w, h = box.get("w", 0), box.get("h", 0)
-            confidence = rep.get("confidence", 1.0) 
+            confidence = rep.get("confidence", 1.0)
 
-            # Skip false positives
-            if w < 50 or h < 50:   # too small → not a real face
+            if w < 50 or h < 50:
                 continue
-            if w / (h + 1e-6) < 0.6 or w / (h + 1e-6) > 1.6:  # weird shape → skip
+            if w / (h + 1e-6) < 0.6 or w / (h + 1e-6) > 1.6:
                 continue
-            if confidence < 0.90:  # low confidence → skip
+            if confidence < 0.90:
                 continue
 
             faces.append({
@@ -72,7 +64,6 @@ def detect_faces(tmp_path):
 
     return faces
 
-# 🟢 Preview endpoint (NO DB writes)
 @router.post("/preview")
 async def preview_faces(file: UploadFile = None, db: Session = Depends(get_db)):
     if not file:
@@ -118,11 +109,9 @@ async def preview_faces(file: UploadFile = None, db: Session = Depends(get_db)):
 
     return {"results": results}
 
-
-# 🟡 Mark endpoint (DB write) — supports checkin, checkout, break_start, break_end
 @router.post("/mark")
 async def mark_attendance(
-    action: str = Form(...),  # "checkin", "checkout", "break_start", "break_end"
+    action: str = Form(...),
     file: UploadFile = None,
     db: Session = Depends(get_db),
 ):
@@ -159,7 +148,6 @@ async def mark_attendance(
         print(f"➡️ Action: {action}, Match: {best_match.name if best_match else None}, Score: {best_score}")
 
         if best_match and best_score >= threshold:
-            from models.Attendance import Attendance
             record = db.query(Attendance).filter(
                 Attendance.user_id == best_match.id,
                 Attendance.date == today
@@ -170,7 +158,9 @@ async def mark_attendance(
                 db.add(record)
 
             if action == "checkin":
-                if record.check_in:
+                if record.check_out:
+                    status ="already_checked_out"
+                elif record.check_in:
                     status = "already_checked_in"
                 else:
                     record.check_in = datetime.now().strftime("%H:%M:%S")
@@ -179,6 +169,10 @@ async def mark_attendance(
             elif action == "break_start":
                 if not record.check_in:
                     status = "checkin_missing"
+                elif record.check_out:
+                    status = "already_checked_out"
+                elif record.break_end:
+                    status = "already_break_ended"  # no restart after ending
                 elif record.break_start:
                     status = "already_on_break"
                 else:
@@ -186,7 +180,11 @@ async def mark_attendance(
                     status = "break_started"
 
             elif action == "break_end":
-                if not record.break_start:
+                if not record.check_in:
+                    status = "checkin_missing"
+                elif record.check_out:
+                    status = "already_checked_out"
+                elif not record.break_start:
                     status = "break_not_started"
                 elif record.break_end:
                     status = "already_break_ended"
@@ -199,6 +197,8 @@ async def mark_attendance(
                     status = "checkin_missing"
                 elif record.check_out:
                     status = "already_checked_out"
+                elif record.break_start and not record.break_end:
+                    status = "cannot_checkout_on_break"
                 else:
                     record.check_out = datetime.now().strftime("%H:%M:%S")
                     status = "checked_out"
