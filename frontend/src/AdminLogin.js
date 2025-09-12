@@ -31,7 +31,7 @@ function AdminLogin() {
       const data = await response.json();
 
       if (response.ok && !data.error) {
-        // ✅ Save logged in admin
+        // Save logged in admin
         localStorage.setItem("currentAdmin", username);
         navigate("/admin-dashboard");
       } else {
@@ -50,6 +50,7 @@ function AdminLogin() {
     <div className="flex flex-col min-h-screen bg-gradient-to-tr from-gray-100 via-indigo-100 to-blue-200">
       {/* Header */}
       <div className="w-full flex items-center justify-between px-10 py-4 bg-indigo-300 shadow-md mb-10">
+        {/* Left → Date & Time */}
         <div className="text-blue-800 text-xl font-bold">
           {dateTime.toLocaleDateString("en-US", {
             weekday: "short",
@@ -65,9 +66,14 @@ function AdminLogin() {
             hour12: true,
           })}
         </div>
-        <h1 className="text-5xl font-bold text-blue-900 text-center">
-          FaceTrack Attendance
-        </h1>
+
+        <div className="flex-1 flex justify-start pl-40">
+          <h1 className="text-5xl font-bold text-blue-900">
+            FaceTrack Attendance
+          </h1>
+        </div>
+
+        {/* Right → Back button */}
         <button
           onClick={() => navigate("/")}
           className="w-40 px-6 py-3 bg-red-500 hover:bg-red-600 text-white font-bold rounded-lg shadow"
@@ -81,14 +87,18 @@ function AdminLogin() {
         <h2 className="text-2xl font-bold text-center mb-6 text-indigo-700">
           Admin Login 🔑
         </h2>
+
+        {/* Username */}
         <input
           type="text"
           placeholder="Username"
           value={username}
           onChange={(e) => setUsername(e.target.value)}
           onKeyDown={handleKeyDown}
-          className="w-full px-4 py-2 mb-4 border rounded-lg"
+          className="w-full px-4 py-2 mb-4 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-400"
         />
+
+        {/* Password with toggle */}
         <div className="relative w-full mb-6">
           <input
             type={showPassword ? "text" : "password"}
@@ -96,22 +106,32 @@ function AdminLogin() {
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             onKeyDown={handleKeyDown}
-            className="w-full px-4 py-2 pr-10 border rounded-lg"
+            className="w-full px-4 py-2 pr-10 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-400"
           />
           <button
             type="button"
             onClick={() => setShowPassword(!showPassword)}
-            className="absolute inset-y-0 right-3 flex items-center text-gray-600"
+            className="absolute inset-y-0 right-3 flex items-center text-gray-600 hover:text-indigo-500"
           >
-            {showPassword ? <EyeSlashIcon className="h-5 w-5" /> : <EyeIcon className="h-5 w-5" />}
+            {showPassword ? (
+              <EyeSlashIcon className="h-5 w-5" /> 
+            ) : (
+              <EyeIcon className="h-5 w-5" /> 
+            )}
           </button>
         </div>
-        {error && <p className="text-red-500 text-sm mb-4">{error}</p>}
+
+        {/* Error Message */}
+        {error && <p className="text-red-500 text-sm mb-4 font-semibold">{error}</p>}
+
+        {/* Login Button */}
         <button
           onClick={handleLogin}
           disabled={loading}
-          className={`w-full py-2 font-bold rounded-lg ${
-            loading ? "bg-gray-400" : "bg-indigo-500 hover:bg-indigo-600 text-white"
+          className={`w-full py-2 font-bold rounded-lg shadow ${
+            loading
+              ? "bg-gray-400 cursor-not-allowed"
+              : "bg-indigo-500 hover:bg-indigo-600 hover:scale-105 active:scale-95 transition-transform duration-200 text-white"
           }`}
         >
           {loading ? "Logging in..." : "Login"}
