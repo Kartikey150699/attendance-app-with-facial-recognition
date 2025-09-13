@@ -1,5 +1,14 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import { Cog6ToothIcon, 
+         ArrowRightOnRectangleIcon,
+         UserPlusIcon,
+         DocumentTextIcon, 
+         LockClosedIcon, 
+         ArrowUpOnSquareIcon, 
+         UsersIcon, 
+         ShieldCheckIcon  
+} from "@heroicons/react/24/solid";
 
 function AdminDashboard() {
   const [dateTime, setDateTime] = useState(new Date());
@@ -48,19 +57,21 @@ function AdminDashboard() {
         {/* Logout Button */}
         <div className="absolute right-10">
           <button
-            onClick={handleLogout}
-            className="w-40 px-6 py-3 bg-red-500 hover:bg-red-600 hover:scale-105 active:scale-95 transition-transform duration-200 text-white font-bold rounded-lg shadow"
-          >
-            🚪 Logout
-          </button>
+  onClick={handleLogout}
+  className="w-40 px-6 py-3 bg-red-500 hover:bg-red-600 hover:scale-105 active:scale-95 transition-transform duration-200 text-white font-bold rounded-lg shadow flex items-center justify-center gap-2"
+>
+  <ArrowRightOnRectangleIcon className="h-5 w-5 text-white" />
+  Logout
+</button>
         </div>
       </div>
 
       {/* Dashboard Content */}
       <div className="flex flex-col items-center flex-grow py-10">
-        <h2 className="text-4xl font-bold text-indigo-700 mb-16">
-          Admin Dashboard
-        </h2>
+        <h2 className="text-4xl font-bold text-indigo-700 mb-16 flex items-center justify-center gap-2">
+  <Cog6ToothIcon className="h-8 w-8 text-indigo-700" />
+  Admin Dashboard
+</h2>
 
         <div className="grid grid-cols-2 gap-8">
           {/* Row 1 */}
@@ -68,11 +79,13 @@ function AdminDashboard() {
             onClick={() => navigate("/register-user")}
             className="px-10 py-6 bg-green-500 hover:bg-green-600 hover:scale-105 active:scale-95 transition-transform duration-200 text-white text-xl font-bold rounded-lg shadow"
           >
-            👤 Register User
+            <UserPlusIcon className="h-6 w-6 inline-block mr-2" />
+            Register User
           </button>
 
           <button className="px-10 py-6 bg-blue-500 hover:bg-blue-600 hover:scale-105 active:scale-95 transition-transform duration-200 text-white text-xl font-bold rounded-lg shadow">
-            📑 View Attendance Logs
+            <DocumentTextIcon className="h-6 w-6 inline-block mr-2" />
+            View Attendance Logs
           </button>
 
           {/* Row 2 */}
@@ -80,12 +93,14 @@ function AdminDashboard() {
   onClick={() => navigate("/change-password")}
   className="px-10 py-6 bg-yellow-500 hover:bg-yellow-600 hover:scale-105 active:scale-95 transition-transform duration-200 text-white text-xl font-bold rounded-lg shadow"
 >
-  🔒 Change Password
+  <LockClosedIcon className="h-6 w-6 inline-block mr-2" />
+  Change Password
 </button>
 
 
           <button className="px-10 py-6 bg-purple-500 hover:bg-purple-600 hover:scale-105 active:scale-95 transition-transform duration-200 text-white text-xl font-bold rounded-lg shadow">
-            📤 Export Attendance
+            <ArrowUpOnSquareIcon className="h-6 w-6 inline-block mr-2" />
+            Export Attendance
           </button>
 
           {/* Row 3 */}
@@ -93,7 +108,8 @@ function AdminDashboard() {
   onClick={() => navigate("/manage-users")}
   className="px-10 py-6 bg-indigo-500 hover:bg-indigo-600 hover:scale-105 active:scale-95 transition-transform duration-200 text-white text-xl font-bold rounded-lg shadow"
 >
-  👥 Manage Users
+  <UsersIcon className="h-6 w-6 inline-block mr-2" />
+  Manage Users
 </button>
 
 
@@ -101,7 +117,8 @@ function AdminDashboard() {
   onClick={() => navigate("/manage-admin")}
   className="px-10 py-6 bg-pink-500 hover:bg-pink-600 hover:scale-105 active:scale-95 transition-transform duration-200 text-white text-xl font-bold rounded-lg shadow"
 >
-  🛡️ Manage Admin
+  <ShieldCheckIcon className="h-6 w-6 inline-block mr-2" />
+  Manage Admin
 </button>
 
         </div>

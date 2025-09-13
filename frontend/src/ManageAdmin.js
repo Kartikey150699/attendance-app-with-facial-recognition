@@ -1,6 +1,16 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { EyeIcon, EyeSlashIcon } from "@heroicons/react/24/solid";
+import { EyeIcon, 
+  EyeSlashIcon, 
+  ArrowUturnLeftIcon, 
+  ShieldCheckIcon,
+  PlusIcon,
+  TrashIcon,
+  DocumentTextIcon,
+  ClipboardDocumentListIcon,
+  UserPlusIcon,
+  XMarkIcon
+ } from "@heroicons/react/24/solid";
 
 function ManageAdmin() {
   const [dateTime, setDateTime] = useState(new Date());
@@ -165,11 +175,14 @@ function ManageAdmin() {
 
         <div className="absolute right-10">
           <button
-            onClick={() => navigate("/admin-dashboard")}
-            className="w-40 px-6 py-3 bg-red-500 hover:bg-red-600 hover:scale-105 active:scale-95 transition-transform duration-200 text-white font-bold rounded-lg shadow"
-          >
-            🔙 Back
-          </button>
+  onClick={() => navigate("/admin-dashboard")}
+  className="w-40 px-6 py-3 bg-red-500 hover:bg-red-600 hover:scale-105 active:scale-95 
+             transition-transform duration-200 text-white font-bold rounded-lg shadow flex 
+             items-center justify-center gap-2"
+>
+  <ArrowUturnLeftIcon className="h-5 w-5 text-white" />
+  Back
+</button>
         </div>
       </div>
 
@@ -201,39 +214,43 @@ function ManageAdmin() {
 
       {/* Body */}
       <div className="flex flex-col items-center flex-grow py-10">
-        <h2 className="text-3xl font-bold text-indigo-700 mb-10">
-          🛡️ Manage Admin
-        </h2>
+        <h2 className="text-3xl font-bold text-indigo-700 mb-10 flex items-center justify-center gap-2">
+  <ShieldCheckIcon className="h-8 w-8 text-indigo-700" />
+  Manage Admin
+</h2>
 
         {!showAddForm && !showDeleteForm && (
           <div className="grid grid-cols-3 gap-8">
             <button
-              onClick={() => {
-                setShowAddForm(true);
-                setShowAdminList(false); // ✅ close list when opening Add form
-              }}
-              className="px-10 py-6 bg-green-500 hover:bg-green-600 text-white text-xl font-bold rounded-lg shadow"
-            >
-              ➕ Add Admin
-            </button>
+  onClick={() => {
+    setShowAddForm(true);
+    setShowAdminList(false); 
+  }}
+  className="px-10 py-6 bg-green-500 hover:bg-green-600 hover:scale-105 active:scale-95 transition-transform duration-200 text-white text-xl font-bold rounded-lg shadow flex items-center justify-center gap-2"
+>
+  <PlusIcon className="h-6 w-6 text-white transition-transform duration-200 group-hover:rotate-90" />
+  Add Admin
+</button>
             <button
-              onClick={() => {
-                setShowDeleteForm(true);
-                setShowAdminList(false); // ✅ close list when opening Delete form
-              }}
-              className="px-10 py-6 bg-red-600 hover:bg-red-700 text-white text-xl font-bold rounded-lg shadow"
-            >
-              🗑️ Delete Admin
-            </button>
+  onClick={() => {
+    setShowDeleteForm(true);
+    setShowAdminList(false);
+  }}
+  className="px-10 py-6 bg-red-600 hover:bg-red-700 hover:scale-105 active:scale-95 transition-transform duration-200 text-white text-xl font-bold rounded-lg shadow flex items-center justify-center gap-2"
+>
+  <TrashIcon className="h-6 w-6 text-white transition-transform duration-200 group-hover:rotate-12" />
+  Delete Admin
+</button>
             <button
-              onClick={() => {
-                fetchAdmins();
-                setShowAdminList(true);
-              }}
-              className="px-10 py-6 bg-blue-600 hover:bg-blue-700 text-white text-xl font-bold rounded-lg shadow"
-            >
-              📜 Admin List
-            </button>
+  onClick={() => {
+    fetchAdmins();
+    setShowAdminList(true);
+  }}
+  className="px-10 py-6 bg-blue-600 hover:bg-blue-700 hover:scale-105 active:scale-95 transition-transform duration-200 text-white text-xl font-bold rounded-lg shadow flex items-center gap-2"
+>
+  <DocumentTextIcon className="h-6 w-6 text-white" />
+  Admin List
+</button>
           </div>
         )}
 
@@ -241,15 +258,17 @@ function ManageAdmin() {
         {showAdminList && (
           <div className="bg-white p-6 rounded-xl shadow-lg mt-10 w-[500px]">
             <div className="flex justify-between items-center mb-4">
-              <h3 className="text-2xl font-bold text-indigo-700">
-                📒 List of Admins
-              </h3>
+              <h3 className="text-2xl font-bold text-indigo-700 flex items-center gap-2">
+  <ClipboardDocumentListIcon className="h-7 w-7 text-indigo-700" />
+  List of Admins
+</h3>
               <button
-                onClick={() => setShowAdminList(false)}
-                className="px-4 py-1 bg-gray-400 hover:bg-gray-500 text-white font-bold rounded-lg"
-              >
-                Close
-              </button>
+  onClick={() => setShowAdminList(false)}
+  className="px-4 py-1 bg-gray-400 hover:bg-gray-500 text-white font-bold rounded-lg flex items-center gap-2"
+>
+  <XMarkIcon className="h-5 w-5 text-white" />
+  Close
+</button>
             </div>
             <ul className="divide-y divide-gray-300">
               {admins.length > 0 ? (
@@ -272,9 +291,10 @@ function ManageAdmin() {
         {/* Add Admin Form */}
         {showAddForm && (
           <div className="bg-white p-8 rounded-xl shadow-lg w-[400px]">
-            <h3 className="text-2xl font-bold text-indigo-700 mb-6 text-center">
-              ➕ Add Admin
-            </h3>
+            <h3 className="text-2xl font-bold text-indigo-700 mb-6 text-center flex items-center justify-center gap-2">
+  <UserPlusIcon className="h-7 w-7 text-indigo-700" />
+  Add Admin
+</h3>
             <input
               type="text"
               placeholder="Enter username"
@@ -322,9 +342,10 @@ function ManageAdmin() {
         {/* Delete Admin Form */}
         {showDeleteForm && !showConfirmDelete && (
           <div className="bg-white p-8 rounded-xl shadow-lg w-[400px]">
-            <h3 className="text-2xl font-bold text-red-600 mb-6 text-center">
-              🗑️ Delete Admin
-            </h3>
+            <h3 className="text-2xl font-bold text-red-600 mb-6 text-center flex items-center justify-center gap-2">
+  <TrashIcon className="h-7 w-7 text-red-600" />
+  Delete Admin
+</h3>
             <input
               type="text"
               placeholder="Enter username to delete"

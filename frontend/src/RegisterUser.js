@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import Webcam from "react-webcam";
+import { ArrowUturnLeftIcon, UserPlusIcon, IdentificationIcon } from "@heroicons/react/24/solid";
 
 function RegisterUser() {
   const [name, setName] = useState("");
@@ -154,14 +155,15 @@ function RegisterUser() {
 </h1>
         <div className="absolute right-10 top-4 flex flex-col items-end">
   <button
-    onClick={() => navigate("/admin-dashboard")}
-    className="w-40 px-6 py-3 bg-red-500 hover:bg-red-600 hover:scale-105 active:scale-95 transition-transform duration-200 text-white font-bold rounded-lg shadow"
-  >
-    🔙 Back
-  </button>
+  onClick={() => navigate("/admin-dashboard")}
+  className="w-40 px-6 py-3 bg-red-500 hover:bg-red-600 hover:scale-105 active:scale-95 transition-transform duration-200 text-white font-bold rounded-lg shadow flex items-center justify-center gap-2"
+>
+  <ArrowUturnLeftIcon className="h-5 w-5 text-white" />
+  <span>Back</span>
+</button>
           {/* Camera selection dropdown */}
-          <div className="flex flex-col items-center mt-6">
-  <label className="text-xl font-semibold text-indigo-700 mb-2">
+          <div className="flex flex-col items-center mt-10">
+  <label className="text-xl font-semibold text-indigo-700 mb-4">
     Select Camera
   </label>
   <select
@@ -186,9 +188,10 @@ function RegisterUser() {
 
       {/* Body */}
       <div className="flex flex-col items-center flex-grow py-6">
-        <h2 className="text-3xl font-bold text-indigo-700 mb-6">
-          Register New User
-        </h2>
+        <h2 className="text-3xl font-bold text-indigo-700 mb-6 flex items-center justify-center gap-2">
+  <UserPlusIcon className="h-8 w-8 text-indigo-700" />
+  Register New User
+</h2>
 
         <div className="flex w-full max-w-6xl px-10 mt-20">
           {/* Camera */}
@@ -235,16 +238,19 @@ function RegisterUser() {
               className="w-80 px-4 py-2 mb-6 border rounded-lg shadow focus:outline-none focus:ring-2 focus:ring-indigo-400 disabled:bg-gray-200"
             />
             <button
-              onClick={handleSubmit}
-              disabled={isSubmitting}
-              className={`w-80 py-3 font-bold rounded-lg shadow transition-transform ${
-                isSubmitting
-                  ? "bg-gray-400 text-white cursor-not-allowed"
-                  : "bg-green-500 hover:bg-green-600 hover:scale-105 active:scale-95 text-white"
-              }`}
-            >
-              {isSubmitting ? buttonText : "Register"}
-            </button>
+  onClick={handleSubmit}
+  disabled={isSubmitting}
+  className={`w-80 py-3 font-bold rounded-lg shadow transition-transform ${
+    isSubmitting
+      ? "bg-gray-400 text-white cursor-not-allowed"
+      : "bg-green-500 hover:bg-green-600 hover:scale-105 active:scale-95 text-white"
+  }`}
+>
+  <div className="flex items-center justify-center gap-2">
+    <IdentificationIcon className="h-5 w-5 text-white" />
+    <span>{isSubmitting ? buttonText : "Register"}</span>
+  </div>
+</button>
           </div>
         </div>
       </div>

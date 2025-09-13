@@ -5,6 +5,11 @@ import {
   PauseCircleIcon,
   PlayIcon,
   StopIcon,
+  KeyIcon,
+  ClipboardDocumentListIcon,
+  CameraIcon, 
+  ArrowDownCircleIcon, 
+  ArrowUpCircleIcon,
 } from "@heroicons/react/24/solid";
 import Webcam from "react-webcam";
 import { useNavigate } from "react-router-dom";
@@ -173,11 +178,12 @@ function Home() {
 
         <div className="absolute right-10">
           <button
-            onClick={() => navigate("/admin-login")}
-            className="w-350 px-6 py-3 bg-red-500 hover:bg-red-600 hover:scale-105 active:scale-95 transition-transform duration-200 text-white font-bold rounded-lg shadow"
-          >
-            🔑 Admin Login
-          </button>
+  onClick={() => navigate("/admin-login")}
+  className="w-350 px-6 py-3 bg-red-500 hover:bg-red-600 hover:scale-105 active:scale-95 transition-transform duration-200 text-white font-bold rounded-lg shadow flex items-center justify-center gap-2"
+>
+  <KeyIcon className="h-5 w-5" />
+  Admin Login
+</button>
         </div>
       </div>
 
@@ -295,11 +301,12 @@ function Home() {
                   </>
                 ) : (
                   <button
-                    onClick={() => captureAndSendFrame("mark")}
-                    className="px-6 py-3 bg-green-500 hover:bg-green-600 hover:scale-105 active:scale-95 transition-transform duration-200 text-white font-bold rounded-lg shadow"
-                  >
-                    📸 Capture
-                  </button>
+  onClick={() => captureAndSendFrame("mark")}
+  className="px-6 py-3 bg-green-500 hover:bg-green-600 hover:scale-105 active:scale-95 transition-transform duration-200 text-white font-bold rounded-lg shadow flex items-center gap-2"
+>
+  <CameraIcon className="h-5 w-5" />
+  Capture
+</button>
                 )}
                 <button
                   onClick={() => {
@@ -319,13 +326,24 @@ function Home() {
               className="w-[37%] bg-white border-[6px] border-indigo-700 rounded-xl shadow-2xl p-6 flex flex-col items-center"
               style={{ height: `${videoHeight + 12}px` }}
             >
-              <h2 className="text-2xl font-bold text-indigo-700 mb-6">
-                {action === "checkin"
-                  ? "Check In"
-                  : action === "checkout"
-                  ? "Check Out"
-                  : "Break"}
-              </h2>
+              <h2 className="text-2xl font-bold text-indigo-700 mb-6 flex items-center gap-2">
+  {action === "checkin" ? (
+    <>
+      <ArrowDownCircleIcon className="h-6 w-6 text-indigo-700" />
+      Check In
+    </>
+  ) : action === "checkout" ? (
+    <>
+      <ArrowUpCircleIcon className="h-6 w-6 text-indigo-700" />
+      Check Out
+    </>
+  ) : (
+    <>
+      <PauseCircleIcon className="h-6 w-6 text-indigo-700" />
+      Break
+    </>
+  )}
+</h2>
 
               {statusMessages.length > 0 ? (
                 <div className="space-y-2 text-center">
@@ -336,7 +354,10 @@ function Home() {
                   ))}
                 </div>
               ) : (
-                <p className="text-gray-500">📌 Capture to see status</p>
+                <p className="text-gray-500 flex items-center justify-center gap-2">
+  <ClipboardDocumentListIcon className="h-5 w-5 text-gray-500" />
+  Capture to see status
+</p>
               )}
             </div>
           </div>

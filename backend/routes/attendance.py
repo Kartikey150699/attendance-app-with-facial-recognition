@@ -26,10 +26,11 @@ def cosine_similarity(vec1, vec2):
 def detect_faces(tmp_path):
     faces = []
     try:
+        # Use SAME model + detector as users.py -- Very Important otherwise Model won't work !!!
         reps = DeepFace.represent(
             img_path=tmp_path,
-            model_name="ArcFace",
-            detector_backend="mtcnn",
+            model_name="ArcFace", # must match users.py (Model and Detector)
+            detector_backend="mtcnn", # IMPORTANT COMMENT -- USE "RetinaFace" as detector if we deploy on cloud, but cannot use it on computer because very slow on CPUs, works perfect with GPUs
             enforce_detection=False
         )
 

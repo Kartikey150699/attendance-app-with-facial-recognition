@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { EyeIcon, EyeSlashIcon } from "@heroicons/react/24/solid";
+import { EyeIcon, EyeSlashIcon, LockClosedIcon, ArrowUturnLeftIcon } from "@heroicons/react/24/solid";
 
 function AdminLogin() {
   const [dateTime, setDateTime] = useState(new Date());
@@ -76,20 +76,22 @@ function AdminLogin() {
 </h1>
         </div>
 
-        {/* Right → Back button */}
+        {/* Back button */}
         <button
-          onClick={() => navigate("/")}
-          className="w-40 px-6 py-3 bg-red-500 hover:bg-red-600 hover:scale-105 active:scale-95 transition-transform duration-200 text-white font-bold rounded-lg shadow"
-        >
-          🔙 Back
-        </button>
+  onClick={() => navigate("/")}
+  className="w-40 px-6 py-3 bg-red-500 hover:bg-red-600 hover:scale-105 active:scale-95 transition-transform duration-200 text-white font-bold rounded-lg shadow flex items-center justify-center gap-2"
+>
+  <ArrowUturnLeftIcon className="h-5 w-5 text-white" />
+  Back
+</button>
       </div>
 
       {/* Login Form */}
       <div className="bg-white p-8 rounded-xl shadow-md w-96 mx-auto mt-20">
-        <h2 className="text-2xl font-bold text-center mb-6 text-indigo-700">
-          Admin Login 🔑
-        </h2>
+        <h2 className="text-2xl font-bold text-center mb-6 text-indigo-700 flex items-center justify-center gap-2">
+  <LockClosedIcon className="h-6 w-6 text-indigo-700" />
+  Admin Login
+</h2>
 
         {/* Username */}
         <input

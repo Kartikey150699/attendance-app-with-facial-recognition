@@ -43,11 +43,11 @@ async def register_user(
             tmp_path = tmp.name
 
         try:
-            # 🔹 Use SAME model + detector as attendance
+            # Use SAME model + detector as attendance.py -- Very Important otherwise Model won't work !!!
             rep = DeepFace.represent(
                 img_path=tmp_path,
-                model_name="ArcFace",          # must match attendance.py
-                detector_backend="mtcnn", # must match attendance.py
+                model_name="ArcFace", # must match attendance.py (Model and Detector)
+                detector_backend="mtcnn", # IMPORTANT COMMENT -- USE "RetinaFace" as detector if we deploy on cloud, but cannot use it on computer because very slow on CPUs, works perfect with GPUs
                 enforce_detection=True
             )
 

@@ -1,6 +1,13 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { EyeIcon, EyeSlashIcon } from "@heroicons/react/24/solid";
+import { EyeIcon, 
+  EyeSlashIcon, 
+  ArrowUturnLeftIcon, 
+  LockClosedIcon, 
+  FingerPrintIcon, 
+  CheckCircleIcon,
+  XCircleIcon
+} from "@heroicons/react/24/solid";
 
 function ChangePassword() {
   const [dateTime, setDateTime] = useState(new Date());
@@ -48,15 +55,15 @@ function ChangePassword() {
       const data = await response.json();
 
       if (data.error) {
-        setPopupMessage(`❌ ${data.error}`);
+        setPopupMessage(`Error: ${data.error}`);
         setShowPopup(true);
       } else {
-        setPopupMessage("✅ Password updated successfully!");
+        setPopupMessage("Password updated successfully!");
         setShowPopup(true);
       }
     } catch (err) {
       console.error("Error changing password:", err);
-      setPopupMessage("❌ Failed to change password.");
+      setPopupMessage("Failed to change password.");
       setShowPopup(true);
     }
   };
@@ -104,21 +111,23 @@ function ChangePassword() {
         {/* Back Button */}
         <div className="absolute right-10">
           <button
-            onClick={() => navigate("/admin-dashboard")}
-            className="w-40 px-6 py-3 bg-red-500 hover:bg-red-600 hover:scale-105 active:scale-95 transition-transform duration-200 text-white font-bold rounded-lg shadow"
-          >
-            🔙 Back
-          </button>
+  onClick={() => navigate("/admin-dashboard")}
+  className="w-40 px-6 py-3 bg-red-500 hover:bg-red-600 hover:scale-105 active:scale-95 transition-transform duration-200 text-white font-bold rounded-lg shadow flex items-center justify-center gap-2"
+>
+  <ArrowUturnLeftIcon className="h-5 w-5 text-white" />
+  <span>Back</span>
+</button>
         </div>
       </div>
 
       {/* Change Password Box */}
       <div className="bg-white p-8 rounded-xl shadow-md w-96 mx-auto mt-20">
-        <h2 className="text-2xl font-bold text-center mb-6 text-indigo-700">
-          Change Password 🔒
-        </h2>
+        <h2 className="text-2xl font-bold text-center mb-6 text-indigo-700 flex items-center justify-center gap-2">
+  <LockClosedIcon className="h-6 w-6 text-indigo-700" />
+  Change Password
+</h2>
 
-        {/* ✅ Username Field */}
+        {/* Username Field */}
         <div className="relative w-full mb-4">
           <input
             type="text"
@@ -186,8 +195,9 @@ function ChangePassword() {
         {/* Submit Button */}
         <button
   onClick={handleSubmit}
-  className="w-full py-2 bg-indigo-500 hover:bg-indigo-600 hover:scale-105 active:scale-95 transition-transform duration-200 text-white font-bold rounded-lg shadow"
+  className="w-full py-2 bg-indigo-500 hover:bg-indigo-600 hover:scale-105 active:scale-95 transition-transform duration-200 text-white font-bold rounded-lg shadow flex items-center justify-center gap-2"
 >
+  <FingerPrintIcon className="h-5 w-5 text-white" />
   Change Password
 </button>
 
@@ -195,19 +205,25 @@ function ChangePassword() {
 
       {/* Popup */}
       {showPopup && (
-        <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-40">
-          <div className="bg-white p-6 rounded-xl shadow-lg text-center">
-            <p className="text-lg font-semibold text-gray-800 mb-4">{popupMessage}</p>
-            <button
-              onClick={handlePopupOk}
-              className="px-6 py-2 bg-indigo-500 hover:bg-indigo-600 text-white font-bold rounded-lg shadow"
-            >
-              OK
-            </button>
-          </div>
-        </div>
-      )}
-
+  <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-40">
+    <div className="bg-white p-6 rounded-xl shadow-lg text-center">
+      <p className="text-lg font-semibold text-gray-800 mb-4 flex items-center justify-center gap-2">
+        {popupMessage.includes("successfully") ? (
+          <CheckCircleIcon className="h-6 w-6 text-green-600" />
+        ) : (
+          <XCircleIcon className="h-6 w-6 text-red-600" />
+        )}
+        {popupMessage}
+      </p>
+      <button
+        onClick={handlePopupOk}
+        className="px-6 py-2 bg-indigo-500 hover:bg-indigo-600 text-white font-bold rounded-lg shadow"
+      >
+        OK
+      </button>
+    </div>
+  </div>
+)}
       {/* Footer */}
       <footer className="w-full py-4 bg-blue-900 text-center text-xl text-white mt-auto">
         © 2025 FaceTrack. All rights reserved - Kartikey Koli - IFNET

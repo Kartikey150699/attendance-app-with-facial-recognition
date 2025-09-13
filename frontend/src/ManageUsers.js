@@ -1,5 +1,10 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import { ArrowUturnLeftIcon, 
+        UsersIcon,
+        PencilSquareIcon,
+        TrashIcon
+} from "@heroicons/react/24/solid";
 
 function ManageUsers() {
   const [dateTime, setDateTime] = useState(new Date());
@@ -43,28 +48,32 @@ function ManageUsers() {
         {/* Back Button */}
         <div className="absolute right-10">
           <button
-            onClick={() => navigate("/admin-dashboard")}
-            className="w-40 px-6 py-3 bg-red-500 hover:bg-red-600 hover:scale-105 active:scale-95 transition-transform duration-200 text-white font-bold rounded-lg shadow"
-          >
-            🔙 Back
-          </button>
+  onClick={() => navigate("/admin-dashboard")}
+  className="w-40 px-6 py-3 bg-red-500 hover:bg-red-600 hover:scale-105 active:scale-95 transition-transform duration-200 text-white font-bold rounded-lg shadow flex items-center justify-center gap-2"
+>
+  <ArrowUturnLeftIcon className="h-5 w-5 text-white" />
+  Back
+</button>
         </div>
       </div>
 
       {/* Body */}
       <div className="flex flex-col items-center flex-grow py-10">
-        <h2 className="text-3xl font-bold text-indigo-700 mb-10">
-          👥 Manage Users
-        </h2>
+        <h2 className="text-3xl font-bold text-indigo-700 mb-10 flex items-center gap-2">
+  <UsersIcon className="h-8 w-8 text-indigo-700" />
+  Manage Users
+</h2>
 
         <div className="grid grid-cols-2 gap-8">
-          <button className="px-10 py-6 bg-yellow-500 hover:bg-yellow-600 hover:scale-105 active:scale-95 transition-transform duration-200 text-white text-xl font-bold rounded-lg shadow">
-            ✏️ Edit User Info
-          </button>
+          <button className="px-10 py-6 bg-yellow-500 hover:bg-yellow-600 hover:scale-105 active:scale-95 transition-transform duration-200 text-white text-xl font-bold rounded-lg shadow flex items-center justify-center gap-2">
+  <PencilSquareIcon className="h-6 w-6 text-white" />
+  Edit User Info
+</button>
 
-          <button className="px-10 py-6 bg-red-600 hover:bg-red-700 hover:scale-105 active:scale-95 transition-transform duration-200 text-white text-xl font-bold rounded-lg shadow">
-            🗑️ Delete User
-          </button>
+         <button className="px-10 py-6 bg-red-600 hover:bg-red-700 hover:scale-105 active:scale-95 transition-transform duration-200 text-white text-xl font-bold rounded-lg shadow flex items-center justify-center gap-2">
+  <TrashIcon className="h-6 w-6 text-white" />
+  Delete User
+</button>
         </div>
       </div>
 
