@@ -38,48 +38,60 @@ function ManageUsers() {
     }
   };
 
-  // Change user name
   const handleChangeName = async () => {
-    if (!currentName || !newName) {
+  if (!currentName || !newName) {
+    setPopup({
+      type: "error",
+      message: "⚠️ Please enter both current and new name.",
+    });
+    setCurrentName("");
+    setNewName("");
+    return;
+  }
+
+  if (currentName.trim().toLowerCase() === newName.trim().toLowerCase()) {
+    setPopup({
+      type: "error",
+      message:
+        "⚠️ Current name and new name cannot be the same.",
+    });
+    setCurrentName("");
+    setNewName("");
+    return;
+  }
+
+  try {
+    const res = await fetch("http://127.0.0.1:8000/users/update-name", {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        current_name: currentName.trim(),
+        new_name: newName.trim(),
+      }),
+    });
+
+    const data = await res.json();
+
+    if (!res.ok) {
       setPopup({
         type: "error",
-        message: "⚠️ Please enter both current and new name.",
+        message: data.detail || data.error || "❌ Failed to update user name.",
       });
-      return;
-    }
-
-    try {
-      const res = await fetch("http://127.0.0.1:8000/users/update-name", {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          current_name: currentName.trim(),
-          new_name: newName.trim(),
-        }),
-      });
-
-      const data = await res.json();
-
-      if (!res.ok) {
-        setPopup({
-          type: "error",
-          message: data.detail || data.error || "❌ Failed to update user name.",
-        });
-        return;
-      }
-
+    } else {
       setPopup({ type: "success", message: data.message });
-      setCurrentName("");
-      setNewName("");
       fetchUsers();
-    } catch (err) {
-      console.error("❌ Failed to change name:", err);
-      setPopup({
-        type: "error",
-        message: "❌ Could not connect to the server.",
-      });
     }
-  };
+  } catch (err) {
+    console.error("❌ Failed to change name:", err);
+    setPopup({
+      type: "error",
+      message: "❌ Could not connect to the server.",
+    });
+  } finally {
+    setCurrentName("");
+    setNewName("");
+  }
+};
 
   // Delete user
   const handleDeleteUser = async () => {
@@ -115,6 +127,11 @@ function ManageUsers() {
   const handlePopupClose = () => {
     setPopup(null);
     setActiveSection(null);
+  };
+
+  // Format Employee ID like IFNT{001}
+  const formatEmployeeId = (id) => {
+    return `IFNT{${String(id).padStart(3, "0")}}`;
   };
 
   return (
@@ -290,71 +307,79 @@ function ManageUsers() {
             <table className="w-full border-collapse">
               <thead>
                 <tr className="bg-gray-200">
-                  <th className="p-2 border">ID</th>
+                  <th className="p-2 border">Employee ID</th>
                   <th className="p-2 border">Name</th>
                   <th className="p-2 border">Created At</th>
                 </tr>
               </thead>
               <tbody>
-  {users.map((u) => {
-    // Convert backend UTC timestamp into client-local time
-    const d = new Date(u.created_at);
+                {users.map((u) => {
+                  // Convert backend UTC timestamp into client-local time
+                  const d = new Date(u.created_at);
 
-    const datePart = d.toLocaleDateString("en-US", {
-      year: "numeric",
-      month: "short", // Sep
-      day: "2-digit",
-    });
+                  const datePart = d.toLocaleDateString("en-US", {
+                    year: "numeric",
+                    month: "short", // Sep
+                    day: "2-digit",
+                  });
 
-    const timePart = d.toLocaleTimeString("en-US", {
-      hour: "2-digit",
-      minute: "2-digit",
-      hour12: false, // 24-hour format
-    });
+                  const timePart = d.toLocaleTimeString("en-US", {
+                    hour: "2-digit",
+                    minute: "2-digit",
+                    hour12: false, // 24-hour format
+                  });
 
-    const formattedDate = `${datePart} - ${timePart}`;
+                  const formattedDate = `${datePart} - ${timePart}`;
 
-    return (
-      <tr key={u.id} className="text-center">
-        <td className="p-2 border">{u.id}</td>
-        <td className="p-2 border">{u.name}</td>
-        <td className="p-2 border">{formattedDate}</td>
-      </tr>
-    );
-  })}
-</tbody>
+                  return (
+                    <tr key={u.id} className="text-center">
+                      <td className="p-2 border">{u.employee_id}</td>
+                      <td className="p-2 border">{u.name}</td>
+                      <td className="p-2 border">{formattedDate}</td>
+                    </tr>
+                  );
+                })}
+              </tbody>
             </table>
           </div>
         )}
 
         {/* Center Popup Modal */}
         {popup && (
-          <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
-            <div
-              className={`p-6 rounded-lg shadow-lg text-center w-1/3 ${
-                popup.type === "success" ? "bg-green-100" : "bg-red-100"
-              }`}
-            >
-              <p
-                className={`text-lg font-bold mb-4 ${
-                  popup.type === "success" ? "text-green-700" : "text-red-700"
-                }`}
-              >
-                {popup.message}
-              </p>
-              <button
-                onClick={handlePopupClose}
-                className={`px-6 py-2 font-bold rounded-lg shadow ${
-                  popup.type === "success"
-                    ? "bg-green-600 text-white hover:bg-green-700"
-                    : "bg-red-600 text-white hover:bg-red-700"
-                }`}
-              >
-                OK
-              </button>
-            </div>
-          </div>
-        )}
+  <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
+    <div
+      className={`p-8 rounded-2xl shadow-2xl text-center transform transition-all duration-300 scale-100 ${
+        popup.type === "success"
+          ? "bg-green-50 border-2 border-green-400"
+          : "bg-red-50 border-2 border-red-400"
+      }`}
+    >
+      {/* Title */}
+      <h2
+        className={`text-2xl font-extrabold mb-4 ${
+          popup.type === "success" ? "text-green-700" : "text-red-700"
+        }`}
+      >
+        {popup.type === "success" ? "Success!" : "Error"}
+      </h2>
+
+      {/* Message */}
+      <p className="text-lg text-gray-800 mb-6">{popup.message}</p>
+
+      {/* OK button */}
+      <button
+        onClick={handlePopupClose}
+        className={`px-6 py-2 font-bold rounded-lg shadow ${
+          popup.type === "success"
+            ? "bg-green-600 text-white hover:bg-green-700"
+            : "bg-red-600 text-white hover:bg-red-700"
+        }`}
+      >
+        OK
+      </button>
+    </div>
+  </div>
+)}
       </div>
 
       <Footer />

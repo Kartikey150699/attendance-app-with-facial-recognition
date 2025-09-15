@@ -110,18 +110,20 @@ function RegisterUser() {
       const data = await response.json();
 
       if (!response.ok) {
-        // Handle FastAPI HTTPException (detail)
-        if (data.detail) {
-          setPopupMessage(`❌ ${data.detail}`);
-        } else if (data.error) {
-          setPopupMessage(`❌ ${data.error}`);
-        } else {
-          setPopupMessage("❌ Registration failed.");
-        }
-        setIsSubmitting(false);
-      } else {
-        setPopupMessage(`✅ ${data.message}`);
-      }
+  // Handle FastAPI HTTPException (detail)
+  if (data.detail) {
+    setPopupMessage(`❌ ${data.detail}`);
+  } else if (data.error) {
+    setPopupMessage(`❌ ${data.error}`);
+  } else {
+    setPopupMessage("❌ Registration failed.");
+  }
+  setIsSubmitting(false);
+} else {
+  setPopupMessage(
+    `✅ ${data.message}\nYour Employee ID is ${data.employee_id}`
+  );
+}
 
       setShowPopup(true);
       setName("");
@@ -260,22 +262,60 @@ function RegisterUser() {
         </div>
       </div>
 
-      {/* Popup */}
-      {showPopup && (
-        <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-40 z-50">
-          <div className="bg-white p-6 rounded-xl shadow-lg text-center w-96">
-            <p className="text-lg font-semibold text-gray-800 mb-4">
-              {popupMessage}
-            </p>
-            <button
-              onClick={handlePopupOk}
-              className="px-6 py-2 bg-indigo-500 hover:bg-indigo-600 text-white font-bold rounded-lg shadow"
-            >
-              OK
-            </button>
-          </div>
-        </div>
-      )}
+      {/* Popup - Will use this pop style in other pages too */}
+{showPopup && (
+  <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
+    <div
+      className={`p-8 rounded-2xl shadow-2xl text-center transform transition-all duration-300 scale-100 ${
+        popupMessage.startsWith("✅")
+          ? "bg-green-50 border-2 border-green-400"
+          : "bg-red-50 border-2 border-red-400"
+      }`}
+    >
+      {/* Title */}
+      <h2
+        className={`text-2xl font-extrabold mb-4 ${
+          popupMessage.startsWith("✅") ? "text-green-700" : "text-red-700"
+        }`}
+      >
+        {popupMessage.startsWith("✅") ? "Registration Successful!" : "Error"}
+      </h2>
+
+      {/* Extract parts */}
+      {(() => {
+        const lines = popupMessage.split("\n");
+        const mainText = lines[0]; // first line
+        const empIdText = lines[1]; // second line if exists
+
+        return (
+          <>
+            {/* Main message */}
+            <p className="text-lg text-gray-800 mb-4">{mainText}</p>
+
+            {/* Highlight employee ID if present */}
+            {empIdText && empIdText.includes("Employee ID") && (
+              <p className="text-xl font-bold text-indigo-700 bg-indigo-100 px-4 py-2 rounded-lg inline-block mb-4">
+                {empIdText}
+              </p>
+            )}
+          </>
+        );
+      })()}
+
+      {/* OK button */}
+      <button
+        onClick={handlePopupOk}
+        className={`px-6 py-2 font-bold rounded-lg shadow ${
+          popupMessage.startsWith("✅")
+            ? "bg-green-600 text-white hover:bg-green-700"
+            : "bg-red-600 text-white hover:bg-red-700"
+        }`}
+      >
+        OK
+      </button>
+    </div>
+  </div>
+)}
 
       <Footer />
 

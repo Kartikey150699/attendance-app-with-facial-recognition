@@ -24,6 +24,13 @@ def get_db():
 
 
 # -------------------------
+# Employee ID formatter
+# -------------------------
+def format_employee_id(user_id: int) -> str:
+    return f"IFNT{{{user_id:03d}}}"
+
+
+# -------------------------
 # Cosine similarity helper
 # -------------------------
 def cosine_similarity(vec1, vec2):
@@ -130,11 +137,12 @@ async def register_user(
     db.commit()
     db.refresh(new_user)
 
+    employee_id = f"IFNT{str(new_user.id).zfill(3)}"
     return {
         "message": f"✅ User {name} registered successfully!",
-        "id": new_user.id,
+        "employee_id": employee_id,
         "embeddings_stored": len(embeddings)
-    }
+}
 
 
 # -------------------------
@@ -185,8 +193,17 @@ async def delete_user(name: str, db: Session = Depends(get_db)):
 @router.get("/active")
 async def list_active_users(db: Session = Depends(get_db)):
     users = db.query(User).all()
+
+    def format_employee_id(uid: int):
+        return f"IFNT{str(uid).zfill(3)}"  # no brackets
+
     return [
-        {"id": user.id, "name": user.name, "created_at": user.created_at.isoformat()}
+        {
+            "id": user.id,
+            "employee_id": format_employee_id(user.id),  # send formatted ID
+            "name": user.name,
+            "created_at": user.created_at.isoformat(),
+        }
         for user in users
     ]
 

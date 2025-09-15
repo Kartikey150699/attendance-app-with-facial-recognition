@@ -178,29 +178,40 @@ function ManageAdmin() {
 
       {/* Modal Popup */}
       {popup && (
-        <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-40 z-50">
-          <div className="bg-white p-8 rounded-xl shadow-lg w-[350px] text-center">
-            <h3
-              className={`text-xl font-bold mb-4 ${
-                popup.type === "success" ? "text-green-600" : "text-red-600"
-              }`}
-            >
-              {popup.type === "success" ? "✅ Success" : "❌ Error"}
-            </h3>
-            <p className="text-gray-700 mb-6">{popup.message}</p>
-            <button
-              onClick={closePopup}
-              className={`px-6 py-2 rounded-lg font-bold ${
-                popup.type === "success"
-                  ? "bg-green-500 hover:bg-green-600 text-white"
-                  : "bg-red-500 hover:bg-red-600 text-white"
-              }`}
-            >
-              {popup.type === "success" ? "OK" : "Try Again"}
-            </button>
-          </div>
-        </div>
-      )}
+  <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
+    <div
+      className={`p-8 rounded-2xl shadow-2xl text-center transform transition-all duration-300 scale-100 ${
+        popup.type === "success"
+          ? "bg-green-50 border-2 border-green-400"
+          : "bg-red-50 border-2 border-red-400"
+      }`}
+    >
+      {/* Title */}
+      <h2
+        className={`text-2xl font-extrabold mb-4 ${
+          popup.type === "success" ? "text-green-700" : "text-red-700"
+        }`}
+      >
+        {popup.type === "success" ? "Operation Successful!" : "Error Occurred"}
+      </h2>
+
+      {/* Main message */}
+      <p className="text-lg text-gray-800 mb-6">{popup.message}</p>
+
+      {/* Action button */}
+      <button
+        onClick={closePopup}
+        className={`px-6 py-2 font-bold rounded-lg shadow ${
+          popup.type === "success"
+            ? "bg-green-600 text-white hover:bg-green-700"
+            : "bg-red-600 text-white hover:bg-red-700"
+        }`}
+      >
+        {popup.type === "success" ? "OK" : "Try Again"}
+      </button>
+    </div>
+  </div>
+)}
 
       {/* Body */}
       <div className="flex flex-col items-center flex-grow py-10">

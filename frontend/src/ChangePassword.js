@@ -196,19 +196,32 @@ function ChangePassword() {
 
       {/* Popup */}
       {showPopup && (
-  <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-40">
-    <div className="bg-white p-6 rounded-xl shadow-lg text-center">
-      <p className="text-lg font-semibold text-gray-800 mb-4 flex items-center justify-center gap-2">
-        {popupMessage.includes("successfully") ? (
-          <CheckCircleIcon className="h-6 w-6 text-green-600" />
-        ) : (
-          <XCircleIcon className="h-6 w-6 text-red-600" />
-        )}
-        {popupMessage}
-      </p>
+  <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
+    <div
+      className={`p-8 rounded-2xl shadow-2xl text-center transform transition-all duration-300 scale-100 ${
+        popupMessage.includes("successfully")
+          ? "bg-green-50 border-2 border-green-400"
+          : "bg-red-50 border-2 border-red-400"
+      }`}
+    >
+      {/* Title */}
+      <h2
+        className={`text-2xl font-extrabold mb-4 flex items-center justify-center gap-2 ${
+          popupMessage.includes("successfully")
+            ? "text-green-700"
+            : "text-red-700"
+        }`}
+      >
+        {popupMessage.includes("successfully") ? "✅ Success" : "❌ Error"}
+      </h2>
+
+      {/* Message */}
+      <p className="text-lg text-gray-800 mb-6">{popupMessage}</p>
+
+      {/* Action button */}
       <button
         onClick={handlePopupOk}
-        className="px-6 py-2 bg-indigo-500 hover:bg-indigo-600 text-white font-bold rounded-lg shadow"
+        className="px-6 py-2 font-bold rounded-lg shadow bg-indigo-600 text-white hover:bg-indigo-700"
       >
         OK
       </button>
