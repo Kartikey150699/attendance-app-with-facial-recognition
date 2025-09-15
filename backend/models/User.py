@@ -1,6 +1,11 @@
-from sqlalchemy import Column, Integer, String, Text, DateTime
-from datetime import datetime
+from sqlalchemy import Column, Integer, String, DateTime, Boolean
+from sqlalchemy.dialects.mysql import LONGTEXT  # Import MySQL LONGTEXT type
+from datetime import datetime, timezone, timedelta
 from utils.db import Base
+
+# Define JST timezone
+JST = timezone(timedelta(hours=9))
+
 
 class User(Base):
     __tablename__ = "users"
@@ -9,6 +14,10 @@ class User(Base):
     name = Column(String(100), nullable=False)
     
     # Store embeddings as JSON string (can now hold multiple embeddings, e.g., [normal, masked])
-    embedding = Column(Text, nullable=False)  
+    embedding = Column(LONGTEXT, nullable=False)   # Changed to LONGTEXT
     
-    created_at = Column(DateTime, default=datetime.utcnow)
+    # Save in JST instead of UTC
+    created_at = Column(DateTime, default=lambda: datetime.now(JST))
+
+    # Soft delete flag → if False, user is considered deleted
+    is_active = Column(Boolean, default=True, nullable=False)

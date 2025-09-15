@@ -7,8 +7,8 @@ from deepface import DeepFace
 import tempfile
 import json
 import numpy as np
-from datetime import date, datetime
 import cv2
+from datetime import date, datetime, timezone, timedelta
 
 router = APIRouter(prefix="/attendance", tags=["Attendance"])
 
@@ -22,6 +22,10 @@ def get_db():
     finally:
         db.close()
 
+# -------------------------
+# JST timezone
+# -------------------------
+JST = timezone(timedelta(hours=9))
 
 # -------------------------
 # Cosine similarity
@@ -31,15 +35,12 @@ def cosine_similarity(vec1, vec2):
     v1, v2 = v1 / np.linalg.norm(v1), v2 / np.linalg.norm(v2)
     return float(np.dot(v1, v2))
 
-
 # -------------------------
-# Detect faces (MTCNN + ArcFace, fallback OpenCV DNN for masked faces)
+# Detect faces (MTCNN + ArcFace, fallback OpenCV Haar for masks)
 # -------------------------
 def detect_faces(tmp_path):
     faces = []
-
     try:
-        # Primary detector: MTCNN
         reps = DeepFace.represent(
             img_path=tmp_path,
             model_name="ArcFace",
@@ -56,7 +57,6 @@ def detect_faces(tmp_path):
             w, h = box.get("w", 0), box.get("h", 0)
             confidence = rep.get("confidence", 1.0)
 
-            # Filter invalid
             if w < 50 or h < 50:
                 continue
             if w / (h + 1e-6) < 0.6 or w / (h + 1e-6) > 1.6:
@@ -66,21 +66,20 @@ def detect_faces(tmp_path):
 
             faces.append({
                 "embedding": embedding,
-                "facial_area": {"x": int(box.get("x", 0)), "y": int(box.get("y", 0)),
-                                "w": int(w), "h": int(h)}
+                "facial_area": {
+                    "x": int(box.get("x", 0)),
+                    "y": int(box.get("y", 0)),
+                    "w": int(w),
+                    "h": int(h)
+                }
             })
-
     except Exception as e:
         print("⚠️ MTCNN failed:", e)
 
-    # -------------------------
-    # Fallback: OpenCV Haar Cascade (lightweight, handles masks decently)
-    # -------------------------
+    # Fallback OpenCV Haar
     if not faces:
         try:
             img = cv2.imread(tmp_path)
-            h, w = img.shape[:2]
-
             modelFile = cv2.data.haarcascades + "haarcascade_frontalface_default.xml"
             face_cascade = cv2.CascadeClassifier(modelFile)
 
@@ -105,17 +104,20 @@ def detect_faces(tmp_path):
                 for r in rep:
                     faces.append({
                         "embedding": r.get("embedding"),
-                        "facial_area": {"x": int(x), "y": int(y), "w": int(fw), "h": int(fh)}
+                        "facial_area": {
+                            "x": int(x),
+                            "y": int(y),
+                            "w": int(fw),
+                            "h": int(fh)
+                        }
                     })
-
         except Exception as e:
             print("❌ OpenCV fallback failed:", e)
 
     return faces
 
-
 # -------------------------
-# Preview API (live camera preview)
+# Preview API
 # -------------------------
 @router.post("/preview")
 async def preview_faces(file: UploadFile = None, db: Session = Depends(get_db)):
@@ -132,7 +134,7 @@ async def preview_faces(file: UploadFile = None, db: Session = Depends(get_db)):
         return {"results": []}
 
     results = []
-    users = db.query(User).all()
+    users = db.query(User).filter(User.is_active == True).all()
     threshold = 0.55
 
     for face in faces:
@@ -143,13 +145,12 @@ async def preview_faces(file: UploadFile = None, db: Session = Depends(get_db)):
         if embedding is not None:
             for user in users:
                 stored_embeddings = json.loads(user.embedding)
-
-                # Ensure stored_embeddings is always a list of vectors
                 if isinstance(stored_embeddings[0], (int, float)):
                     stored_embeddings = [stored_embeddings]
 
                 for stored_emb in stored_embeddings:
                     score = cosine_similarity(embedding, stored_emb)
+                    print(f"🔍 Comparing with {user.name}, Score={score:.4f}")
                     if score > best_score:
                         best_match, best_score = user, score
 
@@ -167,7 +168,6 @@ async def preview_faces(file: UploadFile = None, db: Session = Depends(get_db)):
             })
 
     return {"results": results}
-
 
 # -------------------------
 # Mark Attendance API
@@ -193,8 +193,9 @@ async def mark_attendance(
     results = []
     today = date.today()
     action = action.lower().strip()
-    users = db.query(User).all()
+    users = db.query(User).filter(User.is_active == True).all()
     threshold = 0.55
+    fallback_threshold = 0.50
 
     for face in faces:
         embedding = face.get("embedding")
@@ -204,38 +205,30 @@ async def mark_attendance(
         if embedding is not None:
             for user in users:
                 stored_embeddings = json.loads(user.embedding)
-
-                # Ensure stored_embeddings is always a list of vectors
                 if isinstance(stored_embeddings[0], (int, float)):
                     stored_embeddings = [stored_embeddings]
 
                 for stored_emb in stored_embeddings:
                     score = cosine_similarity(embedding, stored_emb)
+                    print(f"➡️ Action={action}, Comparing with {user.name}, Score={score:.4f}")
                     if score > best_score:
                         best_match, best_score = user, score
 
-        print(f"➡️ Action: {action}, Match: {best_match.name if best_match else None}, Score: {best_score}")
-
         if best_match and best_score >= threshold:
-
-            # Work Application Authentication
-            if action == "work-application":
-                results.append({
-                    "name": best_match.name,
-                    "box": [box.get("x"), box.get("y"), box.get("w"), box.get("h")],
-                    "status": "authenticated"
-                })
-                continue
-
-            # Normal Attendance Flow
             record = db.query(Attendance).filter(
                 Attendance.user_id == best_match.id,
                 Attendance.date == today
             ).first()
 
             if not record:
-                record = Attendance(user_id=best_match.id, date=today)
+                record = Attendance(
+                    user_id=best_match.id,
+                    user_name_snapshot=best_match.name,
+                    date=today
+                )
                 db.add(record)
+
+            now_jst = datetime.now(JST).strftime("%H:%M:%S")
 
             if action == "checkin":
                 if record.check_out:
@@ -243,7 +236,7 @@ async def mark_attendance(
                 elif record.check_in:
                     status = "already_checked_in"
                 else:
-                    record.check_in = datetime.now().strftime("%H:%M:%S")
+                    record.check_in = now_jst
                     status = "checked_in"
 
             elif action == "break_start":
@@ -256,7 +249,7 @@ async def mark_attendance(
                 elif record.break_start:
                     status = "already_on_break"
                 else:
-                    record.break_start = datetime.now().strftime("%H:%M:%S")
+                    record.break_start = now_jst
                     status = "break_started"
 
             elif action == "break_end":
@@ -269,7 +262,7 @@ async def mark_attendance(
                 elif record.break_end:
                     status = "already_break_ended"
                 else:
-                    record.break_end = datetime.now().strftime("%H:%M:%S")
+                    record.break_end = now_jst
                     status = "break_ended"
 
             elif action == "checkout":
@@ -280,9 +273,8 @@ async def mark_attendance(
                 elif record.break_start and not record.break_end:
                     status = "cannot_checkout_on_break"
                 else:
-                    record.check_out = datetime.now().strftime("%H:%M:%S")
+                    record.check_out = now_jst
                     status = "checked_out"
-
             else:
                 status = "invalid_action"
 
@@ -293,6 +285,13 @@ async def mark_attendance(
                 "name": best_match.name,
                 "box": [box.get("x"), box.get("y"), box.get("w"), box.get("h")],
                 "status": status
+            })
+
+        elif best_match and best_score >= fallback_threshold:
+            results.append({
+                "name": best_match.name,
+                "box": [box.get("x"), box.get("y"), box.get("w"), box.get("h")],
+                "status": "maybe_match"
             })
         else:
             results.append({

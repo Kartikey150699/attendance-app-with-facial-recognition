@@ -1,12 +1,14 @@
-from fastapi import APIRouter, UploadFile, Form, Depends
+from fastapi import APIRouter, UploadFile, Form, Depends, HTTPException
 from sqlalchemy.orm import Session
 from utils.db import SessionLocal
 from models.User import User
+from models.Attendance import Attendance
 from deepface import DeepFace
 import tempfile
 import json
 import numpy as np
 import cv2
+from pydantic import BaseModel
 
 router = APIRouter(prefix="/users", tags=["Users"])
 
@@ -31,7 +33,7 @@ def cosine_similarity(vec1, vec2):
 
 
 # -------------------------
-# Helper: apply synthetic mask (simple rectangle over lower half of face)
+# Helper: apply synthetic mask
 # -------------------------
 def apply_synthetic_mask(image_path):
     img = cv2.imread(image_path)
@@ -39,11 +41,10 @@ def apply_synthetic_mask(image_path):
         return None
 
     h, w, _ = img.shape
-    mask_color = (0, 0, 0)  # black mask
-    y_start = int(h * 0.55)  # lower half of face
+    mask_color = (0, 0, 0)
+    y_start = int(h * 0.55)
     cv2.rectangle(img, (0, y_start), (w, h), mask_color, -1)
 
-    # Save to temporary file
     tmp_masked = tempfile.NamedTemporaryFile(delete=False, suffix=".jpg")
     cv2.imwrite(tmp_masked.name, img)
     return tmp_masked.name
@@ -55,15 +56,14 @@ def apply_synthetic_mask(image_path):
 @router.post("/register")
 async def register_user(
     name: str = Form(...),
-    files: list[UploadFile] = None,   # multiple screenshots from frontend
+    files: list[UploadFile] = None,
     db: Session = Depends(get_db)
 ):
     if not files or len(files) == 0:
-        return {"error": "No images uploaded"}
+        raise HTTPException(status_code=400, detail="No images uploaded")
 
     embeddings = []
 
-    # Process uploaded frames
     for file in files:
         contents = await file.read()
         with tempfile.NamedTemporaryFile(delete=False, suffix=".jpg") as tmp:
@@ -71,9 +71,7 @@ async def register_user(
             tmp_path = tmp.name
 
         try:
-            # -------------------------
-            # Normal embedding (MTCNN + ArcFace)
-            # -------------------------
+            # Normal embedding
             rep = DeepFace.represent(
                 img_path=tmp_path,
                 model_name="ArcFace",
@@ -87,16 +85,14 @@ async def register_user(
             if rep and "embedding" in rep[0]:
                 embeddings.append(rep[0]["embedding"])
 
-            # -------------------------
-            # Masked embedding (synthetic mask applied)
-            # -------------------------
+            # Masked embedding
             masked_path = apply_synthetic_mask(tmp_path)
             if masked_path:
                 rep_mask = DeepFace.represent(
                     img_path=masked_path,
                     model_name="ArcFace",
                     detector_backend="mtcnn",
-                    enforce_detection=False  # allow lower confidence
+                    enforce_detection=False
                 )
 
                 if isinstance(rep_mask, dict):
@@ -110,24 +106,25 @@ async def register_user(
             continue
 
     if not embeddings:
-        return {"error": "❌ No face detected. Try again!"}
+        raise HTTPException(status_code=400, detail="❌ No face detected. Try again!")
 
-    # -------------------------
-    # Save all embeddings (not averaged)
-    # -------------------------
+    # Prevent duplicate registration
     users = db.query(User).all()
     threshold = 0.55
 
     for user in users:
         stored_embeddings = json.loads(user.embedding)
+        emb_list = stored_embeddings if isinstance(stored_embeddings[0], list) else [stored_embeddings]
 
-        # Check against all embeddings of that user
-        for stored_emb in stored_embeddings if isinstance(stored_embeddings[0], list) else [stored_embeddings]:
+        for stored_emb in emb_list:
             score = cosine_similarity(embeddings[0], stored_emb)
             if score >= threshold:
-                return {"error": f"User '{user.name}' is already registered with this face!"}
+                raise HTTPException(
+                    status_code=400,
+                    detail=f"User '{user.name}' is already registered with this face!"
+                )
 
-    # If same name but different face → allow new row
+    # Create new user
     new_user = User(name=name, embedding=json.dumps(embeddings))
     db.add(new_user)
     db.commit()
@@ -138,3 +135,78 @@ async def register_user(
         "id": new_user.id,
         "embeddings_stored": len(embeddings)
     }
+
+
+# -------------------------
+# Pydantic schema for updating name
+# -------------------------
+class UpdateNameRequest(BaseModel):
+    current_name: str
+    new_name: str
+
+
+# -------------------------
+# Update User Name
+# -------------------------
+@router.put("/update-name")
+async def update_user_name(payload: UpdateNameRequest, db: Session = Depends(get_db)):
+    user = db.query(User).filter(User.name == payload.current_name).first()
+    if not user:
+        raise HTTPException(status_code=404, detail=f"No user found named '{payload.current_name}'")
+
+    user.name = payload.new_name
+    db.commit()
+    return {"message": f"✏️ User name updated from '{payload.current_name}' to '{payload.new_name}'"}
+
+
+# -------------------------
+# Hard Delete User
+# -------------------------
+@router.delete("/delete-by-name/{name}")
+async def delete_user(name: str, db: Session = Depends(get_db)):
+    user = db.query(User).filter(User.name == name).first()
+    if not user:
+        raise HTTPException(status_code=404, detail=f"No user found named '{name}'")
+
+    # Preserve attendance history
+    records = db.query(Attendance).filter(Attendance.user_id == user.id).all()
+    for record in records:
+        record.user_name_snapshot = user.name
+        record.user_id = None
+
+    db.delete(user)
+    db.commit()
+    return {"message": f"🗑️ User {user.name} deleted successfully (attendance preserved)."}
+
+
+# -------------------------
+# List Active Users
+# -------------------------
+@router.get("/active")
+async def list_active_users(db: Session = Depends(get_db)):
+    users = db.query(User).all()
+    return [
+        {"id": user.id, "name": user.name, "created_at": user.created_at.isoformat()}
+        for user in users
+    ]
+
+
+# -------------------------
+# List Deleted Users’ Attendance
+# -------------------------
+@router.get("/deleted-attendance")
+async def deleted_users_attendance(db: Session = Depends(get_db)):
+    records = db.query(Attendance).filter(Attendance.user_id == None).all()
+    return [
+        {
+            "id": r.id,
+            "name_snapshot": r.user_name_snapshot,
+            "date": r.date.isoformat(),
+            "check_in": r.check_in,
+            "break_start": r.break_start,
+            "break_end": r.break_end,
+            "check_out": r.check_out,
+            "status": r.status
+        }
+        for r in records
+    ]

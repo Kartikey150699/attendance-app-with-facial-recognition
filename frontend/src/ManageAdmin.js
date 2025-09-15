@@ -239,7 +239,7 @@ function ManageAdmin() {
   className="px-10 py-6 bg-blue-600 hover:bg-blue-700 hover:scale-105 active:scale-95 transition-transform duration-200 text-white text-xl font-bold rounded-lg shadow flex items-center gap-2"
 >
   <DocumentTextIcon className="h-6 w-6 text-white" />
-  Admin List
+  Show Admin List
 </button>
           </div>
         )}

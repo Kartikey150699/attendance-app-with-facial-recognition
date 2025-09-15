@@ -7,7 +7,8 @@ import { Cog6ToothIcon,
          LockClosedIcon, 
          ArrowUpOnSquareIcon, 
          UsersIcon, 
-         ShieldCheckIcon  
+         ShieldCheckIcon,
+         UserGroupIcon  
 } from "@heroicons/react/24/solid";
 import Footer from "./Footer";
 import HeaderDateTime from "./HeaderDateTime"; 
@@ -90,8 +91,8 @@ function AdminDashboard() {
 
 
           <button className="px-10 py-6 bg-purple-500 hover:bg-purple-600 hover:scale-105 active:scale-95 transition-transform duration-200 text-white text-xl font-bold rounded-lg shadow">
-            <ArrowUpOnSquareIcon className="h-6 w-6 inline-block mr-2" />
-            Export Attendance
+            <UserGroupIcon className="h-6 w-6 inline-block mr-2" />
+            HR Portal
           </button>
 
           {/* Row 3 */}
@@ -109,7 +110,7 @@ function AdminDashboard() {
   className="px-10 py-6 bg-pink-500 hover:bg-pink-600 hover:scale-105 active:scale-95 transition-transform duration-200 text-white text-xl font-bold rounded-lg shadow"
 >
   <ShieldCheckIcon className="h-6 w-6 inline-block mr-2" />
-  Manage Admin
+  Manage Admins
 </button>
 
         </div>

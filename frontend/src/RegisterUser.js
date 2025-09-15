@@ -1,9 +1,13 @@
 import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import Webcam from "react-webcam";
-import { ArrowUturnLeftIcon, UserPlusIcon, IdentificationIcon } from "@heroicons/react/24/solid";
+import {
+  ArrowUturnLeftIcon,
+  UserPlusIcon,
+  IdentificationIcon,
+} from "@heroicons/react/24/solid";
 import Footer from "./Footer";
-import HeaderDateTime from "./HeaderDateTime"; 
+import HeaderDateTime from "./HeaderDateTime";
 
 function RegisterUser() {
   const [name, setName] = useState("");
@@ -27,14 +31,16 @@ function RegisterUser() {
     "Calibrating Sensors...",
     "Encoding Biometric Data...",
     "Securing Identity...",
-    "Finalizing Registration..."
+    "Finalizing Registration...",
   ];
 
+  // Live clock
   useEffect(() => {
     const timer = setInterval(() => setDateTime(new Date()), 1000);
     return () => clearInterval(timer);
   }, []);
 
+  // Button progress text
   useEffect(() => {
     if (!isSubmitting) return;
     let i = 0;
@@ -46,7 +52,7 @@ function RegisterUser() {
     return () => clearInterval(interval);
   }, [isSubmitting]);
 
-  // Detect connected cameras
+  // Camera detection
   useEffect(() => {
     async function fetchDevices() {
       try {
@@ -65,6 +71,7 @@ function RegisterUser() {
     fetchDevices();
   }, [selectedDeviceId]);
 
+  // Submit handler
   const handleSubmit = async () => {
     if (isSubmitting) return;
     if (!name.trim()) {
@@ -102,15 +109,22 @@ function RegisterUser() {
 
       const data = await response.json();
 
-      if (data.error) {
-        setPopupMessage(`❌ ${data.error}`);
+      if (!response.ok) {
+        // Handle FastAPI HTTPException (detail)
+        if (data.detail) {
+          setPopupMessage(`❌ ${data.detail}`);
+        } else if (data.error) {
+          setPopupMessage(`❌ ${data.error}`);
+        } else {
+          setPopupMessage("❌ Registration failed.");
+        }
         setIsSubmitting(false);
-        setName("");
       } else {
         setPopupMessage(`✅ ${data.message}`);
-        setName("");
       }
+
       setShowPopup(true);
+      setName("");
     } catch (error) {
       console.error("Error registering user:", error);
       setPopupMessage("❌ Failed to register user.");
@@ -120,6 +134,7 @@ function RegisterUser() {
     }
   };
 
+  // Popup OK handler
   const handlePopupOk = () => {
     setShowPopup(false);
     if (popupMessage.includes("successfully")) {
@@ -138,57 +153,57 @@ function RegisterUser() {
           <HeaderDateTime />
         </div>
         <h1
-  onClick={() => navigate("/")}
-  className="text-5xl font-bold text-blue-900 cursor-pointer hover:text-blue-700 transition-colors"
->
-  FaceTrack Attendance
-</h1>
+          onClick={() => navigate("/")}
+          className="text-5xl font-bold text-blue-900 cursor-pointer hover:text-blue-700 transition-colors"
+        >
+          FaceTrack Attendance
+        </h1>
         <div className="absolute right-10 top-4 flex flex-col items-end">
-  <button
-  onClick={() => navigate("/admin-dashboard")}
-  className="w-40 px-6 py-3 bg-red-500 hover:bg-red-600 hover:scale-105 active:scale-95 transition-transform duration-200 text-white font-bold rounded-lg shadow flex items-center justify-center gap-2"
->
-  <ArrowUturnLeftIcon className="h-5 w-5 text-white" />
-  <span>Back</span>
-</button>
-          {/* Camera selection dropdown */}
+          <button
+            onClick={() => navigate("/admin-dashboard")}
+            className="w-40 px-6 py-3 bg-red-500 hover:bg-red-600 hover:scale-105 active:scale-95 transition-transform duration-200 text-white font-bold rounded-lg shadow flex items-center justify-center gap-2"
+          >
+            <ArrowUturnLeftIcon className="h-5 w-5 text-white" />
+            <span>Back</span>
+          </button>
+          {/* Camera selection */}
           <div className="flex flex-col items-center mt-10">
-  <label className="text-xl font-semibold text-indigo-700 mb-4">
-    Select Camera
-  </label>
-  <select
-    value={selectedDeviceId}
-    onChange={(e) => {
-      setSelectedDeviceId(e.target.value);
-      localStorage.setItem("selectedCamera", e.target.value);
-    }}
-    className="px-4 py-2 border-2 border-indigo-400 rounded-lg shadow-md text-base w-72 focus:outline-none focus:ring-2 focus:ring-indigo-500"
-  >
-    {devices.map((device, idx) => (
-      <option key={idx} value={device.deviceId}>
-        {device.label || `Camera ${idx + 1}`}
-      </option>
-    ))}
-  </select>
-</div>
-
-
+            <label className="text-xl font-semibold text-indigo-700 mb-4">
+              Select Camera
+            </label>
+            <select
+              value={selectedDeviceId}
+              onChange={(e) => {
+                setSelectedDeviceId(e.target.value);
+                localStorage.setItem("selectedCamera", e.target.value);
+              }}
+              className="px-4 py-2 border-2 border-indigo-400 rounded-lg shadow-md text-base w-72 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+            >
+              {devices.map((device, idx) => (
+                <option key={idx} value={device.deviceId}>
+                  {device.label || `Camera ${idx + 1}`}
+                </option>
+              ))}
+            </select>
+          </div>
         </div>
       </div>
 
       {/* Body */}
       <div className="flex flex-col items-center flex-grow py-6">
         <h2 className="text-3xl font-bold text-indigo-700 mb-6 flex items-center justify-center gap-2">
-  <UserPlusIcon className="h-8 w-8 text-indigo-700" />
-  Register New User
-</h2>
+          <UserPlusIcon className="h-8 w-8 text-indigo-700" />
+          Register New User
+        </h2>
 
         <div className="flex w-full max-w-6xl px-10 mt-20">
           {/* Camera */}
           <div className="relative flex justify-center items-center w-1/2">
             <div
               className={`relative rounded-lg shadow-lg border-4 ${
-                isSubmitting ? "border-green-400 animate-pulse" : "border-indigo-500"
+                isSubmitting
+                  ? "border-green-400 animate-pulse"
+                  : "border-indigo-500"
               }`}
             >
               <Webcam
@@ -228,27 +243,27 @@ function RegisterUser() {
               className="w-80 px-4 py-2 mb-6 border rounded-lg shadow focus:outline-none focus:ring-2 focus:ring-indigo-400 disabled:bg-gray-200"
             />
             <button
-  onClick={handleSubmit}
-  disabled={isSubmitting}
-  className={`w-80 py-3 font-bold rounded-lg shadow transition-transform ${
-    isSubmitting
-      ? "bg-gray-400 text-white cursor-not-allowed"
-      : "bg-green-500 hover:bg-green-600 hover:scale-105 active:scale-95 text-white"
-  }`}
->
-  <div className="flex items-center justify-center gap-2">
-    <IdentificationIcon className="h-5 w-5 text-white" />
-    <span>{isSubmitting ? buttonText : "Register"}</span>
-  </div>
-</button>
+              onClick={handleSubmit}
+              disabled={isSubmitting}
+              className={`w-80 py-3 font-bold rounded-lg shadow transition-transform ${
+                isSubmitting
+                  ? "bg-gray-400 text-white cursor-not-allowed"
+                  : "bg-green-500 hover:bg-green-600 hover:scale-105 active:scale-95 text-white"
+              }`}
+            >
+              <div className="flex items-center justify-center gap-2">
+                <IdentificationIcon className="h-5 w-5 text-white" />
+                <span>{isSubmitting ? buttonText : "Register"}</span>
+              </div>
+            </button>
           </div>
         </div>
       </div>
 
       {/* Popup */}
       {showPopup && (
-        <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-40">
-          <div className="bg-white p-6 rounded-xl shadow-lg text-center">
+        <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-40 z-50">
+          <div className="bg-white p-6 rounded-xl shadow-lg text-center w-96">
             <p className="text-lg font-semibold text-gray-800 mb-4">
               {popupMessage}
             </p>
@@ -262,7 +277,6 @@ function RegisterUser() {
         </div>
       )}
 
-      {/* Footer */}
       <Footer />
 
       {/* Animations */}
