@@ -11,6 +11,9 @@ from datetime import date, datetime
 
 router = APIRouter(prefix="/attendance", tags=["Attendance"])
 
+# -------------------------
+# DB session dependency
+# -------------------------
 def get_db():
     db = SessionLocal()
     try:
@@ -18,19 +21,25 @@ def get_db():
     finally:
         db.close()
 
+# -------------------------
+# Cosine similarity
+# -------------------------
 def cosine_similarity(vec1, vec2):
     v1, v2 = np.array(vec1, dtype=float), np.array(vec2, dtype=float)
     v1, v2 = v1 / np.linalg.norm(v1), v2 / np.linalg.norm(v2)
     return float(np.dot(v1, v2))
 
+# -------------------------
+# Detect faces (DeepFace embeddings)
+# -------------------------
 def detect_faces(tmp_path):
     faces = []
     try:
         # Use SAME model + detector as users.py -- Very Important otherwise Model won't work !!!
         reps = DeepFace.represent(
             img_path=tmp_path,
-            model_name="ArcFace", # must match users.py (Model and Detector)
-            detector_backend="mtcnn", # IMPORTANT COMMENT -- USE "RetinaFace" as detector if we deploy on cloud, but cannot use it on computer because very slow on CPUs, works perfect with GPUs
+            model_name="ArcFace",  # must match users.py (Model and Detector)
+            detector_backend="mtcnn",  # IMPORTANT COMMENT -- USE "RetinaFace" as detector if we deploy on cloud, but cannot use it on computer because very slow on CPUs, works perfect with GPUs
             enforce_detection=False
         )
 
@@ -43,6 +52,7 @@ def detect_faces(tmp_path):
             w, h = box.get("w", 0), box.get("h", 0)
             confidence = rep.get("confidence", 1.0)
 
+            # Filter invalid faces
             if w < 50 or h < 50:
                 continue
             if w / (h + 1e-6) < 0.6 or w / (h + 1e-6) > 1.6:
@@ -65,6 +75,9 @@ def detect_faces(tmp_path):
 
     return faces
 
+# -------------------------
+# Preview API (used for live camera preview)
+# -------------------------
 @router.post("/preview")
 async def preview_faces(file: UploadFile = None, db: Session = Depends(get_db)):
     if not file:
@@ -81,7 +94,7 @@ async def preview_faces(file: UploadFile = None, db: Session = Depends(get_db)):
 
     results = []
     users = db.query(User).all()
-    threshold = 0.55
+    threshold = 0.55  # similarity threshold
 
     for face in faces:
         embedding = face.get("embedding")
@@ -110,6 +123,9 @@ async def preview_faces(file: UploadFile = None, db: Session = Depends(get_db)):
 
     return {"results": results}
 
+# -------------------------
+# Mark Attendance API
+# -------------------------
 @router.post("/mark")
 async def mark_attendance(
     action: str = Form(...),
@@ -149,6 +165,20 @@ async def mark_attendance(
         print(f"➡️ Action: {action}, Match: {best_match.name if best_match else None}, Score: {best_score}")
 
         if best_match and best_score >= threshold:
+            # -------------------------
+            # Work Application Authentication
+            # -------------------------
+            if action == "work-application":
+                results.append({
+                    "name": best_match.name,
+                    "box": [box.get("x"), box.get("y"), box.get("w"), box.get("h")],
+                    "status": "authenticated"
+                })
+                continue  # Skip attendance logging
+
+            # -------------------------
+            # Normal Attendance Flow
+            # -------------------------
             record = db.query(Attendance).filter(
                 Attendance.user_id == best_match.id,
                 Attendance.date == today
@@ -158,15 +188,21 @@ async def mark_attendance(
                 record = Attendance(user_id=best_match.id, date=today)
                 db.add(record)
 
+            # -------------------------
+            # Check-In
+            # -------------------------
             if action == "checkin":
                 if record.check_out:
-                    status ="already_checked_out"
+                    status = "already_checked_out"
                 elif record.check_in:
                     status = "already_checked_in"
                 else:
                     record.check_in = datetime.now().strftime("%H:%M:%S")
                     status = "checked_in"
 
+            # -------------------------
+            # Break Start
+            # -------------------------
             elif action == "break_start":
                 if not record.check_in:
                     status = "checkin_missing"
@@ -180,6 +216,9 @@ async def mark_attendance(
                     record.break_start = datetime.now().strftime("%H:%M:%S")
                     status = "break_started"
 
+            # -------------------------
+            # Break End
+            # -------------------------
             elif action == "break_end":
                 if not record.check_in:
                     status = "checkin_missing"
@@ -193,6 +232,9 @@ async def mark_attendance(
                     record.break_end = datetime.now().strftime("%H:%M:%S")
                     status = "break_ended"
 
+            # -------------------------
+            # Checkout
+            # -------------------------
             elif action == "checkout":
                 if not record.check_in:
                     status = "checkin_missing"
@@ -216,6 +258,9 @@ async def mark_attendance(
                 "status": status
             })
         else:
+            # -------------------------
+            # No match found
+            # -------------------------
             results.append({
                 "name": "Unknown",
                 "box": [box.get("x"), box.get("y"), box.get("w"), box.get("h")],

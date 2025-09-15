@@ -7,6 +7,9 @@ import RegisterUser from "./RegisterUser";
 import ManageAdmin from "./ManageAdmin";
 import ManageUsers from "./ManageUsers";
 import ChangePassword from "./ChangePassword";
+import PrivacyPolicy from "./PrivacyPolicy";
+import TermsAndConditions from "./TermsAndConditions";
+import WorkApplication from "./WorkApplication";
 
 function AnimatedRoutes() {
   const location = useLocation();
@@ -45,6 +48,9 @@ function AnimatedRoutes() {
         <Route path="/manage-admin" element={<ManageAdmin />} />
         <Route path="/manage-users" element={<ManageUsers />} />
         <Route path="/change-password" element={<ChangePassword />} />
+        <Route path="/privacy-policy" element={<PrivacyPolicy />} />
+        <Route path="/terms-and-conditions" element={<TermsAndConditions />} />
+        <Route path="/work-application" element={<WorkApplication />} />
       </Routes>
     </AnimatePresence>
   );

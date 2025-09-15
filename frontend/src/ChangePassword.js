@@ -8,6 +8,7 @@ import { EyeIcon,
   CheckCircleIcon,
   XCircleIcon
 } from "@heroicons/react/24/solid";
+import Footer from "./Footer";
 
 function ChangePassword() {
   const [dateTime, setDateTime] = useState(new Date());
@@ -225,9 +226,7 @@ function ChangePassword() {
   </div>
 )}
       {/* Footer */}
-      <footer className="w-full py-4 bg-blue-900 text-center text-xl text-white mt-auto">
-        © 2025 FaceTrack. All rights reserved - Kartikey Koli - IFNET
-      </footer>
+      <Footer />
     </div>
   );
 }

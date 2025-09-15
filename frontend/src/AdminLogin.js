@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { EyeIcon, EyeSlashIcon, LockClosedIcon, ArrowUturnLeftIcon } from "@heroicons/react/24/solid";
+import Footer from "./Footer";
 
 function AdminLogin() {
   const [dateTime, setDateTime] = useState(new Date());
@@ -144,9 +145,7 @@ function AdminLogin() {
       </div>
 
       {/* Footer */}
-      <footer className="w-full py-4 bg-blue-900 text-center text-xl text-white mt-auto">
-        © 2025 FaceTrack. All rights reserved - Kartikey Koli - IFNET
-      </footer>
+      <Footer />
     </div>
   );
 }
