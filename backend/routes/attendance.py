@@ -11,9 +11,7 @@ from datetime import date, datetime
 
 router = APIRouter(prefix="/attendance", tags=["Attendance"])
 
-# -------------------------
 # DB session dependency
-# -------------------------
 def get_db():
     db = SessionLocal()
     try:
@@ -21,17 +19,14 @@ def get_db():
     finally:
         db.close()
 
-# -------------------------
 # Cosine similarity
-# -------------------------
 def cosine_similarity(vec1, vec2):
     v1, v2 = np.array(vec1, dtype=float), np.array(vec2, dtype=float)
     v1, v2 = v1 / np.linalg.norm(v1), v2 / np.linalg.norm(v2)
     return float(np.dot(v1, v2))
 
-# -------------------------
-# Detect faces (DeepFace embeddings)
-# -------------------------
+
+# Detect faces (DeepFace embeddings with MTCNN + ArcFace)
 def detect_faces(tmp_path):
     faces = []
     try:
@@ -39,7 +34,7 @@ def detect_faces(tmp_path):
         reps = DeepFace.represent(
             img_path=tmp_path,
             model_name="ArcFace",  # must match users.py (Model and Detector)
-            detector_backend="mtcnn",  # IMPORTANT COMMENT -- USE "RetinaFace" as detector if we deploy on cloud, but cannot use it on computer because very slow on CPUs, works perfect with GPUs
+            detector_backend="mtcnn",  # IMPORTANT COMMENT -- USE "RetinaFace" as detector if we deploy on cloud, but too slow on CPU
             enforce_detection=False
         )
 
@@ -75,9 +70,7 @@ def detect_faces(tmp_path):
 
     return faces
 
-# -------------------------
 # Preview API (used for live camera preview)
-# -------------------------
 @router.post("/preview")
 async def preview_faces(file: UploadFile = None, db: Session = Depends(get_db)):
     if not file:
@@ -123,9 +116,7 @@ async def preview_faces(file: UploadFile = None, db: Session = Depends(get_db)):
 
     return {"results": results}
 
-# -------------------------
 # Mark Attendance API
-# -------------------------
 @router.post("/mark")
 async def mark_attendance(
     action: str = Form(...),
@@ -165,9 +156,8 @@ async def mark_attendance(
         print(f"➡️ Action: {action}, Match: {best_match.name if best_match else None}, Score: {best_score}")
 
         if best_match and best_score >= threshold:
-            # -------------------------
+
             # Work Application Authentication
-            # -------------------------
             if action == "work-application":
                 results.append({
                     "name": best_match.name,
@@ -176,9 +166,7 @@ async def mark_attendance(
                 })
                 continue  # Skip attendance logging
 
-            # -------------------------
             # Normal Attendance Flow
-            # -------------------------
             record = db.query(Attendance).filter(
                 Attendance.user_id == best_match.id,
                 Attendance.date == today
@@ -188,9 +176,7 @@ async def mark_attendance(
                 record = Attendance(user_id=best_match.id, date=today)
                 db.add(record)
 
-            # -------------------------
             # Check-In
-            # -------------------------
             if action == "checkin":
                 if record.check_out:
                     status = "already_checked_out"
@@ -200,25 +186,21 @@ async def mark_attendance(
                     record.check_in = datetime.now().strftime("%H:%M:%S")
                     status = "checked_in"
 
-            # -------------------------
             # Break Start
-            # -------------------------
             elif action == "break_start":
                 if not record.check_in:
                     status = "checkin_missing"
                 elif record.check_out:
                     status = "already_checked_out"
                 elif record.break_end:
-                    status = "already_break_ended"  # no restart after ending
+                    status = "already_break_ended"
                 elif record.break_start:
                     status = "already_on_break"
                 else:
                     record.break_start = datetime.now().strftime("%H:%M:%S")
                     status = "break_started"
 
-            # -------------------------
             # Break End
-            # -------------------------
             elif action == "break_end":
                 if not record.check_in:
                     status = "checkin_missing"
@@ -232,9 +214,7 @@ async def mark_attendance(
                     record.break_end = datetime.now().strftime("%H:%M:%S")
                     status = "break_ended"
 
-            # -------------------------
             # Checkout
-            # -------------------------
             elif action == "checkout":
                 if not record.check_in:
                     status = "checkin_missing"
@@ -258,9 +238,7 @@ async def mark_attendance(
                 "status": status
             })
         else:
-            # -------------------------
             # No match found
-            # -------------------------
             results.append({
                 "name": "Unknown",
                 "box": [box.get("x"), box.get("y"), box.get("w"), box.get("h")],

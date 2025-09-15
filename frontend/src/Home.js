@@ -14,6 +14,7 @@ import {
 import Webcam from "react-webcam";
 import { useNavigate } from "react-router-dom";
 import Footer from "./Footer";
+import HeaderDateTime from "./HeaderDateTime"; 
 
 function Home() {
   const [dateTime, setDateTime] = useState(new Date());
@@ -163,19 +164,7 @@ function Home() {
       {/* Header */}
       <div className="w-full flex items-center justify-center px-10 py-4 bg-indigo-300 shadow-md relative">
         <div className="absolute left-10 text-blue-800 text-xl font-bold">
-          {dateTime.toLocaleDateString("en-US", {
-            weekday: "short",
-            year: "numeric",
-            month: "short",
-            day: "numeric",
-          })}{" "}
-          —{" "}
-          {dateTime.toLocaleTimeString("en-US", {
-            hour: "2-digit",
-            minute: "2-digit",
-            second: "2-digit",
-            hour12: true,
-          })}
+          <HeaderDateTime />
         </div>
 
         <h1
@@ -208,7 +197,7 @@ function Home() {
               }}
               className="w-[70%] h-48 bg-green-500 hover:bg-green-600 hover:scale-105 active:scale-95 
                        transition-transform duration-200 text-white text-4xl font-semibold 
-                       rounded-xl shadow-md flex flex-col items-center justify-center"
+                       rounded-xl shadow-lg flex flex-col items-center justify-center"
             >
               <CheckCircleIcon className="h-16 w-16 mb-4" />
               <span>Check In</span>
@@ -222,7 +211,7 @@ function Home() {
               }}
               className="w-[70%] h-48 bg-red-500 hover:bg-red-600 hover:scale-105 active:scale-95 
                        transition-transform duration-200 text-white text-4xl font-semibold 
-                       rounded-xl shadow-md flex flex-col items-center justify-center"
+                       rounded-xl shadow-lg flex flex-col items-center justify-center"
             >
               <ClockIcon className="h-16 w-16 mb-4" />
               <span>Check Out</span>
@@ -236,7 +225,7 @@ function Home() {
               }}
               className="w-[70%] h-48 bg-yellow-400 hover:bg-yellow-500 hover:scale-105 active:scale-95 
                        transition-transform duration-200 text-white text-4xl font-semibold 
-                       rounded-xl shadow-md flex flex-col items-center justify-center"
+                       rounded-xl shadow-lg flex flex-col items-center justify-center"
             >
               <PauseCircleIcon className="h-16 w-16 mb-4" />
               <span>Break</span>
@@ -250,7 +239,7 @@ function Home() {
               }}
               className="w-[70%] h-48 bg-purple-500 hover:bg-purple-600 hover:scale-105 active:scale-95 
                        transition-transform duration-200 text-white text-4xl font-semibold 
-                       rounded-xl shadow-md flex flex-col items-center justify-center"
+                       rounded-xl shadow-lg flex flex-col items-center justify-center"
             >
               <ClipboardDocumentListIcon className="h-16 w-16 mb-4" />
               <span>Work Application</span>

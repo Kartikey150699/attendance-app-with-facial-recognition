@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { XMarkIcon } from "@heroicons/react/24/solid";
+import HeaderDateTime from "./HeaderDateTime"; 
 
 function TermsAndConditions() {
   const [dateTime, setDateTime] = useState(new Date());
@@ -17,19 +18,7 @@ function TermsAndConditions() {
       <div className="w-full flex items-center justify-center px-10 py-4 bg-indigo-300 shadow-md relative">
         {/* Date & Time */}
         <div className="absolute left-10 text-blue-800 text-xl font-bold">
-          {dateTime.toLocaleDateString("en-US", {
-            weekday: "short",
-            year: "numeric",
-            month: "short",
-            day: "numeric",
-          })}{" "}
-          —{" "}
-          {dateTime.toLocaleTimeString("en-US", {
-            hour: "2-digit",
-            minute: "2-digit",
-            second: "2-digit",
-            hour12: true,
-          })}
+          <HeaderDateTime />
         </div>
 
         {/* Title */}

@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { EyeIcon, EyeSlashIcon, LockClosedIcon, ArrowUturnLeftIcon } from "@heroicons/react/24/solid";
 import Footer from "./Footer";
+import HeaderDateTime from "./HeaderDateTime"; 
 
 function AdminLogin() {
   const [dateTime, setDateTime] = useState(new Date());
@@ -53,19 +54,7 @@ function AdminLogin() {
       <div className="w-full flex items-center justify-between px-10 py-4 bg-indigo-300 shadow-md mb-10">
         {/* Left → Date & Time */}
         <div className="text-blue-800 text-xl font-bold">
-          {dateTime.toLocaleDateString("en-US", {
-            weekday: "short",
-            year: "numeric",
-            month: "short",
-            day: "numeric",
-          })}{" "}
-          —{" "}
-          {dateTime.toLocaleTimeString("en-US", {
-            hour: "2-digit",
-            minute: "2-digit",
-            second: "2-digit",
-            hour12: true,
-          })}
+          <HeaderDateTime />
         </div>
 
         <div className="flex-1 flex justify-start pl-40">

@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import Webcam from "react-webcam";
 import { ArrowUturnLeftIcon, UserPlusIcon, IdentificationIcon } from "@heroicons/react/24/solid";
 import Footer from "./Footer";
+import HeaderDateTime from "./HeaderDateTime"; 
 
 function RegisterUser() {
   const [name, setName] = useState("");
@@ -134,19 +135,7 @@ function RegisterUser() {
       {/* Header */}
       <div className="w-full flex items-center justify-center px-10 py-4 bg-indigo-300 shadow-md relative">
         <div className="absolute left-10 text-blue-800 text-xl font-bold">
-          {dateTime.toLocaleDateString("en-US", {
-            weekday: "short",
-            year: "numeric",
-            month: "short",
-            day: "numeric",
-          })}{" "}
-          —{" "}
-          {dateTime.toLocaleTimeString("en-US", {
-            hour: "2-digit",
-            minute: "2-digit",
-            second: "2-digit",
-            hour12: true,
-          })}
+          <HeaderDateTime />
         </div>
         <h1
   onClick={() => navigate("/")}
