@@ -7,5 +7,8 @@ class User(Base):
 
     id = Column(Integer, primary_key=True, index=True)
     name = Column(String(100), nullable=False)
-    embedding = Column(Text, nullable=False)  # face embedding stored as JSON
+    
+    # Store embeddings as JSON string (can now hold multiple embeddings, e.g., [normal, masked])
+    embedding = Column(Text, nullable=False)  
+    
     created_at = Column(DateTime, default=datetime.utcnow)
