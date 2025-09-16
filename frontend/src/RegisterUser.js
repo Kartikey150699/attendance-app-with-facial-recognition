@@ -209,16 +209,17 @@ function RegisterUser() {
               }`}
             >
               <Webcam
-                ref={webcamRef}
-                audio={false}
-                screenshotFormat="image/jpeg"
-                className="rounded-lg transform scale-x-[-1]"
-                videoConstraints={{
-                  width: 520,
-                  height: 380,
-                  deviceId: selectedDeviceId,
-                }}
-              />
+  key={selectedDeviceId}  // re-mounts webcam when dropdown changes
+  ref={webcamRef}
+  audio={false}
+  screenshotFormat="image/jpeg"
+  className="rounded-lg transform scale-x-[-1]"
+  videoConstraints={{
+    width: 520,
+    height: 380,
+    deviceId: selectedDeviceId ? { exact: selectedDeviceId } : undefined,
+  }}
+/>
               {isSubmitting && (
                 <div className="absolute top-0 left-0 w-full h-full overflow-hidden rounded-lg">
                   <div className="w-full h-1 animate-scan glow-line"></div>

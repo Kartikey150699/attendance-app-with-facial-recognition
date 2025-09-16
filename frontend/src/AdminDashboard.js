@@ -75,7 +75,9 @@ function AdminDashboard() {
             Register User
           </button>
 
-          <button className="px-10 py-6 bg-blue-500 hover:bg-blue-600 hover:scale-105 active:scale-95 transition-transform duration-200 text-white text-xl font-bold rounded-lg shadow">
+          <button 
+          onClick={() => navigate("/attendance-logs")}
+          className="px-10 py-6 bg-blue-500 hover:bg-blue-600 hover:scale-105 active:scale-95 transition-transform duration-200 text-white text-xl font-bold rounded-lg shadow">
             <DocumentTextIcon className="h-6 w-6 inline-block mr-2" />
             View Attendance Logs
           </button>

@@ -176,6 +176,7 @@ async def preview_faces(file: UploadFile = None, db: Session = Depends(get_db)):
 async def mark_attendance(
     action: str = Form(...),
     file: UploadFile = None,
+    employee_id: str = Form(None),  
     db: Session = Depends(get_db),
 ):
     if not file:
@@ -193,9 +194,10 @@ async def mark_attendance(
     results = []
     today = date.today()
     action = action.lower().strip()
+    print(f"📌 Received action: {action}")
     users = db.query(User).filter(User.is_active == True).all()
-    threshold = 0.55
-    fallback_threshold = 0.50
+    threshold = 0.65
+    fallback_threshold = 0.60
 
     for face in faces:
         embedding = face.get("embedding")
@@ -215,6 +217,39 @@ async def mark_attendance(
                         best_match, best_score = user, score
 
         if best_match and best_score >= threshold:
+
+            # -------------------------
+            # Work Application Login Flow (Face + Employee ID)
+            # -------------------------
+            if action == "work-application-login":
+                expected_emp_id = f"IFNT{str(best_match.id).zfill(3)}"
+                if employee_id == expected_emp_id:
+                    status = "logged_in"
+                else:
+                    status = "login_failed"
+
+                results.append({
+                    "name": best_match.name,
+                    "employee_id": expected_emp_id,
+                    "box": [box.get("x"), box.get("y"), box.get("w"), box.get("h")],  # ✅ Always include box
+                    "status": status
+                })
+                continue
+
+            # -------------------------
+            # Old Work Application (face only)
+            # -------------------------
+            if action == "work-application":
+                results.append({
+                    "name": best_match.name,
+                    "box": [box.get("x"), box.get("y"), box.get("w"), box.get("h")],  # ✅ Always include box
+                    "status": "logged_in"
+                })
+                continue
+
+            # -------------------------
+            # Normal Attendance Flow
+            # -------------------------
             record = db.query(Attendance).filter(
                 Attendance.user_id == best_match.id,
                 Attendance.date == today
@@ -283,20 +318,20 @@ async def mark_attendance(
 
             results.append({
                 "name": best_match.name,
-                "box": [box.get("x"), box.get("y"), box.get("w"), box.get("h")],
+                "box": [box.get("x"), box.get("y"), box.get("w"), box.get("h")], 
                 "status": status
             })
 
         elif best_match and best_score >= fallback_threshold:
             results.append({
                 "name": best_match.name,
-                "box": [box.get("x"), box.get("y"), box.get("w"), box.get("h")],
+                "box": [box.get("x"), box.get("y"), box.get("w"), box.get("h")], 
                 "status": "maybe_match"
             })
         else:
             results.append({
                 "name": "Unknown",
-                "box": [box.get("x"), box.get("y"), box.get("w"), box.get("h")],
+                "box": [box.get("x"), box.get("y"), box.get("w"), box.get("h")], 
                 "status": "unknown"
             })
 

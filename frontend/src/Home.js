@@ -68,7 +68,13 @@ function Home() {
     const blob = await (await fetch(imageSrc)).blob();
     const formData = new FormData();
     formData.append("file", blob, "frame.jpg");
-    formData.append("action", subAction || action);
+
+    // Use proper action mapping
+    if (action === "work-application") {
+      formData.append("action", "login"); // send as login
+    } else {
+      formData.append("action", subAction || action);
+    }
 
     try {
       const response = await fetch(`http://localhost:8000/attendance/${mode}`, {
@@ -109,9 +115,10 @@ function Home() {
         });
 
         const msgs = mappedFaces.map((face) => {
-          if (action === "work-application" && face.status === "authenticated") {
+          if (action === "work-application" && face.status === "logged_in") {
+            // navigate to Work Application page
             navigate("/work-application", { state: { user: face.name } });
-            return `✅ ${face.name} authenticated for Work Application — ${currentDateTime}`;
+            return `✅ ${face.name} logged in to Work Application — ${currentDateTime}`;
           }
 
           if (face.status === "checked_in")
@@ -154,7 +161,7 @@ function Home() {
     if (status === "checked_out") return "border-blue-500";
     if (status === "already_checked_out") return "border-yellow-400";
     if (status === "unknown") return "border-red-600";
-    if (status === "authenticated") return "border-green-500";
+    if (status === "logged_in") return "border-green-500"; 
     if (status === "preview") return "border-green-300";
     return "border-gray-300";
   };
@@ -234,8 +241,7 @@ function Home() {
             {/* Work Application */}
             <button
               onClick={() => {
-                setAction("work-application");
-                setShowCamera(true);
+                navigate("/work-application-login"); // 🔹 redirect instead of opening camera
               }}
               className="w-[70%] h-48 bg-purple-500 hover:bg-purple-600 hover:scale-105 active:scale-95 
                        transition-transform duration-200 text-white text-4xl font-semibold 
@@ -249,27 +255,28 @@ function Home() {
           <div className="flex flex-col items-center w-full gap-6 mt-10">
             {/* Camera Selection Dropdown */}
             <div className="flex flex-col items-center mt-0 mb-0">
-  <label className="text-xl font-semibold text-indigo-700 mb-2">
-    Select Camera
-  </label>
-  <select
-    value={selectedCamera || ""}
-    onChange={(e) => setSelectedCamera(e.target.value)}
-    className="px-4 py-2 border-2 border-indigo-400 rounded-lg shadow-md text-base w-72 focus:outline-none focus:ring-2 focus:ring-indigo-500"
-  >
-    {cameras.map((cam, idx) => (
-      <option key={cam.deviceId} value={cam.deviceId}>
-        {cam.label || `Camera ${idx + 1}`}
-      </option>
-    ))}
-  </select>
-</div>
+              <label className="text-xl font-semibold text-indigo-700 mb-2">
+                Select Camera
+              </label>
+              <select
+                value={selectedCamera || ""}
+                onChange={(e) => setSelectedCamera(e.target.value)}
+                className="px-4 py-2 border-2 border-indigo-400 rounded-lg shadow-md text-base w-72 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              >
+                {cameras.map((cam, idx) => (
+                  <option key={cam.deviceId} value={cam.deviceId}>
+                    {cam.label || `Camera ${idx + 1}`}
+                  </option>
+                ))}
+              </select>
+            </div>
 
             <div className="flex w-full justify-center gap-6">
               {/* Camera */}
               <div className="relative">
                 <div className="relative border-[6px] border-blue-800 rounded-lg shadow-2xl inline-block">
                   <Webcam
+                    key={selectedCamera}
                     audio={false}
                     ref={webcamRef}
                     screenshotFormat="image/jpeg"
@@ -277,7 +284,7 @@ function Home() {
                     videoConstraints={{
                       width: videoWidth,
                       height: videoHeight,
-                      deviceId: selectedCamera || undefined,
+                      deviceId: selectedCamera ? { exact: selectedCamera } : undefined,
                     }}
                   />
                 </div>
