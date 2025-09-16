@@ -31,11 +31,10 @@ function AdminDashboard() {
   }, []);
 
   const handleLogout = () => {
-    // Clear admin info on logout
-    localStorage.removeItem("currentAdmin");
-    setCurrentAdmin(null);
-    navigate("/admin-login");
-  };
+  localStorage.removeItem("admin_username");
+  navigate("/admin-login");
+  window.location.reload(); // ✅ ensures nothing stays cached
+};
 
   return (
     <div className="flex flex-col min-h-screen bg-gradient-to-tr from-gray-100 via-indigo-100 to-blue-200">

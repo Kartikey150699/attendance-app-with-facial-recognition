@@ -63,7 +63,7 @@ def detect_faces(tmp_path):
         reps = DeepFace.represent(
             img_path=tmp_path,
             model_name="ArcFace",
-            detector_backend="mtcnn",
+            detector_backend="mtcnn", #retinaface use for deploy
             enforce_detection=False
         )
 
