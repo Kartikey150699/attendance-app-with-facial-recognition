@@ -2,7 +2,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 # absolute imports
-from routes import users, attendance, admin
+from routes import users, attendance, admin, logs
 from utils.db import Base, engine
 from models import User, Attendance, Admin
 
@@ -31,6 +31,7 @@ app.add_middleware(
 app.include_router(users.router)
 app.include_router(attendance.router)
 app.include_router(admin.router)
+app.include_router(logs.router) 
 
 # Root endpoint
 @app.get("/")

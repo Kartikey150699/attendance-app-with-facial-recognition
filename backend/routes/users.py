@@ -1,4 +1,4 @@
-from fastapi import APIRouter, UploadFile, Form, Depends, HTTPException
+from fastapi import APIRouter, UploadFile, Form, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
 from utils.db import SessionLocal
 from models.User import User
@@ -22,13 +22,11 @@ def get_db():
     finally:
         db.close()
 
-
 # -------------------------
 # Employee ID formatter
 # -------------------------
 def format_employee_id(user_id: int) -> str:
-    return f"IFNT{{{user_id:03d}}}"
-
+    return f"IFNT{user_id:03d}"
 
 # -------------------------
 # Cosine similarity helper
@@ -37,7 +35,6 @@ def cosine_similarity(vec1, vec2):
     v1, v2 = np.array(vec1, dtype=float), np.array(vec2, dtype=float)
     v1, v2 = v1 / np.linalg.norm(v1), v2 / np.linalg.norm(v2)
     return float(np.dot(v1, v2))
-
 
 # -------------------------
 # Helper: apply synthetic mask
@@ -55,7 +52,6 @@ def apply_synthetic_mask(image_path):
     tmp_masked = tempfile.NamedTemporaryFile(delete=False, suffix=".jpg")
     cv2.imwrite(tmp_masked.name, img)
     return tmp_masked.name
-
 
 # -------------------------
 # Register User
@@ -85,10 +81,8 @@ async def register_user(
                 detector_backend="mtcnn",
                 enforce_detection=True
             )
-
             if isinstance(rep, dict):
                 rep = [rep]
-
             if rep and "embedding" in rep[0]:
                 embeddings.append(rep[0]["embedding"])
 
@@ -101,10 +95,8 @@ async def register_user(
                     detector_backend="mtcnn",
                     enforce_detection=False
                 )
-
                 if isinstance(rep_mask, dict):
                     rep_mask = [rep_mask]
-
                 if rep_mask and "embedding" in rep_mask[0]:
                     embeddings.append(rep_mask[0]["embedding"])
 
@@ -118,11 +110,9 @@ async def register_user(
     # Prevent duplicate registration
     users = db.query(User).all()
     threshold = 0.55
-
     for user in users:
         stored_embeddings = json.loads(user.embedding)
         emb_list = stored_embeddings if isinstance(stored_embeddings[0], list) else [stored_embeddings]
-
         for stored_emb in emb_list:
             score = cosine_similarity(embeddings[0], stored_emb)
             if score >= threshold:
@@ -137,13 +127,12 @@ async def register_user(
     db.commit()
     db.refresh(new_user)
 
-    employee_id = f"IFNT{str(new_user.id).zfill(3)}"
+    employee_id = format_employee_id(new_user.id)
     return {
         "message": f"✅ User {name} registered successfully!",
         "employee_id": employee_id,
         "embeddings_stored": len(embeddings)
-}
-
+    }
 
 # -------------------------
 # Pydantic schema for updating name
@@ -151,7 +140,6 @@ async def register_user(
 class UpdateNameRequest(BaseModel):
     current_name: str
     new_name: str
-
 
 # -------------------------
 # Update User Name
@@ -165,7 +153,6 @@ async def update_user_name(payload: UpdateNameRequest, db: Session = Depends(get
     user.name = payload.new_name
     db.commit()
     return {"message": f"✏️ User name updated from '{payload.current_name}' to '{payload.new_name}'"}
-
 
 # -------------------------
 # Hard Delete User
@@ -186,44 +173,65 @@ async def delete_user(name: str, db: Session = Depends(get_db)):
     db.commit()
     return {"message": f"🗑️ User {user.name} deleted successfully (attendance preserved)."}
 
+# -------------------------
+# List Users (active / deleted toggle)
+# -------------------------
+@router.get("/list")
+async def list_users(
+    show_deleted: bool = Query(False, description="Set true to include deleted users"),
+    db: Session = Depends(get_db)
+):
+    if show_deleted:
+        # Users who were deleted → appear only in attendance
+        deleted_records = db.query(Attendance).filter(Attendance.user_id == None).all()
+        return [
+            {
+                "id": r.id,
+                "employee_id": "DELETED",
+                "name": r.user_name_snapshot or "Unknown",
+                "created_at": r.date.isoformat(),
+            }
+            for r in deleted_records
+        ]
+    else:
+        users = db.query(User).all()
+        return [
+            {
+                "id": u.id,
+                "employee_id": format_employee_id(u.id),
+                "name": u.name,
+                "created_at": u.created_at.isoformat(),
+            }
+            for u in users
+        ]
 
 # -------------------------
-# List Active Users
+# Legacy support for frontend (optional)
 # -------------------------
 @router.get("/active")
-async def list_active_users(db: Session = Depends(get_db)):
+async def legacy_active_users(db: Session = Depends(get_db)):
+    """Kept for backward compatibility with frontend still calling /users/active"""
     users = db.query(User).all()
-
-    def format_employee_id(uid: int):
-        return f"IFNT{str(uid).zfill(3)}"  # no brackets
-
     return [
         {
-            "id": user.id,
-            "employee_id": format_employee_id(user.id),  # send formatted ID
-            "name": user.name,
-            "created_at": user.created_at.isoformat(),
+            "id": u.id,
+            "employee_id": format_employee_id(u.id),
+            "name": u.name,
+            "created_at": u.created_at.isoformat(),
         }
-        for user in users
+        for u in users
     ]
 
-
-# -------------------------
-# List Deleted Users’ Attendance
-# -------------------------
-@router.get("/deleted-attendance")
-async def deleted_users_attendance(db: Session = Depends(get_db)):
-    records = db.query(Attendance).filter(Attendance.user_id == None).all()
+# List deleted users
+@router.get("/deleted")
+def get_deleted_users(db: Session = Depends(get_db)):
+    users = db.query(User).filter(User.is_deleted == True).all()
     return [
         {
-            "id": r.id,
-            "name_snapshot": r.user_name_snapshot,
-            "date": r.date.isoformat(),
-            "check_in": r.check_in,
-            "break_start": r.break_start,
-            "break_end": r.break_end,
-            "check_out": r.check_out,
-            "status": r.status
+            "id": u.id,
+            "employee_id": f"IFNT{str(u.id).zfill(3)}",
+            "name": u.name,
+            "created_at": u.created_at,
         }
-        for r in records
+        for u in users
     ]

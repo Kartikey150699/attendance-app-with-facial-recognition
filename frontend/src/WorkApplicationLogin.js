@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import {
   ClipboardDocumentListIcon,
-  CameraIcon,
+  ArrowRightOnRectangleIcon,
   ArrowUturnLeftIcon,
 } from "@heroicons/react/24/solid";
 import Webcam from "react-webcam";
@@ -23,11 +23,13 @@ function WorkApplicationLogin() {
   const videoWidth = 580;
   const videoHeight = 343;
 
+  // update time
   useEffect(() => {
     const timer = setInterval(() => setDateTime(new Date()), 1000);
     return () => clearInterval(timer);
   }, []);
 
+  // detect cameras
   useEffect(() => {
     async function getCameras() {
       const devices = await navigator.mediaDevices.enumerateDevices();
@@ -40,7 +42,7 @@ function WorkApplicationLogin() {
     getCameras();
   }, []);
 
-  // ✅ live preview loop
+  // live preview loop
   useEffect(() => {
     let interval;
     if (selectedCamera) {
@@ -49,6 +51,7 @@ function WorkApplicationLogin() {
     return () => clearInterval(interval);
   }, [selectedCamera]);
 
+  // capture frame for preview (face boxes only)
   const capturePreviewFrame = async () => {
     if (!webcamRef.current) return;
     const imageSrc = webcamRef.current.getScreenshot();
@@ -78,6 +81,7 @@ function WorkApplicationLogin() {
     }
   };
 
+  // capture frame for login (face + employee ID)
   const captureAndSendFrame = async () => {
     if (!webcamRef.current || !employeeId) {
       setStatusMessages(["⚠️ Please enter Employee ID and try again"]);
@@ -94,32 +98,40 @@ function WorkApplicationLogin() {
     formData.append("employee_id", employeeId);
 
     try {
-  const response = await fetch("http://localhost:8000/attendance/mark", {
-    method: "POST",
-    body: formData,
-  });
-  const data = await response.json();
+      const response = await fetch("http://localhost:8000/attendance/mark", {
+        method: "POST",
+        body: formData,
+      });
+      const data = await response.json();
 
-  if (data.results && data.results.length > 0) {
-    const face = data.results[0];
-    if (face.status === "logged_in") {
-      setStatusMessages([`✅ Welcome ${face.name}`]);
-      setTimeout(() => {
-        navigate("/work-application", { state: { user: face.name } });
-      }, 1000);
-    } else {
-      setStatusMessages([`⚠️ ${face.name}: ${face.status}`]);
+      if (data.results && data.results.length > 0) {
+        const face = data.results[0];
+
+        if (face.status === "logged_in") {
+          setStatusMessages([`✅ Welcome ${face.name}`]);
+          setTimeout(() => {
+            navigate("/work-application", { state: { user: face.name } });
+          }, 500);
+        } else if (face.status === "invalid_employee_id") {
+          setStatusMessages([`❌ Invalid Employee ID`]);
+        } else if (face.status === "face_mismatch") {
+          setStatusMessages([`❌ Face does not match to Employee ID ${employeeId}`]);
+        } else {
+          setStatusMessages([`⚠️ ${face.name}: ${face.status}`]);
+        }
+      }
+    } catch (error) {
+      console.error("Error sending frame:", error);
     }
-  }
-} catch (error) {
-  console.error("Error sending frame:", error);
-}
   };
 
+  // decide box color
   const getBoxColor = (status) => {
     if (status === "logged_in") return "border-green-500";
     if (status === "preview") return "border-green-500";
     if (status === "login_failed") return "border-red-600";
+    if (status === "face_mismatch") return "border-red-600";
+    if (status === "invalid_employee_id") return "border-red-600";
     if (status === "unknown") return "border-red-600";
     return "border-yellow-400";
   };
@@ -152,24 +164,24 @@ function WorkApplicationLogin() {
 
           {/* Camera Selection */}
           <div className="absolute right-15 top-20 flex flex-col items-center">
-  <label className="text-xl font-semibold text-indigo-700 mb-2 mt-4">
-    Select Camera
-  </label>
-  <select
-    value={selectedCamera || ""}
-    onChange={(e) => {
-      setSelectedCamera(e.target.value);
-      localStorage.setItem("selectedCamera", e.target.value);
-    }}
-    className="px-6 py-2 border-2 border-indigo-400 rounded-lg shadow-md text-sm w-64 focus:outline-none focus:ring-2 focus:ring-indigo-500"
-  >
-    {cameras.map((cam, idx) => (
-      <option key={cam.deviceId} value={cam.deviceId}>
-        {cam.label || `Camera ${idx + 1}`}
-      </option>
-    ))}
-  </select>
-</div>
+            <label className="text-xl font-semibold text-indigo-700 mb-2 mt-4">
+              Select Camera
+            </label>
+            <select
+              value={selectedCamera || ""}
+              onChange={(e) => {
+                setSelectedCamera(e.target.value);
+                localStorage.setItem("selectedCamera", e.target.value);
+              }}
+              className="px-6 py-2 border-2 border-indigo-400 rounded-lg shadow-md text-sm w-64 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+            >
+              {cameras.map((cam, idx) => (
+                <option key={cam.deviceId} value={cam.deviceId}>
+                  {cam.label || `Camera ${idx + 1}`}
+                </option>
+              ))}
+            </select>
+          </div>
         </div>
       </div>
 
@@ -232,10 +244,10 @@ function WorkApplicationLogin() {
               <button
                 onClick={captureAndSendFrame}
                 className="px-6 py-3 bg-green-500 hover:bg-green-600 hover:scale-105 active:scale-95 
-                         transition-transform duration-200 text-white font-bold rounded-lg shadow flex items-center gap-2"
+                  transition-transform duration-200 text-white font-bold rounded-lg shadow flex items-center gap-2"
               >
-                <CameraIcon className="h-5 w-5" />
-                Capture
+                <ArrowRightOnRectangleIcon className="h-5 w-5" />
+                Login
               </button>
             </div>
           </div>
@@ -261,7 +273,7 @@ function WorkApplicationLogin() {
             ) : (
               <p className="text-gray-500 flex items-center justify-center gap-2">
                 <ClipboardDocumentListIcon className="h-5 w-5 text-gray-500" />
-                Enter ID & Capture to login
+                Enter ID & Press Login
               </p>
             )}
           </div>

@@ -20,7 +20,7 @@ class Attendance(Base):
     # Date of the attendance record (with JST default)
     date = Column(DateTime, default=lambda: datetime.now(JST), nullable=False)
 
-    # Time logs (store as proper DateTime instead of strings)
+    # Time logs (stored as proper DateTime instead of strings)
     check_in = Column(DateTime, nullable=True)
     break_start = Column(DateTime, nullable=True)
     break_end = Column(DateTime, nullable=True)
@@ -28,3 +28,6 @@ class Attendance(Base):
 
     # Status (default = Present)
     status = Column(String(20), default="Present")
+
+    # store total work duration 
+    total_work = Column(String(20), nullable=True)

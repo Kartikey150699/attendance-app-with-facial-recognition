@@ -45,7 +45,14 @@ def admin_login(
     if not admin or str(admin.password).strip() != str(password).strip():
         return {"error": "Invalid username or password. Try again!"}
 
-    return {"message": f"Welcome {username}!"}
+    # Return admin info so frontend can store
+    return {
+        "message": f"Welcome {admin.username}!",
+        "admin": {
+            "id": admin.id,
+            "username": admin.username
+        }
+    }
 
 
 # Change password

@@ -115,7 +115,7 @@ function ChangePassword() {
       <div className="bg-white p-8 rounded-xl shadow-md w-96 mx-auto mt-20">
         <h2 className="text-2xl font-bold text-center mb-6 text-indigo-700 flex items-center justify-center gap-2">
   <LockClosedIcon className="h-6 w-6 text-indigo-700" />
-  Change Password
+  Change Admin Password
 </h2>
 
         {/* Username Field */}

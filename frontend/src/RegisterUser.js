@@ -5,6 +5,7 @@ import {
   ArrowUturnLeftIcon,
   UserPlusIcon,
   IdentificationIcon,
+  ExclamationTriangleIcon,
 } from "@heroicons/react/24/solid";
 import Footer from "./Footer";
 import HeaderDateTime from "./HeaderDateTime";
@@ -65,7 +66,7 @@ function RegisterUser() {
           localStorage.setItem("selectedCamera", videoDevices[0].deviceId);
         }
       } catch (err) {
-        console.error("Error fetching devices:", err);
+        console.error("❌ Error fetching devices:", err);
       }
     }
     fetchDevices();
@@ -110,25 +111,24 @@ function RegisterUser() {
       const data = await response.json();
 
       if (!response.ok) {
-  // Handle FastAPI HTTPException (detail)
-  if (data.detail) {
-    setPopupMessage(`❌ ${data.detail}`);
-  } else if (data.error) {
-    setPopupMessage(`❌ ${data.error}`);
-  } else {
-    setPopupMessage("❌ Registration failed.");
-  }
-  setIsSubmitting(false);
-} else {
-  setPopupMessage(
-    `✅ ${data.message}\nYour Employee ID is ${data.employee_id}`
-  );
-}
+        if (data.detail) {
+          setPopupMessage(`❌ ${data.detail}`);
+        } else if (data.error) {
+          setPopupMessage(`❌ ${data.error}`);
+        } else {
+          setPopupMessage("❌ Registration failed.");
+        }
+        setIsSubmitting(false);
+      } else {
+        setPopupMessage(
+          `✅ ${data.message}\nYour Employee ID is ${data.employee_id}`
+        );
+      }
 
       setShowPopup(true);
       setName("");
     } catch (error) {
-      console.error("Error registering user:", error);
+      console.error("❌ Error registering user:", error);
       setPopupMessage("❌ Failed to register user.");
       setShowPopup(true);
       setIsSubmitting(false);
@@ -169,8 +169,8 @@ function RegisterUser() {
             <span>Back</span>
           </button>
           {/* Camera selection */}
-          <div className="flex flex-col items-center mt-10">
-            <label className="text-xl font-semibold text-indigo-700 mb-4">
+          <div className="flex flex-col items-center mt-6">
+            <label className="text-xl font-semibold text-indigo-700 mb-2">
               Select Camera
             </label>
             <select
@@ -192,15 +192,15 @@ function RegisterUser() {
       </div>
 
       {/* Body */}
-      <div className="flex flex-col items-center flex-grow py-6">
-        <h2 className="text-3xl font-bold text-indigo-700 mb-6 flex items-center justify-center gap-2">
+      <div className="flex flex-col items-center flex-grow py-4">
+        <h2 className="text-3xl font-bold text-indigo-700 mb-4 flex items-center justify-center gap-2">
           <UserPlusIcon className="h-8 w-8 text-indigo-700" />
           Register New User
         </h2>
 
-        <div className="flex w-full max-w-6xl px-10 mt-20">
+        <div className="flex w-full max-w-6xl px-10 mt-10">
           {/* Camera */}
-          <div className="relative flex justify-center items-center w-1/2">
+          <div className="relative flex flex-col justify-center items-center w-1/2">
             <div
               className={`relative rounded-lg shadow-lg border-4 ${
                 isSubmitting
@@ -208,18 +208,30 @@ function RegisterUser() {
                   : "border-indigo-500"
               }`}
             >
-              <Webcam
-  key={selectedDeviceId}  // re-mounts webcam when dropdown changes
-  ref={webcamRef}
-  audio={false}
-  screenshotFormat="image/jpeg"
-  className="rounded-lg transform scale-x-[-1]"
-  videoConstraints={{
-    width: 520,
-    height: 380,
-    deviceId: selectedDeviceId ? { exact: selectedDeviceId } : undefined,
-  }}
-/>
+              {devices.length > 0 ? (
+                <Webcam
+                  ref={webcamRef}
+                  audio={false}
+                  screenshotFormat="image/jpeg"
+                  className="rounded-lg transform scale-x-[-1]"
+                  playsInline
+                  mirrored
+                  videoConstraints={{
+                    width: 520,
+                    height: 380,
+                    deviceId: selectedDeviceId
+                      ? { exact: selectedDeviceId }
+                      : undefined,
+                  }}
+                  onUserMediaError={(err) =>
+                    console.error("❌ Webcam error:", err)
+                  }
+                />
+              ) : (
+                <div className="w-[520px] h-[380px] flex items-center justify-center bg-gray-200 rounded-lg">
+                  <p className="text-gray-600">No camera detected</p>
+                </div>
+              )}
               {isSubmitting && (
                 <div className="absolute top-0 left-0 w-full h-full overflow-hidden rounded-lg">
                   <div className="w-full h-1 animate-scan glow-line"></div>
@@ -243,7 +255,7 @@ function RegisterUser() {
               value={name}
               onChange={(e) => setName(e.target.value)}
               disabled={isSubmitting}
-              className="w-80 px-4 py-2 mb-6 border rounded-lg shadow focus:outline-none focus:ring-2 focus:ring-indigo-400 disabled:bg-gray-200"
+              className="w-80 px-4 py-2 mb-4 border rounded-lg shadow focus:outline-none focus:ring-2 focus:ring-indigo-400 disabled:bg-gray-200"
             />
             <button
               onClick={handleSubmit}
@@ -261,62 +273,56 @@ function RegisterUser() {
             </button>
           </div>
         </div>
+
+        {/* ✅ Advisory Box */}
+        <div className="mt-6 flex items-center gap-4 bg-yellow-100 border-2 border-yellow-500 text-yellow-800 rounded-xl px-8 py-4 shadow-lg w-full max-w-6xl mx-auto">
+          <ExclamationTriangleIcon className="h-12 w-12 text-yellow-600 flex-shrink-0" />
+          <div className="flex flex-col text-left w-full">
+            <p className="text-lg font-semibold">
+              Please remove hats, glasses, and keep forehead clear — show your full face for accurate registration.
+            </p>
+            <p className="text-xl font-semibold text-gray-700">
+              帽子や眼鏡を外し、おでこを隠さず、顔全体をカメラに映してください。
+            </p>
+          </div>
+        </div>
       </div>
 
-      {/* Popup - Will use this pop style in other pages too */}
-{showPopup && (
-  <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
-    <div
-      className={`p-8 rounded-2xl shadow-2xl text-center transform transition-all duration-300 scale-100 ${
-        popupMessage.startsWith("✅")
-          ? "bg-green-50 border-2 border-green-400"
-          : "bg-red-50 border-2 border-red-400"
-      }`}
-    >
-      {/* Title */}
-      <h2
-        className={`text-2xl font-extrabold mb-4 ${
-          popupMessage.startsWith("✅") ? "text-green-700" : "text-red-700"
-        }`}
-      >
-        {popupMessage.startsWith("✅") ? "Registration Successful!" : "Error"}
-      </h2>
-
-      {/* Extract parts */}
-      {(() => {
-        const lines = popupMessage.split("\n");
-        const mainText = lines[0]; // first line
-        const empIdText = lines[1]; // second line if exists
-
-        return (
-          <>
-            {/* Main message */}
-            <p className="text-lg text-gray-800 mb-4">{mainText}</p>
-
-            {/* Highlight employee ID if present */}
-            {empIdText && empIdText.includes("Employee ID") && (
-              <p className="text-xl font-bold text-indigo-700 bg-indigo-100 px-4 py-2 rounded-lg inline-block mb-4">
-                {empIdText}
-              </p>
-            )}
-          </>
-        );
-      })()}
-
-      {/* OK button */}
-      <button
-        onClick={handlePopupOk}
-        className={`px-6 py-2 font-bold rounded-lg shadow ${
-          popupMessage.startsWith("✅")
-            ? "bg-green-600 text-white hover:bg-green-700"
-            : "bg-red-600 text-white hover:bg-red-700"
-        }`}
-      >
-        OK
-      </button>
-    </div>
-  </div>
-)}
+      {/* Popup */}
+      {showPopup && (
+        <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
+          <div
+            className={`p-8 rounded-2xl shadow-2xl text-center transform transition-all duration-300 scale-100 ${
+              popupMessage.startsWith("✅")
+                ? "bg-green-50 border-2 border-green-400"
+                : "bg-red-50 border-2 border-red-400"
+            }`}
+          >
+            <h2
+              className={`text-2xl font-extrabold mb-4 ${
+                popupMessage.startsWith("✅") ? "text-green-700" : "text-red-700"
+              }`}
+            >
+              {popupMessage.startsWith("✅")
+                ? "Registration Successful!"
+                : "Error"}
+            </h2>
+            <p className="text-lg text-gray-800 mb-6 whitespace-pre-line">
+              {popupMessage}
+            </p>
+            <button
+              onClick={handlePopupOk}
+              className={`px-6 py-2 font-bold rounded-lg shadow ${
+                popupMessage.startsWith("✅")
+                  ? "bg-green-600 text-white hover:bg-green-700"
+                  : "bg-red-600 text-white hover:bg-red-700"
+              }`}
+            >
+              OK
+            </button>
+          </div>
+        </div>
+      )}
 
       <Footer />
 

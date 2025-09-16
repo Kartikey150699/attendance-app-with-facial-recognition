@@ -36,6 +36,25 @@ def cosine_similarity(vec1, vec2):
     return float(np.dot(v1, v2))
 
 # -------------------------
+# Helper: calculate total work
+# -------------------------
+def calculate_total_work(record: Attendance):
+    """Recalculate total working hours (excluding break) and update the record."""
+    if record.check_in and record.check_out:
+        try:
+            total = record.check_out - record.check_in
+            if record.break_start and record.break_end:
+                total -= (record.break_end - record.break_start)
+            total_minutes = total.total_seconds() // 60
+            hours, minutes = divmod(total_minutes, 60)
+            record.total_work = f"{int(hours)}h {int(minutes)}m"
+        except Exception as e:
+            print("⚠️ Error calculating total work:", e)
+            record.total_work = "-"
+    else:
+        record.total_work = "-"
+
+# -------------------------
 # Detect faces (MTCNN + ArcFace, fallback OpenCV Haar for masks)
 # -------------------------
 def detect_faces(tmp_path):
@@ -176,7 +195,7 @@ async def preview_faces(file: UploadFile = None, db: Session = Depends(get_db)):
 async def mark_attendance(
     action: str = Form(...),
     file: UploadFile = None,
-    employee_id: str = Form(None),  
+    employee_id: str = Form(None),
     db: Session = Depends(get_db),
 ):
     if not file:
@@ -194,76 +213,75 @@ async def mark_attendance(
     results = []
     today = date.today()
     action = action.lower().strip()
-    print(f"📌 Received action: {action}")
-    users = db.query(User).filter(User.is_active == True).all()
     threshold = 0.65
     fallback_threshold = 0.60
 
     for face in faces:
         embedding = face.get("embedding")
         box = face.get("facial_area", {})
+
+        # -------------------------
+        # Work Application Login Flow
+        # -------------------------
+        if action == "work-application-login":
+            if not employee_id:
+                results.append({"name": "Unknown", "employee_id": None, "box": [box.get("x"), box.get("y"), box.get("w"), box.get("h")], "status": "employee_id_missing"})
+                continue
+
+            user_id = employee_id.replace("IFNT", "")
+            try:
+                user_id = int(user_id)
+            except:
+                user_id = None
+
+            user = db.query(User).filter(User.id == user_id, User.is_active == True).first()
+
+            if not user:
+                results.append({"name": "Unknown", "employee_id": employee_id, "box": [box.get("x"), box.get("y"), box.get("w"), box.get("h")], "status": "invalid_employee_id"})
+                continue
+
+            stored_embeddings = json.loads(user.embedding)
+            if isinstance(stored_embeddings[0], (int, float)):
+                stored_embeddings = [stored_embeddings]
+
+            matched = any(cosine_similarity(embedding, stored_emb) >= threshold for stored_emb in stored_embeddings)
+
+            status = "logged_in" if matched else "face_mismatch"
+
+            results.append({
+                "name": user.name,
+                "employee_id": employee_id,
+                "box": [box.get("x"), box.get("y"), box.get("w"), box.get("h")],
+                "status": status
+            })
+            continue
+
+        # -------------------------
+        # Normal Attendance Flow
+        # -------------------------
         best_match, best_score = None, -1
+        users = db.query(User).filter(User.is_active == True).all()
+        for user in users:
+            stored_embeddings = json.loads(user.embedding)
+            if isinstance(stored_embeddings[0], (int, float)):
+                stored_embeddings = [stored_embeddings]
 
-        if embedding is not None:
-            for user in users:
-                stored_embeddings = json.loads(user.embedding)
-                if isinstance(stored_embeddings[0], (int, float)):
-                    stored_embeddings = [stored_embeddings]
-
-                for stored_emb in stored_embeddings:
-                    score = cosine_similarity(embedding, stored_emb)
-                    print(f"➡️ Action={action}, Comparing with {user.name}, Score={score:.4f}")
-                    if score > best_score:
-                        best_match, best_score = user, score
+            for stored_emb in stored_embeddings:
+                score = cosine_similarity(embedding, stored_emb)
+                if score > best_score:
+                    best_match, best_score = user, score
 
         if best_match and best_score >= threshold:
-
-            # -------------------------
-            # Work Application Login Flow (Face + Employee ID)
-            # -------------------------
-            if action == "work-application-login":
-                expected_emp_id = f"IFNT{str(best_match.id).zfill(3)}"
-                if employee_id == expected_emp_id:
-                    status = "logged_in"
-                else:
-                    status = "login_failed"
-
-                results.append({
-                    "name": best_match.name,
-                    "employee_id": expected_emp_id,
-                    "box": [box.get("x"), box.get("y"), box.get("w"), box.get("h")],  # ✅ Always include box
-                    "status": status
-                })
-                continue
-
-            # -------------------------
-            # Old Work Application (face only)
-            # -------------------------
-            if action == "work-application":
-                results.append({
-                    "name": best_match.name,
-                    "box": [box.get("x"), box.get("y"), box.get("w"), box.get("h")],  # ✅ Always include box
-                    "status": "logged_in"
-                })
-                continue
-
-            # -------------------------
-            # Normal Attendance Flow
-            # -------------------------
             record = db.query(Attendance).filter(
                 Attendance.user_id == best_match.id,
                 Attendance.date == today
             ).first()
 
             if not record:
-                record = Attendance(
-                    user_id=best_match.id,
-                    user_name_snapshot=best_match.name,
-                    date=today
-                )
+                record = Attendance(user_id=best_match.id, user_name_snapshot=best_match.name, date=today)
                 db.add(record)
 
-            now_jst = datetime.now(JST).strftime("%H:%M:%S")
+            now_jst = datetime.now(JST)
 
             if action == "checkin":
                 if record.check_out:
@@ -313,26 +331,22 @@ async def mark_attendance(
             else:
                 status = "invalid_action"
 
+            # ✅ Recalculate total work
+            calculate_total_work(record)
+
             db.commit()
             db.refresh(record)
 
             results.append({
                 "name": best_match.name,
-                "box": [box.get("x"), box.get("y"), box.get("w"), box.get("h")], 
-                "status": status
+                "box": [box.get("x"), box.get("y"), box.get("w"), box.get("h")],
+                "status": status,
+                "total_work": record.total_work
             })
 
         elif best_match and best_score >= fallback_threshold:
-            results.append({
-                "name": best_match.name,
-                "box": [box.get("x"), box.get("y"), box.get("w"), box.get("h")], 
-                "status": "maybe_match"
-            })
+            results.append({"name": best_match.name, "box": [box.get("x"), box.get("y"), box.get("w"), box.get("h")], "status": "maybe_match"})
         else:
-            results.append({
-                "name": "Unknown",
-                "box": [box.get("x"), box.get("y"), box.get("w"), box.get("h")], 
-                "status": "unknown"
-            })
+            results.append({"name": "Unknown", "box": [box.get("x"), box.get("y"), box.get("w"), box.get("h")], "status": "unknown"})
 
     return {"results": results}

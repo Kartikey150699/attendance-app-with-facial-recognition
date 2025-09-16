@@ -19,30 +19,31 @@ function AdminLogin() {
   }, []);
 
   const handleLogin = async () => {
-    setError("");
-    try {
-      const formData = new FormData();
-      formData.append("username", username);
-      formData.append("password", password);
+  setError("");
+  try {
+    const formData = new FormData();
+    formData.append("username", username);
+    formData.append("password", password);
 
-      const response = await fetch("http://localhost:8000/admin/login", {
-        method: "POST",
-        body: formData,
-      });
+    const response = await fetch("http://localhost:8000/admin/login", {
+      method: "POST",
+      body: formData,
+    });
 
-      const data = await response.json();
+    const data = await response.json();
 
-      if (response.ok && !data.error) {
-        // Save logged in admin
-        localStorage.setItem("currentAdmin", username);
-        navigate("/admin-dashboard");
-      } else {
-        setError("❌ Invalid username or password");
-      }
-    } catch (err) {
-      setError("⚠️ Server error. Please try again.");
+    if (response.ok && !data.error) {
+      // ✅ Save logged-in admin in localStorage
+      localStorage.setItem("currentAdmin", data.admin.username);
+      localStorage.setItem("currentAdminId", data.admin.id); // optional if needed later
+      navigate("/admin-dashboard");
+    } else {
+      setError("❌ Invalid username or password");
     }
-  };
+  } catch (err) {
+    setError("⚠️ Server error. Please try again.");
+  }
+};
 
   const handleKeyDown = (e) => {
     if (e.key === "Enter") handleLogin();
