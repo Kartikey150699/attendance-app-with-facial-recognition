@@ -23,7 +23,7 @@ function AdminDashboard() {
       setDateTime(new Date());
     }, 1000);
 
-    // ✅ Get currently logged-in admin from localStorage
+    // Get currently logged-in admin from localStorage
     const admin = localStorage.getItem("currentAdmin");
     if (admin) setCurrentAdmin(admin);
 
@@ -31,10 +31,12 @@ function AdminDashboard() {
   }, []);
 
   const handleLogout = () => {
-  localStorage.removeItem("admin_username");
-  navigate("/admin-login");
-  window.location.reload(); // ✅ ensures nothing stays cached
-};
+    // Clear admin info on logout
+    localStorage.removeItem("currentAdmin");
+    setCurrentAdmin(null);
+    navigate("/admin-login");
+    window.location.reload(); // optional to fully reset session
+  };
 
   return (
     <div className="flex flex-col min-h-screen bg-gradient-to-tr from-gray-100 via-indigo-100 to-blue-200">
@@ -111,8 +113,11 @@ function AdminDashboard() {
             Change Admin Password
           </button>
 
-          <button className="px-10 py-6 bg-purple-500 hover:bg-purple-600 hover:scale-105 active:scale-95 
-                            transition-transform duration-200 text-white text-xl font-bold rounded-lg shadow">
+          <button
+            onClick={() => navigate("/hr-portal")}
+            className="px-10 py-6 bg-purple-500 hover:bg-purple-600 hover:scale-105 active:scale-95 
+                            transition-transform duration-200 text-white text-xl font-bold rounded-lg shadow"
+          >
             <UserGroupIcon className="h-6 w-6 inline-block mr-2" />
             HR Portal
           </button>

@@ -1,4 +1,4 @@
-from fastapi import APIRouter, UploadFile, Form, Depends, HTTPException, Query
+from fastapi import APIRouter, UploadFile, Form, Depends, HTTPException, Query, File
 from sqlalchemy.orm import Session
 from utils.db import SessionLocal
 from models.User import User
@@ -9,6 +9,7 @@ import json
 import numpy as np
 import cv2
 from pydantic import BaseModel
+from typing import List
 
 router = APIRouter(prefix="/users", tags=["Users"])
 
@@ -59,7 +60,7 @@ def apply_synthetic_mask(image_path):
 @router.post("/register")
 async def register_user(
     name: str = Form(...),
-    files: list[UploadFile] = None,
+    files: List[UploadFile] = File(...),
     db: Session = Depends(get_db)
 ):
     if not files or len(files) == 0:
@@ -182,7 +183,6 @@ async def list_users(
     db: Session = Depends(get_db)
 ):
     if show_deleted:
-        # Users who were deleted → appear only in attendance
         deleted_records = db.query(Attendance).filter(Attendance.user_id == None).all()
         return [
             {
@@ -206,11 +206,10 @@ async def list_users(
         ]
 
 # -------------------------
-# Legacy support for frontend (optional)
+# Legacy support for frontend
 # -------------------------
 @router.get("/active")
 async def legacy_active_users(db: Session = Depends(get_db)):
-    """Kept for backward compatibility with frontend still calling /users/active"""
     users = db.query(User).all()
     return [
         {

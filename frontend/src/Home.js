@@ -116,7 +116,6 @@ function Home() {
 
         const msgs = mappedFaces.map((face) => {
           if (action === "work-application" && face.status === "logged_in") {
-            // navigate to Work Application page
             navigate("/work-application", { state: { user: face.name } });
             return `✅ ${face.name} logged in to Work Application — ${currentDateTime}`;
           }
@@ -143,6 +142,8 @@ function Home() {
             return `⚠️ ${face.name} cannot proceed → No Check-In found — ${currentDateTime}`;
           if (face.status === "cannot_checkout_on_break")
             return `⚠️ ${face.name} cannot Check Out while on Break — ${currentDateTime}`;
+          if (face.status === "spoof")
+            return `❌ Spoof attempt detected (photo) — ${currentDateTime}`;
           if (face.status === "unknown") return `❌ Unknown face detected`;
           return `ℹ️ ${face.name} action processed — ${currentDateTime}`;
         });
@@ -163,6 +164,7 @@ function Home() {
     if (status === "unknown") return "border-red-600";
     if (status === "logged_in") return "border-green-500"; 
     if (status === "preview") return "border-green-300";
+    if (status === "spoof") return "border-orange-700"; // 🔹 Spoof detection color
     return "border-gray-300";
   };
 
@@ -241,7 +243,7 @@ function Home() {
             {/* Work Application */}
             <button
               onClick={() => {
-                navigate("/work-application-login"); // 🔹 redirect instead of opening camera
+                navigate("/work-application-login");
               }}
               className="w-[70%] h-48 bg-purple-500 hover:bg-purple-600 hover:scale-105 active:scale-95 
                        transition-transform duration-200 text-white text-4xl font-semibold 
@@ -304,7 +306,9 @@ function Home() {
                     }}
                   >
                     <span className="bg-black text-white px-2 py-1 rounded-b-lg font-bold">
-                      {face.name}
+                      {face.status === "spoof"
+                        ? "Photo Detected – Not Allowed"
+                        : face.name}
                     </span>
                   </div>
                 ))}

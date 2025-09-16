@@ -20,9 +20,7 @@ function RegisterUser() {
   const [buttonText, setButtonText] = useState("Register");
 
   const [devices, setDevices] = useState([]);
-  const [selectedDeviceId, setSelectedDeviceId] = useState(
-    localStorage.getItem("selectedCamera") || ""
-  );
+  const [selectedDeviceId, setSelectedDeviceId] = useState("");
 
   const navigate = useNavigate();
   const webcamRef = useRef(null);
@@ -61,16 +59,22 @@ function RegisterUser() {
         const videoDevices = devices.filter((d) => d.kind === "videoinput");
         setDevices(videoDevices);
 
-        if (!selectedDeviceId && videoDevices.length > 0) {
-          setSelectedDeviceId(videoDevices[0].deviceId);
-          localStorage.setItem("selectedCamera", videoDevices[0].deviceId);
+        // ✅ Set default camera on first load
+        if (videoDevices.length > 0) {
+          const saved = localStorage.getItem("selectedCamera");
+          if (saved && videoDevices.some((d) => d.deviceId === saved)) {
+            setSelectedDeviceId(saved);
+          } else {
+            setSelectedDeviceId(videoDevices[0].deviceId);
+            localStorage.setItem("selectedCamera", videoDevices[0].deviceId);
+          }
         }
       } catch (err) {
         console.error("❌ Error fetching devices:", err);
       }
     }
     fetchDevices();
-  }, [selectedDeviceId]);
+  }, []);
 
   // Submit handler
   const handleSubmit = async () => {
@@ -208,7 +212,7 @@ function RegisterUser() {
                   : "border-indigo-500"
               }`}
             >
-              {devices.length > 0 ? (
+              {devices.length > 0 && selectedDeviceId ? (
                 <Webcam
                   ref={webcamRef}
                   audio={false}
@@ -219,9 +223,7 @@ function RegisterUser() {
                   videoConstraints={{
                     width: 520,
                     height: 380,
-                    deviceId: selectedDeviceId
-                      ? { exact: selectedDeviceId }
-                      : undefined,
+                    deviceId: { exact: selectedDeviceId },
                   }}
                   onUserMediaError={(err) =>
                     console.error("❌ Webcam error:", err)
@@ -274,7 +276,7 @@ function RegisterUser() {
           </div>
         </div>
 
-        {/* ✅ Advisory Box */}
+        {/* Advisory Box */}
         <div className="mt-6 flex items-center gap-4 bg-yellow-100 border-2 border-yellow-500 text-yellow-800 rounded-xl px-8 py-4 shadow-lg w-full max-w-6xl mx-auto">
           <ExclamationTriangleIcon className="h-12 w-12 text-yellow-600 flex-shrink-0" />
           <div className="flex flex-col text-left w-full">
