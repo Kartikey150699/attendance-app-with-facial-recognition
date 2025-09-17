@@ -110,7 +110,9 @@ function WorkApplicationLogin() {
         if (face.status === "logged_in") {
           setStatusMessages([`✅ Welcome ${face.name}`]);
           setTimeout(() => {
-            navigate("/work-application", { state: { user: face.name } });
+            navigate("/work-application", { 
+  state: { user: face.name, employeeId }   // <-- pass both
+});
           }, 500);
         } else if (face.status === "invalid_employee_id") {
           setStatusMessages([`❌ Invalid Employee ID`]);

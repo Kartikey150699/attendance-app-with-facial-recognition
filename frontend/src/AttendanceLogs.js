@@ -16,6 +16,9 @@ function AttendanceLogs() {
   const [filterType, setFilterType] = useState("today");
   const [showDeleted, setShowDeleted] = useState(false);
 
+  // Sorting state
+  const [sortConfig, setSortConfig] = useState({ key: null, direction: "asc" });
+
   // Modal states
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editLog, setEditLog] = useState(null);
@@ -36,9 +39,9 @@ function AttendanceLogs() {
 
   const navigate = useNavigate();
   const today = new Date();
-const [year, setYear] = useState(today.getFullYear());
-const [month, setMonth] = useState(today.getMonth() + 1);
-const isCurrentMonth =
+  const [year, setYear] = useState(today.getFullYear());
+  const [month, setMonth] = useState(today.getMonth() + 1);
+  const isCurrentMonth =
   year === today.getFullYear() && month === today.getMonth() + 1;
 
   // Logged-in admin name (stored at login)
@@ -98,8 +101,30 @@ const isCurrentMonth =
       });
     }
 
+    // Sorting logic
+if (sortConfig.key) {
+  updated.sort((a, b) => {
+    let aVal = a[sortConfig.key] || "";
+    let bVal = b[sortConfig.key] || "";
+
+    if (sortConfig.key === "date") {
+      aVal = new Date(aVal);
+      bVal = new Date(bVal);
+    } else {
+      aVal = aVal.toString().toLowerCase();
+      bVal = bVal.toString().toLowerCase();
+    }
+
+    if (aVal < bVal) return sortConfig.direction === "asc" ? -1 : 1;
+    if (aVal > bVal) return sortConfig.direction === "asc" ? 1 : -1;
+    return 0;
+  });
+}
+
     setFilteredLogs(updated);
-  }, [searchTerm, filterType, logs, showDeleted]);
+  }, [searchTerm, filterType, logs, showDeleted, sortConfig]);
+
+
 
   // Reset filters
 const resetFilters = () => {
@@ -110,6 +135,7 @@ const resetFilters = () => {
 
   setYear(today.getFullYear());
   setMonth(today.getMonth() + 1);
+  setSortConfig({ key: null, direction: "asc" });
 
   setFilteredLogs(
     logs.filter((log) => log.employee_id !== "DELETED")
@@ -155,7 +181,7 @@ const handleNextMonth = () => {
 const saveEdit = async () => {
   if (!editLog) return;
 
-  const adminName = localStorage.getItem("currentAdmin"); // ✅ logged-in admin name
+  const adminName = localStorage.getItem("currentAdmin"); // logged-in admin name
 
   try {
     const res = await fetch(
@@ -248,6 +274,23 @@ const confirmExport = async () => {
     console.error("Error exporting logs:", err);
   }
 };
+
+// Sort handler
+const requestSort = (key) => {
+  if (sortConfig.key !== key) {
+    setSortConfig({ key, direction: "asc" });
+  } else if (sortConfig.direction === "asc") {
+    setSortConfig({ key, direction: "desc" });
+  } else if (sortConfig.direction === "desc") {
+    setSortConfig({ key: null, direction: "asc" });
+  }
+};
+
+const getArrow = (key) => {
+  if (sortConfig.key !== key) return "↕";  // Default state
+  return sortConfig.direction === "asc" ? "▲" : "▼";
+};
+
   return (
     <div className="flex flex-col min-h-screen bg-gradient-to-tr from-gray-100 via-indigo-100 to-blue-200">
       {/* Header */}
@@ -378,18 +421,33 @@ const confirmExport = async () => {
       <div className="flex-grow p-10">
         <table className="w-full border-collapse bg-white shadow-lg rounded-xl overflow-hidden">
           <thead>
-            <tr className="bg-indigo-500 text-white text-lg">
-              <th className="p-4">Employee ID</th>
-              <th className="p-4">Date</th>
-              <th className="p-4">Employee</th>
-              <th className="p-4">Check In</th>
-              <th className="p-4">Break Start</th>
-              <th className="p-4">Break End</th>
-              <th className="p-4">Check Out</th>
-              <th className="p-4">Total Working</th>
-              <th className="p-4">Actions</th>
-            </tr>
-          </thead>
+  <tr className="bg-indigo-500 text-white text-lg">
+    <th
+      className="p-4 cursor-pointer select-none"
+      onClick={() => requestSort("employee_id")}
+    >
+      Employee ID {getArrow("employee_id")}
+    </th>
+    <th
+      className="p-4 cursor-pointer select-none"
+      onClick={() => requestSort("date")}
+    >
+      Date {getArrow("date")}
+    </th>
+    <th
+      className="p-4 cursor-pointer select-none"
+      onClick={() => requestSort("user_name_snapshot")}
+    >
+      Employee {getArrow("user_name_snapshot")}
+    </th>
+    <th className="p-4">Check In</th>
+    <th className="p-4">Break Start</th>
+    <th className="p-4">Break End</th>
+    <th className="p-4">Check Out</th>
+    <th className="p-4">Total Working</th>
+    <th className="p-4">Actions</th>
+  </tr>
+</thead>
           <tbody>
             {filteredLogs.length > 0 ? (
               filteredLogs.map((log, idx) => (

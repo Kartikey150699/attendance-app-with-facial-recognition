@@ -164,7 +164,7 @@ function Home() {
     if (status === "unknown") return "border-red-600";
     if (status === "logged_in") return "border-green-500"; 
     if (status === "preview") return "border-green-300";
-    if (status === "spoof") return "border-orange-700"; // 🔹 Spoof detection color
+    if (status === "spoof") return "border-orange-700"; // Spoof detection color
     return "border-gray-300";
   };
 
