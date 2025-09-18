@@ -2,9 +2,9 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 # absolute imports
-from routes import users, attendance, admin, logs
+from routes import users, attendance, admin, logs, work_applications, holiday
 from utils.db import Base, engine
-from models import User, Attendance, Admin
+from models import User, Attendance, Admin, WorkApplication, Holiday  
 
 # FastAPI App
 app = FastAPI(
@@ -31,12 +31,14 @@ app.add_middleware(
 app.include_router(users.router)
 app.include_router(attendance.router)
 app.include_router(admin.router)
-app.include_router(logs.router) 
+app.include_router(logs.router)
+app.include_router(work_applications.router) 
+app.include_router(holiday.router)          
 
 # Root endpoint
 @app.get("/")
 def home():
     return {"message": "✅ FaceTrack Backend is running 🚀"}
 
-# Auto-create tables
+# Auto-create tables (includes WorkApplication & Holiday)
 Base.metadata.create_all(bind=engine)

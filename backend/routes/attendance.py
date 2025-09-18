@@ -169,7 +169,7 @@ async def preview_faces(file: UploadFile = None, db: Session = Depends(get_db)):
 
                 for stored_emb in stored_embeddings:
                     score = cosine_similarity(embedding, stored_emb)
-                    print(f"🔍 Comparing with {user.name}, Score={score:.4f}")
+                    # print(f"🔍 Comparing with {user.name}, Score={score:.4f}")
                     if score > best_score:
                         best_match, best_score = user, score
 

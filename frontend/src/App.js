@@ -12,6 +12,12 @@ import TermsAndConditions from "./TermsAndConditions";
 import WorkApplication from "./WorkApplication";
 import WorkApplicationLogin from "./WorkApplicationLogin";
 import AttendanceLogs from "./AttendanceLogs";
+import YourApplications from "./YourApplications";
+import HrPortal from "./HrPortal";
+import WorkApplicationRequests from "./WorkApplicationRequests";
+import HolidayManagement from "./HolidayManagement";
+import LogsReports from "./LogsReports";
+import CalendarView from "./CalendarView";
 
 function AnimatedRoutes() {
   const location = useLocation();
@@ -23,12 +29,7 @@ function AnimatedRoutes() {
         <Route
           path="/"
           element={
-            <motion.div
-              initial={{ opacity: 0, x: -50 }}
-              animate={{ opacity: 1, x: 0 }}
-              exit={{ opacity: 0, x: 50 }}
-              transition={{ duration: 0.4 }}
-            >
+            <motion.div initial={{ opacity: 0, x: -50 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: 50 }} transition={{ duration: 0.4 }}>
               <Home />
             </motion.div>
           }
@@ -38,12 +39,7 @@ function AnimatedRoutes() {
         <Route
           path="/admin-login"
           element={
-            <motion.div
-              initial={{ opacity: 0, y: 30 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -30 }}
-              transition={{ duration: 0.4 }}
-            >
+            <motion.div initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -30 }} transition={{ duration: 0.4 }}>
               <AdminLogin />
             </motion.div>
           }
@@ -53,12 +49,7 @@ function AnimatedRoutes() {
         <Route
           path="/admin-dashboard"
           element={
-            <motion.div
-              initial={{ opacity: 0, x: 50 }}
-              animate={{ opacity: 1, x: 0 }}
-              exit={{ opacity: 0, x: -50 }}
-              transition={{ duration: 0.4 }}
-            >
+            <motion.div initial={{ opacity: 0, x: 50 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -50 }} transition={{ duration: 0.4 }}>
               <AdminDashboard />
             </motion.div>
           }
@@ -68,12 +59,7 @@ function AnimatedRoutes() {
         <Route
           path="/register-user"
           element={
-            <motion.div
-              initial={{ opacity: 0, y: 50 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -50 }}
-              transition={{ duration: 0.4 }}
-            >
+            <motion.div initial={{ opacity: 0, y: 50 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -50 }} transition={{ duration: 0.4 }}>
               <RegisterUser />
             </motion.div>
           }
@@ -83,12 +69,7 @@ function AnimatedRoutes() {
         <Route
           path="/manage-admin"
           element={
-            <motion.div
-              initial={{ opacity: 0, x: -50 }}
-              animate={{ opacity: 1, x: 0 }}
-              exit={{ opacity: 0, x: 50 }}
-              transition={{ duration: 0.4 }}
-            >
+            <motion.div initial={{ opacity: 0, x: -50 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: 50 }} transition={{ duration: 0.4 }}>
               <ManageAdmin />
             </motion.div>
           }
@@ -98,12 +79,7 @@ function AnimatedRoutes() {
         <Route
           path="/manage-users"
           element={
-            <motion.div
-              initial={{ opacity: 0, y: -50 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: 50 }}
-              transition={{ duration: 0.4 }}
-            >
+            <motion.div initial={{ opacity: 0, y: -50 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 50 }} transition={{ duration: 0.4 }}>
               <ManageUsers />
             </motion.div>
           }
@@ -113,12 +89,7 @@ function AnimatedRoutes() {
         <Route
           path="/change-password"
           element={
-            <motion.div
-              initial={{ opacity: 0, scale: 0.95 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.95 }}
-              transition={{ duration: 0.4 }}
-            >
+            <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.95 }} transition={{ duration: 0.4 }}>
               <ChangePassword />
             </motion.div>
           }
@@ -128,12 +99,7 @@ function AnimatedRoutes() {
         <Route
           path="/privacy-policy"
           element={
-            <motion.div
-              initial={{ opacity: 0, x: 40 }}
-              animate={{ opacity: 1, x: 0 }}
-              exit={{ opacity: 0, x: -40 }}
-              transition={{ duration: 0.4 }}
-            >
+            <motion.div initial={{ opacity: 0, x: 40 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -40 }} transition={{ duration: 0.4 }}>
               <PrivacyPolicy />
             </motion.div>
           }
@@ -143,12 +109,7 @@ function AnimatedRoutes() {
         <Route
           path="/terms-and-conditions"
           element={
-            <motion.div
-              initial={{ opacity: 0, y: -30 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: 30 }}
-              transition={{ duration: 0.4 }}
-            >
+            <motion.div initial={{ opacity: 0, y: -30 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 30 }} transition={{ duration: 0.4 }}>
               <TermsAndConditions />
             </motion.div>
           }
@@ -158,12 +119,7 @@ function AnimatedRoutes() {
         <Route
           path="/work-application"
           element={
-            <motion.div
-              initial={{ opacity: 0, x: -40 }}
-              animate={{ opacity: 1, x: 0 }}
-              exit={{ opacity: 0, x: 40 }}
-              transition={{ duration: 0.4 }}
-            >
+            <motion.div initial={{ opacity: 0, x: -40 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: 40 }} transition={{ duration: 0.4 }}>
               <WorkApplication />
             </motion.div>
           }
@@ -173,12 +129,7 @@ function AnimatedRoutes() {
         <Route
           path="/work-application-login"
           element={
-            <motion.div
-              initial={{ opacity: 0, y: 50 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -50 }}
-              transition={{ duration: 0.4 }}
-            >
+            <motion.div initial={{ opacity: 0, y: 50 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -50 }} transition={{ duration: 0.4 }}>
               <WorkApplicationLogin />
             </motion.div>
           }
@@ -188,16 +139,73 @@ function AnimatedRoutes() {
         <Route
           path="/attendance-logs"
           element={
-            <motion.div
-              initial={{ opacity: 0, y: 40 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -40 }}
-              transition={{ duration: 0.4 }}
-            >
+            <motion.div initial={{ opacity: 0, y: 40 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -40 }} transition={{ duration: 0.4 }}>
               <AttendanceLogs />
             </motion.div>
           }
         />
+
+        {/* Your Applications */}
+        <Route
+          path="/your-applications"
+          element={
+            <motion.div initial={{ opacity: 0, x: 40 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -40 }} transition={{ duration: 0.4 }}>
+              <YourApplications />
+            </motion.div>
+          }
+        />
+
+        {/* HR Portal */}
+        <Route
+          path="/hr-portal"
+          element={
+            <motion.div initial={{ opacity: 0, x: 40 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -40 }} transition={{ duration: 0.4 }}>
+              <HrPortal />
+            </motion.div>
+          }
+        />
+
+        {/* HR Portal Subpages */}
+        <Route
+          path="/hrportal/work-application-requests"
+          element={
+            <motion.div initial={{ opacity: 0, x: 40 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -40 }} transition={{ duration: 0.4 }}>
+              <WorkApplicationRequests />
+            </motion.div>
+          }
+        />
+
+        <Route
+          path="/hrportal/holiday-management"
+          element={
+            <motion.div initial={{ opacity: 0, x: 40 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -40 }} transition={{ duration: 0.4 }}>
+              <HolidayManagement />
+            </motion.div>
+          }
+        />
+
+        <Route
+          path="/hrportal/logs-reports"
+          element={
+            <motion.div initial={{ opacity: 0, x: 40 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -40 }} transition={{ duration: 0.4 }}>
+              <LogsReports />
+            </motion.div>
+          }
+        />
+
+        <Route
+  path="/calendar-view"
+  element={
+    <motion.div
+      initial={{ opacity: 0, x: 40 }}
+      animate={{ opacity: 1, x: 0 }}
+      exit={{ opacity: 0, x: -40 }}
+      transition={{ duration: 0.4 }}
+    >
+      <CalendarView />
+    </motion.div>
+  }
+/>
       </Routes>
     </AnimatePresence>
   );

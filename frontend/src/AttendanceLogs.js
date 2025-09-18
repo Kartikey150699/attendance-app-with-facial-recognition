@@ -305,21 +305,23 @@ const getArrow = (key) => {
           FaceTrack Attendance
         </h1>
         <div className="absolute right-10 flex gap-3">
-          <button
-            onClick={() => setShowExportPopup(true)}
-            className="px-6 py-3 bg-green-600 hover:bg-green-700 text-white font-bold rounded-lg shadow flex items-center gap-2"
-          >
-            <ArrowDownTrayIcon className="h-5 w-5" />
-            Export
-          </button>
-          <button
-            onClick={() => navigate(-1)}
-            className="px-6 py-3 bg-red-500 hover:bg-red-600 text-white font-bold rounded-lg shadow flex items-center gap-2"
-          >
-            <ArrowUturnLeftIcon className="h-5 w-5" />
-            Back
-          </button>
-        </div>
+  <button
+    onClick={() => setShowExportPopup(true)}
+    className="px-6 py-3 bg-green-600 hover:bg-green-700 text-white font-bold rounded-lg shadow flex items-center gap-2 
+               transition-all duration-200 transform hover:scale-105 hover:shadow-lg"
+  >
+    <ArrowDownTrayIcon className="h-5 w-5" />
+    Export
+  </button>
+  <button
+    onClick={() => navigate(-1)}
+    className="px-6 py-3 bg-red-500 hover:bg-red-600 text-white font-bold rounded-lg shadow flex items-center gap-2 
+               transition-all duration-200 transform hover:scale-105 hover:shadow-lg"
+  >
+    <ArrowUturnLeftIcon className="h-5 w-5" />
+    Back
+  </button>
+</div>
       </div>
 
       {/* Month-Year Navigation (Combined) */}

@@ -16,6 +16,7 @@ import HeaderDateTime from "./HeaderDateTime";
 function AdminDashboard() {
   const [dateTime, setDateTime] = useState(new Date());
   const [currentAdmin, setCurrentAdmin] = useState(null);
+  const [pendingCount, setPendingCount] = useState(0); // ✅ pending requests count
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -23,31 +24,45 @@ function AdminDashboard() {
       setDateTime(new Date());
     }, 1000);
 
-    // Get currently logged-in admin from localStorage
     const admin = localStorage.getItem("currentAdmin");
     if (admin) setCurrentAdmin(admin);
 
     return () => clearInterval(timer);
   }, []);
 
+  // ✅ Fetch pending requests count
+  useEffect(() => {
+    const fetchPendingCount = async () => {
+      try {
+        const res = await fetch("http://localhost:8000/work-applications/");
+        if (!res.ok) throw new Error("Failed to fetch applications");
+        const data = await res.json();
+
+        const count = data.filter((app) => app.status === "Pending").length;
+        setPendingCount(count);
+      } catch (error) {
+        console.error("Error fetching pending requests:", error);
+      }
+    };
+
+    fetchPendingCount();
+  }, []);
+
   const handleLogout = () => {
-    // Clear admin info on logout
     localStorage.removeItem("currentAdmin");
     setCurrentAdmin(null);
     navigate("/admin-login");
-    window.location.reload(); // optional to fully reset session
+    window.location.reload();
   };
 
   return (
     <div className="flex flex-col min-h-screen bg-gradient-to-tr from-gray-100 via-indigo-100 to-blue-200">
       {/* Header */}
       <div className="w-full flex items-center justify-center px-10 py-4 bg-indigo-300 shadow-md relative">
-        {/* Date & Time */}
         <div className="absolute left-10 text-blue-800 text-xl font-bold">
           <HeaderDateTime />
         </div>
 
-        {/* Title */}
         <h1
           onClick={() => navigate("/")}
           className="text-5xl font-bold text-blue-900 cursor-pointer hover:text-blue-700 transition-colors"
@@ -55,7 +70,6 @@ function AdminDashboard() {
           FaceTrack Attendance
         </h1>
 
-        {/* Logout Button */}
         <div className="absolute right-10">
           <button
             onClick={handleLogout}
@@ -76,7 +90,6 @@ function AdminDashboard() {
           Admin Dashboard
         </h2>
 
-        {/* Welcome message under heading */}
         {currentAdmin && (
           <p className="text-xl font-semibold text-gray-700 mb-12">
             Welcome <span className="text-indigo-700 font-bold">{currentAdmin}</span>
@@ -113,13 +126,19 @@ function AdminDashboard() {
             Change Admin Password
           </button>
 
+          {/* ✅ HR Portal with inside notification */}
           <button
             onClick={() => navigate("/hr-portal")}
-            className="px-10 py-6 bg-purple-500 hover:bg-purple-600 hover:scale-105 active:scale-95 
-                            transition-transform duration-200 text-white text-xl font-bold rounded-lg shadow"
+            className="relative px-10 py-6 bg-purple-500 hover:bg-purple-600 hover:scale-105 active:scale-95 
+                       transition-transform duration-200 text-white text-xl font-bold rounded-lg shadow flex items-center justify-center"
           >
             <UserGroupIcon className="h-6 w-6 inline-block mr-2" />
             HR Portal
+            {pendingCount > 0 && (
+              <span className="absolute top-2 right-2 bg-red-600 text-white text-xs font-bold rounded-full w-6 h-6 flex items-center justify-center shadow">
+                {pendingCount}
+              </span>
+            )}
           </button>
 
           {/* Row 3 */}
@@ -143,7 +162,6 @@ function AdminDashboard() {
         </div>
       </div>
 
-      {/* Footer */}
       <Footer />
     </div>
   );

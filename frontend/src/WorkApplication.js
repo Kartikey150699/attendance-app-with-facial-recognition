@@ -3,7 +3,6 @@ import { useLocation, useNavigate } from "react-router-dom";
 import {
   ArrowUturnLeftIcon,
   ClipboardDocumentListIcon,
-  CalendarDaysIcon,
   PencilSquareIcon,
   BuildingOffice2Icon,
 } from "@heroicons/react/24/solid";
@@ -30,42 +29,76 @@ function WorkApplication() {
   const [endTime, setEndTime] = useState("");
   const [reason, setReason] = useState("");
 
+  // Popup state
+  const [popup, setPopup] = useState({ show: false, message: "", type: "" });
+
   useEffect(() => {
     const timer = setInterval(() => setDateTime(new Date()), 1000);
     return () => clearInterval(timer);
   }, []);
 
+  // Format optional time
+  const formatTime = (t) => (t ? (t.length === 5 ? `${t}:00` : t) : null);
+
   // Handle submit
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!applicationType || !startDate || !endDate || !reason.trim()) return;
 
-    const newApp = {
-      id: Date.now(),
-      employeeId,
-      user,
-      applicationType,
-      startDate,
-      endDate,
-      startTime,
-      endTime,
-      reason,
-      status: "Pending",
-      hrNotes: "",
-    };
+    if (!applicationType || !startDate || !endDate || !reason.trim()) {
+      setPopup({
+        show: true,
+        message: "⚠️ Please fill all mandatory fields.",
+        type: "error",
+      });
+      return;
+    }
 
-    console.log("Submitted Application:", newApp);
+    const payload = {
+  employee_id: employeeId,
+  name: user,  // send user name
+  application_type: applicationType,
+  start_date: startDate,
+  end_date: endDate,
+  start_time: formatTime(startTime), // optional
+  end_time: formatTime(endTime),     // optional
+  reason: reason,
+};
 
-    // Reset form
-    setApplicationType("");
-    setStartDate("");
-    setEndDate("");
-    setStartTime("");
-    setEndTime("");
-    setReason("");
+    try {
+      const res = await fetch("http://localhost:8000/work-applications/", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+
+      if (!res.ok) throw new Error("Failed to submit request");
+      const data = await res.json();
+
+      setPopup({
+        show: true,
+        message: "✅ Work application submitted successfully!",
+        type: "success",
+      });
+      console.log("Submitted Application:", data);
+
+      // Reset form
+      setApplicationType("");
+      setStartDate("");
+      setEndDate("");
+      setStartTime("");
+      setEndTime("");
+      setReason("");
+    } catch (error) {
+      console.error("Error submitting application:", error);
+      setPopup({
+        show: true,
+        message: "❌ Failed to submit application. Please try again.",
+        type: "error",
+      });
+    }
   };
 
-  const todayStr = new Date().toISOString().split("T")[0]; // ✅ today for min date
+  const todayStr = new Date().toISOString().split("T")[0]; // today for min date
 
   return (
     <div className="flex flex-col min-h-screen bg-gradient-to-tr from-gray-100 via-indigo-100 to-blue-200 overflow-x-hidden">
@@ -100,7 +133,9 @@ function WorkApplication() {
       {/* Action Buttons below header */}
       <div className="flex justify-end gap-3 px-10 mt-4">
         <button
-          onClick={() => alert("Your Applications page coming soon!")}
+          onClick={() =>
+            navigate("/your-applications", { state: { user, employeeId } })
+          }
           className="px-5 py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-lg shadow flex items-center gap-2 
                      transition-transform hover:scale-105 active:scale-95"
         >
@@ -108,7 +143,7 @@ function WorkApplication() {
           Your Applications
         </button>
         <button
-          onClick={() => alert("Holiday Calendar page coming soon!")}
+          onClick={() => navigate("/calendar-view")}
           className="px-5 py-2 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-lg shadow flex items-center gap-2 
                      transition-transform hover:scale-105 active:scale-95"
         >
@@ -237,6 +272,31 @@ function WorkApplication() {
           </div>
         </form>
       </div>
+
+      {/* Popup Modal */}
+      {popup.show && (
+        <div className="fixed inset-0 bg-black bg-opacity-40 flex justify-center items-center z-50">
+          <div className="bg-white p-6 rounded-xl shadow-lg max-w-sm w-full text-center">
+            <p
+              className={`font-bold text-lg ${
+                popup.type === "success"
+                  ? "text-green-600"
+                  : popup.type === "error"
+                  ? "text-red-600"
+                  : "text-blue-600"
+              }`}
+            >
+              {popup.message}
+            </p>
+            <button
+              onClick={() => setPopup({ show: false, message: "", type: "" })}
+              className="mt-4 px-5 py-2 bg-indigo-500 hover:bg-indigo-600 text-white rounded-lg shadow"
+            >
+              OK
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* Footer */}
       <Footer />
