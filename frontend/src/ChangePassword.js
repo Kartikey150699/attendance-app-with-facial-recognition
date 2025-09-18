@@ -5,8 +5,6 @@ import { EyeIcon,
   ArrowUturnLeftIcon, 
   LockClosedIcon, 
   FingerPrintIcon, 
-  CheckCircleIcon,
-  XCircleIcon
 } from "@heroicons/react/24/solid";
 import Footer from "./Footer";
 import HeaderDateTime from "./HeaderDateTime"; 

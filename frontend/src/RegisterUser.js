@@ -59,7 +59,7 @@ function RegisterUser() {
         const videoDevices = devices.filter((d) => d.kind === "videoinput");
         setDevices(videoDevices);
 
-        // ✅ Set default camera on first load
+        // Set default camera on first load
         if (videoDevices.length > 0) {
           const saved = localStorage.getItem("selectedCamera");
           if (saved && videoDevices.some((d) => d.deviceId === saved)) {

@@ -15,15 +15,9 @@ import HeaderDateTime from "./HeaderDateTime";
 
 function HolidayManagement() {
   const navigate = useNavigate();
-  const [dateTime, setDateTime] = useState(new Date());
 
   // Holidays state
-  const [holidays, setHolidays] = useState([
-    { date: "2025-01-01", name: "New Year" },
-    { date: "2025-01-26", name: "Republic Day" },
-    { date: "2025-08-15", name: "Independence Day" },
-    { date: "2025-12-25", name: "Christmas" },
-  ]);
+  const [holidays, setHolidays] = useState([]);
 
   // Filters & Sorting
   const [search, setSearch] = useState("");
@@ -35,16 +29,38 @@ function HolidayManagement() {
 
   // Modal state
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [newHoliday, setNewHoliday] = useState({ date: "", name: "" });
-  const [editIndex, setEditIndex] = useState(null);
+  const [newHoliday, setNewHoliday] = useState({ date: "", holiday_name: "", created_by: 1 });
+  const [editHoliday, setEditHoliday] = useState(null);
 
   // Delete confirmation modal
-  const [deleteIndex, setDeleteIndex] = useState(null);
+  const [deleteHoliday, setDeleteHoliday] = useState(null);
 
+  // Validation Error Modal
+  const [validationError, setValidationError] = useState(null);
+
+  const [month, setMonth] = useState(new Date().getMonth() + 1);
+  const [year, setYear] = useState(new Date().getFullYear());
+
+  const monthNames = [
+  "January","February","March","April","May","June",
+  "July","August","September","October","November","December"
+];
+
+  // Fetch holidays from backend
   useEffect(() => {
-    const timer = setInterval(() => setDateTime(new Date()), 1000);
-    return () => clearInterval(timer);
+    fetchHolidays();
   }, []);
+
+  const fetchHolidays = async () => {
+    try {
+      const res = await fetch("http://localhost:8000/holiday/");
+      if (!res.ok) throw new Error("Failed to fetch holidays");
+      const data = await res.json();
+      setHolidays(data);
+    } catch (error) {
+      console.error("Error fetching holidays:", error);
+    }
+  };
 
   // Sorting
   const requestSort = (key) => {
@@ -64,16 +80,27 @@ function HolidayManagement() {
     return "";
   };
 
+  // Format date → "2025 Sep 23"
+  const formatDate = (dateStr) => {
+    if (!dateStr) return "-";
+    const date = new Date(dateStr);
+    return date.toLocaleDateString("en-US", {
+      year: "numeric",
+      month: "short",
+      day: "numeric",
+    });
+  };
+
   // Filter + sort data
   const filteredHolidays = holidays
-    .filter((h) =>
-      Object.values(h).join(" ").toLowerCase().includes(search.toLowerCase())
-    )
-    .sort((a, b) => {
-      if (!sortConfig.key || !sortConfig.direction) return 0;
-      const dir = sortConfig.direction === "ascending" ? 1 : -1;
-      return a[sortConfig.key] > b[sortConfig.key] ? dir : -dir;
-    });
+  .filter((h) => {
+    if (!h.date) return false;
+    const d = new Date(h.date);
+    return d.getMonth() + 1 === month && d.getFullYear() === year;
+  })
+  .filter((h) =>
+    Object.values(h).join(" ").toLowerCase().includes(search.toLowerCase())
+  )
 
   // Pagination logic
   const totalPages = Math.ceil(filteredHolidays.length / rowsPerPage);
@@ -84,45 +111,78 @@ function HolidayManagement() {
   );
 
   const resetFilters = () => {
-    setSearch("");
-    setSortConfig({ key: "", direction: "" });
-    setCurrentPage(1);
-    setRowsPerPage(10);
-  };
+  setSearch("");
+  setSortConfig({ key: "", direction: "" });
+  setMonth(new Date().getMonth() + 1);  
+  setYear(new Date().getFullYear());  
+  setCurrentPage(1);
+  setRowsPerPage(10);
+};
 
   // Add or Edit holiday
-  const handleSaveHoliday = () => {
-    if (!newHoliday.date || !newHoliday.name.trim()) {
-      alert("Please enter both date and holiday name.");
-      return;
+  const handleSaveHoliday = async () => {
+    if (!newHoliday.date || !newHoliday.holiday_name.trim()) {
+  setValidationError("⚠️ Please enter both date and holiday name.");
+  return;
+}
+
+    try {
+      if (editHoliday) {
+        // Update existing holiday
+        const res = await fetch(
+          `http://localhost:8000/holiday/${editHoliday.id}`,
+          {
+            method: "PUT",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(newHoliday),
+          }
+        );
+        if (!res.ok) throw new Error("Failed to update holiday");
+      } else {
+        // Add new holiday
+        const res = await fetch("http://localhost:8000/holiday/", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(newHoliday),
+        });
+        if (!res.ok) throw new Error("Failed to add holiday");
+      }
+      await fetchHolidays();
+      setNewHoliday({ date: "", holiday_name: "", created_by: 1 });
+      setEditHoliday(null);
+      setIsModalOpen(false);
+    } catch (error) {
+      console.error("Error saving holiday:", error);
     }
-    if (editIndex !== null) {
-      // Editing
-      const updated = [...holidays];
-      updated[editIndex] = newHoliday;
-      setHolidays(updated);
-    } else {
-      // Adding
-      setHolidays([...holidays, newHoliday]);
-    }
-    setNewHoliday({ date: "", name: "" });
-    setEditIndex(null);
-    setIsModalOpen(false);
   };
 
   // Confirm delete
-  const confirmDelete = () => {
-    if (deleteIndex !== null) {
-      const updated = holidays.filter((_, i) => i !== deleteIndex);
-      setHolidays(updated);
+  const confirmDelete = async () => {
+    if (deleteHoliday) {
+      try {
+        const res = await fetch(
+          `http://localhost:8000/holiday/${deleteHoliday.id}`,
+          {
+            method: "DELETE",
+          }
+        );
+        if (!res.ok) throw new Error("Failed to delete holiday");
+        await fetchHolidays();
+      } catch (error) {
+        console.error("Error deleting holiday:", error);
+      }
     }
-    setDeleteIndex(null);
+    setDeleteHoliday(null);
   };
 
   // Open modal for editing
-  const handleEdit = (index) => {
-    setNewHoliday(holidays[index]);
-    setEditIndex(index);
+  const handleEdit = (holiday) => {
+    setNewHoliday({
+      date: holiday.date,
+      holiday_name: holiday.holiday_name,
+      created_by: holiday.created_by || 1,
+    });
+    setEditHoliday(holiday);
     setIsModalOpen(true);
   };
 
@@ -141,12 +201,12 @@ function HolidayManagement() {
         </h1>
         <div className="absolute right-10">
           <button
-            onClick={() => navigate(-1)}
-            className="px-5 py-2 bg-red-500 hover:bg-red-600 text-white font-bold rounded-lg shadow flex items-center gap-2 transition-transform hover:scale-105 active:scale-95"
-          >
-            <ArrowUturnLeftIcon className="h-5 w-5" />
-            Back
-          </button>
+  onClick={() => navigate(-1)}
+  className="w-40 px-6 py-3 bg-red-500 hover:bg-red-600 hover:scale-105 active:scale-95 transition-transform duration-200 text-white font-bold rounded-lg shadow flex items-center justify-center gap-2"
+>
+  <ArrowUturnLeftIcon className="h-5 w-5 text-white" />
+  <span>Back</span>
+</button>
         </div>
       </div>
 
@@ -172,6 +232,32 @@ function HolidayManagement() {
               className="px-4 py-2 border rounded-md shadow-sm text-base focus:ring-2 focus:ring-indigo-400"
             />
           </div>
+
+          {/* Month & Year Selectors */}
+<div className="flex gap-3">
+  <select
+    value={month}
+    onChange={(e) => setMonth(Number(e.target.value))}
+    className="px-3 py-2 border rounded-md text-base"
+  >
+    {monthNames.map((m, i) => (
+      <option key={i + 1} value={i + 1}>
+        {m}
+      </option>
+    ))}
+  </select>
+  <select
+    value={year}
+    onChange={(e) => setYear(Number(e.target.value))}
+    className="px-3 py-2 border rounded-md text-base"
+  >
+    {Array.from({ length: 5 }, (_, i) => year - 2 + i).map((y) => (
+      <option key={y} value={y}>
+        {y}
+      </option>
+    ))}
+  </select>
+</div>
 
           {/* Rows per page */}
           <div>
@@ -201,8 +287,8 @@ function HolidayManagement() {
           <button
             onClick={() => {
               setIsModalOpen(true);
-              setEditIndex(null);
-              setNewHoliday({ date: "", name: "" });
+              setEditHoliday(null);
+              setNewHoliday({ date: "", holiday_name: "", created_by: 1 });
             }}
             className="flex items-center gap-2 px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-md shadow text-base font-semibold"
           >
@@ -217,36 +303,30 @@ function HolidayManagement() {
         <table className="w-full border-collapse bg-white shadow-lg rounded-xl overflow-hidden text-lg">
           <thead>
             <tr className="bg-indigo-500 text-white text-lg">
-              <th
-                className="p-4 cursor-pointer select-none"
-                onClick={() => requestSort("date")}
-              >
+              <th className="p-4 cursor-pointer" onClick={() => requestSort("date")}>
                 Date {getArrow("date")}
               </th>
-              <th
-                className="p-4 cursor-pointer select-none"
-                onClick={() => requestSort("name")}
-              >
-                Holiday Name {getArrow("name")}
+              <th className="p-4 cursor-pointer" onClick={() => requestSort("holiday_name")}>
+                Holiday Name {getArrow("holiday_name")}
               </th>
               <th className="p-4">Actions</th>
             </tr>
           </thead>
           <tbody>
             {currentRows.length > 0 ? (
-              currentRows.map((h, i) => (
-                <tr key={i} className="text-center border-b">
-                  <td className="p-4">{h.date}</td>
-                  <td className="p-4">{h.name}</td>
+              currentRows.map((h) => (
+                <tr key={h.id} className="text-center border-b">
+                  <td className="p-4">{formatDate(h.date)}</td>
+                  <td className="p-4">{h.holiday_name}</td>
                   <td className="p-4 flex justify-center gap-3">
                     <button
-                      onClick={() => handleEdit(i + startIndex)}
+                      onClick={() => handleEdit(h)}
                       className="px-3 py-1 bg-blue-500 hover:bg-blue-600 text-white rounded-md shadow flex items-center gap-1"
                     >
                       <PencilSquareIcon className="h-5 w-5" /> Edit
                     </button>
                     <button
-                      onClick={() => setDeleteIndex(i + startIndex)}
+                      onClick={() => setDeleteHoliday(h)}
                       className="px-3 py-1 bg-red-500 hover:bg-red-600 text-white rounded-md shadow flex items-center gap-1"
                     >
                       <TrashIcon className="h-5 w-5" /> Delete
@@ -256,7 +336,7 @@ function HolidayManagement() {
               ))
             ) : (
               <tr>
-                <td colSpan="3" className="p-6 text-gray-500 text-center">
+                <td colSpan="4" className="p-6 text-gray-500 text-center">
                   No holidays found.
                 </td>
               </tr>
@@ -305,7 +385,7 @@ function HolidayManagement() {
               <XMarkIcon className="h-6 w-6" />
             </button>
             <h3 className="text-2xl font-bold text-indigo-700 mb-6 text-center">
-              {editIndex !== null ? "Edit Holiday" : "Add New Holiday"}
+              {editHoliday ? "Edit Holiday" : "Add New Holiday"}
             </h3>
             <div className="flex flex-col gap-4">
               <input
@@ -318,9 +398,9 @@ function HolidayManagement() {
               />
               <input
                 type="text"
-                value={newHoliday.name}
+                value={newHoliday.holiday_name}
                 onChange={(e) =>
-                  setNewHoliday({ ...newHoliday, name: e.target.value })
+                  setNewHoliday({ ...newHoliday, holiday_name: e.target.value })
                 }
                 placeholder="Holiday Name"
                 className="px-4 py-2 border rounded-md shadow-sm text-base focus:ring-2 focus:ring-indigo-400"
@@ -336,7 +416,7 @@ function HolidayManagement() {
                   onClick={handleSaveHoliday}
                   className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-md shadow font-semibold"
                 >
-                  {editIndex !== null ? "Save Changes" : "Save"}
+                  {editHoliday ? "Save Changes" : "Save"}
                 </button>
               </div>
             </div>
@@ -345,7 +425,7 @@ function HolidayManagement() {
       )}
 
       {/* Delete Confirmation Modal */}
-      {deleteIndex !== null && (
+      {deleteHoliday && (
         <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-40 z-50">
           <div className="bg-white p-8 rounded-lg shadow-lg w-[400px] relative text-center">
             <h3 className="text-2xl font-bold text-red-600 mb-6">
@@ -354,13 +434,13 @@ function HolidayManagement() {
             <p className="text-gray-700 mb-6">
               Are you sure you want to delete{" "}
               <span className="font-semibold">
-                {holidays[deleteIndex]?.name}
+                {deleteHoliday.holiday_name}
               </span>{" "}
-              ({holidays[deleteIndex]?.date})?
+              ({formatDate(deleteHoliday.date)})?
             </p>
             <div className="flex justify-between">
               <button
-                onClick={() => setDeleteIndex(null)}
+                onClick={() => setDeleteHoliday(null)}
                 className="px-4 py-2 bg-gray-300 hover:bg-gray-400 rounded-md shadow font-semibold"
               >
                 Cancel
@@ -375,6 +455,22 @@ function HolidayManagement() {
           </div>
         </div>
       )}
+
+      {/* Validation Error Modal */}
+{validationError && (
+  <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-40 z-50">
+    <div className="bg-white p-6 rounded-lg shadow-lg w-[350px] text-center relative">
+      <h3 className="text-xl font-bold text-red-600 mb-4">Validation Error</h3>
+      <p className="text-gray-700 mb-6">{validationError}</p>
+      <button
+        onClick={() => setValidationError(null)}
+        className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-md shadow font-semibold"
+      >
+        OK
+      </button>
+    </div>
+  </div>
+)}
 
       {/* Footer */}
       <Footer />

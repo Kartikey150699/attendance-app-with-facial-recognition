@@ -111,7 +111,7 @@ function WorkApplicationLogin() {
           setStatusMessages([`✅ Welcome ${face.name}`]);
           setTimeout(() => {
             navigate("/work-application", { 
-  state: { user: face.name, employeeId }   // <-- pass both
+  state: { user: face.name, employeeId }   // pass both
 });
           }, 500);
         } else if (face.status === "invalid_employee_id") {

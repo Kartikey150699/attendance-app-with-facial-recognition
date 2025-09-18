@@ -33,7 +33,7 @@ function AdminLogin() {
     const data = await response.json();
 
     if (response.ok && !data.error) {
-      // ✅ Save logged-in admin in localStorage
+      // Save logged-in admin in localStorage
       localStorage.setItem("currentAdmin", data.admin.username);
       localStorage.setItem("currentAdminId", data.admin.id); // optional if needed later
       navigate("/admin-dashboard");

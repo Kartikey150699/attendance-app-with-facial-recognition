@@ -7,6 +7,7 @@ import {
   XMarkIcon,
   UserIcon,
   IdentificationIcon,
+  DocumentTextIcon,
 } from "@heroicons/react/24/solid";
 import Footer from "./Footer";
 import HeaderDateTime from "./HeaderDateTime";
@@ -61,6 +62,25 @@ function YourApplications() {
     fetchApplications();
   }, [employeeId]);
 
+  // Date formatter
+  const formatDate = (dateString) => {
+    if (!dateString) return "-";
+    return new Date(dateString).toLocaleDateString("en-US", {
+      year: "numeric",
+      month: "short",
+      day: "numeric",
+    });
+  };
+
+  // Time formatter
+  const formatTime = (timeString) => {
+    if (!timeString) return "-";
+    return new Date(`1970-01-01T${timeString}`).toLocaleTimeString("en-US", {
+      hour: "2-digit",
+      minute: "2-digit",
+    });
+  };
+
   // Sorting
   const requestSort = (key) => {
     let direction = "ascending";
@@ -87,9 +107,9 @@ function YourApplications() {
   // Filter + sort data
   const filteredApps = applications
     .filter((app) => {
-      if (!app.start_date) return false;
-      const appMonth = new Date(app.start_date).getMonth() + 1;
-      const appYear = new Date(app.start_date).getFullYear();
+      if (!app.created_at) return false;
+      const appMonth = new Date(app.created_at).getMonth() + 1;
+      const appYear = new Date(app.created_at).getFullYear();
       return appMonth === month && appYear === year;
     })
     .filter(
@@ -101,6 +121,14 @@ function YourApplications() {
     .sort((a, b) => {
       if (!sortConfig.key || !sortConfig.direction) return 0;
       const dir = sortConfig.direction === "ascending" ? 1 : -1;
+
+      // Sort created_at as proper dates
+      if (sortConfig.key === "created_at") {
+        const dateA = new Date(a.created_at);
+        const dateB = new Date(b.created_at);
+        return dateA > dateB ? dir : -dir;
+      }
+
       return a[sortConfig.key] > b[sortConfig.key] ? dir : -dir;
     });
 
@@ -145,18 +173,28 @@ function YourApplications() {
 
       {/* User Info */}
       <div className="max-w-7xl w-full mx-auto px-6 mt-6">
-        <div className="bg-white shadow-md rounded-lg p-4 flex justify-between text-lg font-semibold">
-          <span className="flex items-center gap-2">
-            <UserIcon className="h-6 w-6 text-indigo-600" />
-            Name: <span className="text-red-600">{user}</span>
-          </span>
-          <span className="flex items-center gap-2">
-            <IdentificationIcon className="h-6 w-6 text-indigo-600" />
-            Employee ID: <span className="text-red-600">{employeeId}</span>
-          </span>
-        </div>
-      </div>
+  <div className="bg-white shadow-md rounded-lg p-4 flex justify-between items-center text-lg font-semibold">
+    
+    {/* Left */}
+    <span className="flex items-center gap-2">
+      <UserIcon className="h-6 w-6 text-indigo-600" />
+      Name: <span className="text-red-600">{user}</span>
+    </span>
 
+    {/* Center */}
+    <span className="flex items-center gap-2 text-indigo-700 text-2xl font-bold">
+      <DocumentTextIcon className="h-6 w-6" />
+      Your Applications
+    </span>
+
+    {/* Right */}
+    <span className="flex items-center gap-2">
+      <IdentificationIcon className="h-6 w-6 text-indigo-600" />
+      Employee ID: <span className="text-red-600">{employeeId}</span>
+    </span>
+
+  </div>
+</div>
       {/* Filters Section */}
       <div className="max-w-7xl w-full mx-auto px-6 mt-6 mb-6">
         <div className="flex flex-wrap gap-4 justify-between items-center bg-white p-5 rounded-lg shadow text-lg">
@@ -230,6 +268,9 @@ function YourApplications() {
               <th className="p-4 cursor-pointer select-none" onClick={() => requestSort("application_type")}>
                 Type {getArrow("application_type")}
               </th>
+              <th className="p-4 cursor-pointer select-none" onClick={() => requestSort("created_at")}>
+                Submission Date {getArrow("created_at")}
+              </th>
               <th className="p-4 cursor-pointer select-none" onClick={() => requestSort("start_date")}>
                 Start Date {getArrow("start_date")}
               </th>
@@ -254,10 +295,11 @@ function YourApplications() {
                 return (
                   <tr key={app.id} className="text-center border-b">
                     <td className="p-4">{app.application_type}</td>
-                    <td className="p-4">{app.start_date}</td>
-                    <td className="p-4">{app.end_date}</td>
-                    <td className="p-4">{app.start_time || "-"}</td>
-                    <td className="p-4">{app.end_time || "-"}</td>
+                    <td className="p-4">{formatDate(app.created_at)}</td>
+                    <td className="p-4">{formatDate(app.start_date)}</td>
+                    <td className="p-4">{formatDate(app.end_date)}</td>
+                    <td className="p-4">{formatTime(app.start_time)}</td>
+                    <td className="p-4">{formatTime(app.end_time)}</td>
                     <td
                       className="p-4 text-blue-700 underline cursor-pointer"
                       onClick={() => setSelectedReason(app.reason)}
@@ -281,7 +323,7 @@ function YourApplications() {
               })
             ) : (
               <tr>
-                <td colSpan="8" className="p-6 text-center text-gray-500">
+                <td colSpan="9" className="p-6 text-center text-gray-500">
                   No applications found for this month.
                 </td>
               </tr>

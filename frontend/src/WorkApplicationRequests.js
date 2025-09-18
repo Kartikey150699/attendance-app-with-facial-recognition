@@ -18,10 +18,10 @@ function WorkApplicationRequests() {
   const [selectedReason, setSelectedReason] = useState(null);
 
   // Confirmation modal
-  const [confirmModal, setConfirmModal] = useState(null); // {id, newStatus}
+  const [confirmModal, setConfirmModal] = useState(null);
 
   // Notification modal
-  const [notification, setNotification] = useState(null); // {type, message}
+  const [notification, setNotification] = useState(null);
 
   // Pagination + filters
   const [currentPage, setCurrentPage] = useState(1);
@@ -42,6 +42,25 @@ function WorkApplicationRequests() {
     };
     fetchApplications();
   }, []);
+
+  // Date formatter
+  const formatDate = (dateString) => {
+    if (!dateString) return "-";
+    return new Date(dateString).toLocaleDateString("en-US", {
+      year: "numeric",
+      month: "short",
+      day: "numeric",
+    });
+  };
+
+  // Time formatter
+  const formatTime = (timeString) => {
+    if (!timeString) return "-";
+    return new Date(`1970-01-01T${timeString}`).toLocaleTimeString("en-US", {
+      hour: "2-digit",
+      minute: "2-digit",
+    });
+  };
 
   // Sorting
   const requestSort = (key) => {
@@ -82,6 +101,9 @@ function WorkApplicationRequests() {
     .sort((a, b) => {
       if (!sortConfig.key || !sortConfig.direction) return 0;
       const dir = sortConfig.direction === "ascending" ? 1 : -1;
+      if (sortConfig.key.includes("date")) {
+        return new Date(a[sortConfig.key]) > new Date(b[sortConfig.key]) ? dir : -dir;
+      }
       return a[sortConfig.key] > b[sortConfig.key] ? dir : -dir;
     });
 
@@ -128,7 +150,7 @@ function WorkApplicationRequests() {
   };
 
   return (
-    <div className="flex flex-col min-h-screen bg-gradient-to-tr from-gray-100 via-indigo-100 to-blue-200">
+    <div className="flex flex-col min-h-screen bg-gradient-to-tr from-gray-100 via-indigo-100 to-blue-200 pb-24">
       {/* Header */}
       <div className="w-full flex items-center justify-center px-10 py-4 bg-indigo-300 shadow-md relative">
         <div className="absolute left-10 text-blue-800 text-xl font-bold">
@@ -258,16 +280,14 @@ function WorkApplicationRequests() {
                       app.status === "Pending" ? "bg-yellow-100" : "bg-white"
                     }`}
                   >
-                    <td className="p-4">
-                      {app.created_at ? new Date(app.created_at).toLocaleDateString() : "-"}
-                    </td>
+                    <td className="p-4">{formatDate(app.created_at)}</td>
                     <td className="p-4">{app.employee_id}</td>
                     <td className="p-4">{app.name || "-"}</td>
                     <td className="p-4">
-                      {app.start_date} → {app.end_date}
+                      {formatDate(app.start_date)} → {formatDate(app.end_date)}
                     </td>
                     <td className="p-4">
-                      {app.start_time || "-"} → {app.end_time || "-"}
+                      {formatTime(app.start_time)} → {formatTime(app.end_time)}
                     </td>
                     <td
                       className="p-4 text-blue-700 underline cursor-pointer"

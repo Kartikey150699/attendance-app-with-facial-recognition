@@ -4,7 +4,7 @@ import {
   ClipboardDocumentListIcon,
   CalendarDaysIcon,
   ChartBarIcon,
-  BuildingOffice2Icon,
+  SunIcon,
   UserGroupIcon,
 } from "@heroicons/react/24/solid";
 import Footer from "./Footer";
@@ -99,12 +99,12 @@ function HrPortal() {
 
         {/* Holiday Management */}
         <button
-          onClick={() => navigate("/hrportal/holiday-management")}
-          className="p-10 bg-blue-600 hover:bg-blue-700 text-white rounded-2xl shadow-lg text-2xl font-bold flex flex-col items-center gap-4 transition-transform hover:scale-105"
-        >
-          <BuildingOffice2Icon className="h-12 w-12" />
-          Holiday Management
-        </button>
+  onClick={() => navigate("/hrportal/holiday-management")}
+  className="p-10 bg-blue-600 hover:bg-blue-700 text-white rounded-2xl shadow-lg text-2xl font-bold flex flex-col items-center gap-4 transition-transform hover:scale-105"
+>
+  <SunIcon className="h-12 w-12" />
+  Holiday Management
+</button>
 
         {/* Logs & Reports */}
         <button

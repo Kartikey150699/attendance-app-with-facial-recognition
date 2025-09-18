@@ -16,7 +16,7 @@ import HeaderDateTime from "./HeaderDateTime";
 function AdminDashboard() {
   const [dateTime, setDateTime] = useState(new Date());
   const [currentAdmin, setCurrentAdmin] = useState(null);
-  const [pendingCount, setPendingCount] = useState(0); // ✅ pending requests count
+  const [pendingCount, setPendingCount] = useState(0);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -30,7 +30,7 @@ function AdminDashboard() {
     return () => clearInterval(timer);
   }, []);
 
-  // ✅ Fetch pending requests count
+  // Fetch pending requests count
   useEffect(() => {
     const fetchPendingCount = async () => {
       try {
@@ -126,7 +126,7 @@ function AdminDashboard() {
             Change Admin Password
           </button>
 
-          {/* ✅ HR Portal with inside notification */}
+          {/* HR Portal with inside notification */}
           <button
             onClick={() => navigate("/hr-portal")}
             className="relative px-10 py-6 bg-purple-500 hover:bg-purple-600 hover:scale-105 active:scale-95 

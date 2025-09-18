@@ -331,7 +331,7 @@ async def mark_attendance(
             else:
                 status = "invalid_action"
 
-            # ✅ Recalculate total work
+            # Recalculate total work
             calculate_total_work(record)
 
             db.commit()

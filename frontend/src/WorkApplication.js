@@ -98,7 +98,7 @@ function WorkApplication() {
     }
   };
 
-  const todayStr = new Date().toISOString().split("T")[0]; // today for min date
+  const todayStr = new Date().toISOString().split("T")[0];
 
   return (
     <div className="flex flex-col min-h-screen bg-gradient-to-tr from-gray-100 via-indigo-100 to-blue-200 overflow-x-hidden">

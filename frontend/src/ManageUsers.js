@@ -16,7 +16,7 @@ function ManageUsers() {
   const [newName, setNewName] = useState("");
   const [popupMessage, setPopupMessage] = useState("");
   const [showPopup, setShowPopup] = useState(false);
-  const [popupMode, setPopupMode] = useState(null); // "edit" | "delete" | "message"
+  const [popupMode, setPopupMode] = useState(null);
   const [selectedUser, setSelectedUser] = useState(null);
   const [searchTerm, setSearchTerm] = useState("");
 
