@@ -54,7 +54,13 @@ function YourApplications() {
         );
         if (!res.ok) throw new Error("Failed to fetch applications");
         const data = await res.json();
-        setApplications(data);
+
+        // ✅ Ensure only this user's applications are shown
+        const filtered = data.filter(
+          (app) => app.employee_id === employeeId
+        );
+
+        setApplications(filtered);
       } catch (err) {
         console.error("Error fetching applications:", err);
       }
@@ -122,7 +128,6 @@ function YourApplications() {
       if (!sortConfig.key || !sortConfig.direction) return 0;
       const dir = sortConfig.direction === "ascending" ? 1 : -1;
 
-      // Sort created_at as proper dates
       if (sortConfig.key === "created_at") {
         const dateA = new Date(a.created_at);
         const dateB = new Date(b.created_at);
@@ -173,28 +178,22 @@ function YourApplications() {
 
       {/* User Info */}
       <div className="max-w-7xl w-full mx-auto px-6 mt-6">
-  <div className="bg-white shadow-md rounded-lg p-4 flex justify-between items-center text-lg font-semibold">
-    
-    {/* Left */}
-    <span className="flex items-center gap-2">
-      <UserIcon className="h-6 w-6 text-indigo-600" />
-      Name: <span className="text-red-600">{user}</span>
-    </span>
+        <div className="bg-white shadow-md rounded-lg p-4 flex justify-between items-center text-lg font-semibold">
+          <span className="flex items-center gap-2">
+            <UserIcon className="h-6 w-6 text-indigo-600" />
+            Name: <span className="text-red-600">{user}</span>
+          </span>
+          <span className="flex items-center gap-2 text-indigo-700 text-2xl font-bold">
+            <DocumentTextIcon className="h-6 w-6" />
+            Your Applications
+          </span>
+          <span className="flex items-center gap-2">
+            <IdentificationIcon className="h-6 w-6 text-indigo-600" />
+            Employee ID: <span className="text-red-600">{employeeId}</span>
+          </span>
+        </div>
+      </div>
 
-    {/* Center */}
-    <span className="flex items-center gap-2 text-indigo-700 text-2xl font-bold">
-      <DocumentTextIcon className="h-6 w-6" />
-      Your Applications
-    </span>
-
-    {/* Right */}
-    <span className="flex items-center gap-2">
-      <IdentificationIcon className="h-6 w-6 text-indigo-600" />
-      Employee ID: <span className="text-red-600">{employeeId}</span>
-    </span>
-
-  </div>
-</div>
       {/* Filters Section */}
       <div className="max-w-7xl w-full mx-auto px-6 mt-6 mb-6">
         <div className="flex flex-wrap gap-4 justify-between items-center bg-white p-5 rounded-lg shadow text-lg">

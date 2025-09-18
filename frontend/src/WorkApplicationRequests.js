@@ -5,6 +5,7 @@ import {
   MagnifyingGlassIcon,
   ArrowPathIcon,
   XMarkIcon,
+  ClipboardDocumentListIcon,
 } from "@heroicons/react/24/solid";
 import Footer from "./Footer";
 import HeaderDateTime from "./HeaderDateTime";
@@ -175,10 +176,11 @@ function WorkApplicationRequests() {
 
       {/* Page Title */}
       <div className="flex justify-center py-6">
-        <h2 className="text-3xl font-bold text-indigo-700 flex items-center gap-3">
-          Work Application Requests
-        </h2>
-      </div>
+  <h2 className="text-3xl font-bold text-indigo-700 flex items-center gap-3">
+    <ClipboardDocumentListIcon className="h-8 w-8 text-indigo-700" />
+    Work Application Requests
+  </h2>
+</div>
 
       {/* Filters */}
       <div className="max-w-7xl w-full mx-auto px-6 mt-4 mb-6">
