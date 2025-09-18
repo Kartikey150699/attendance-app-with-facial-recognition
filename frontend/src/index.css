@@ -27,10 +27,140 @@ body {
 /* Calendar holiday tiles */
 .react-calendar__tile.holiday-tile {
   background-color: #fca5a5 !important; /* red-300 */
-  border-radius: 0.5rem;
+  border-radius: 50%;
   color: white !important;
+  font-weight: 700;
 }
-
 .react-calendar__tile.holiday-tile:hover {
   background-color: #f87171 !important; /* red-400 */
+}
+.react-calendar__tile.holiday-tile:active {
+  background-color: #991b1b !important; /* dark red */
+}
+
+/* Calendar container */
+.react-calendar {
+  border: none;
+  border-radius: 20px;
+  background: linear-gradient(135deg, #fdfcff, #eef2ff);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+  padding: 25px;
+  font-family: "Inter", sans-serif;
+  font-size: 1.1rem;
+  font-weight: 600;
+}
+
+/* Weekday headers */
+.react-calendar__month-view__weekdays {
+  background: linear-gradient(90deg, #4f46e5, #2563eb);
+  color: white;
+  border-radius: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+  font-size: 1rem;
+  padding: 10px 0;
+  letter-spacing: 0.5px;
+}
+.react-calendar__month-view__weekdays abbr {
+  text-decoration: none !important;
+}
+
+/* Day tiles */
+.react-calendar__tile {
+  border-radius: 14px;
+  transition: all 0.25s ease-in-out;
+  font-size: 1.1rem;
+  font-weight: 600;
+  padding: 15px 0;
+}
+
+/* Hover effect */
+.react-calendar__tile:hover {
+  background: #e0e7ff !important;
+  transform: scale(1.05);
+  box-shadow: 0 3px 12px rgba(0, 0, 0, 0.1);
+}
+
+/* Today's date */
+.react-calendar__tile--now {
+  background: linear-gradient(135deg, #f43f5e, #f97316) !important; /* red → orange */
+  color: white !important;
+  font-weight: 700;
+  border-radius: 50%;
+  box-shadow: 0 5px 14px rgba(244, 63, 94, 0.5);
+  transition: all 0.25s ease-in-out;
+}
+.react-calendar__tile--now:hover {
+  background: linear-gradient(135deg, #dc2626, #ea580c) !important; /* darker red/orange */
+  color: #fff !important;
+  transform: scale(1.1);
+  box-shadow: 0 6px 18px rgba(220, 38, 38, 0.6);
+}
+
+/* Selected date */
+.react-calendar__tile--active {
+  background: linear-gradient(135deg, #2563eb, #4f46e5) !important;
+  color: white !important;
+  font-weight: 700;
+  border-radius: 50%;
+  transform: scale(1.1);
+  box-shadow: 0 5px 16px rgba(37, 99, 235, 0.4);
+}
+
+/* Weekends */
+.react-calendar__month-view__days__day--weekend {
+  color: #ef4444;
+  font-weight: 700;
+}
+
+/* Animations */
+
+/* General fade-slide animation */
+.animate-calendar {
+  animation: fadeSlide 0.4s ease-in-out;
+}
+@keyframes fadeSlide {
+  0% {
+    opacity: 0;
+    transform: translateY(20px) scale(0.98);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+/* Slide animations for month switch */
+.calendar-container {
+  animation-duration: 0.4s;
+  animation-fill-mode: both;
+}
+
+.slide-left {
+  animation-name: slideLeft;
+}
+.slide-right {
+  animation-name: slideRight;
+}
+
+@keyframes slideLeft {
+  from {
+    opacity: 0;
+    transform: translateX(80px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes slideRight {
+  from {
+    opacity: 0;
+    transform: translateX(-80px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
 }

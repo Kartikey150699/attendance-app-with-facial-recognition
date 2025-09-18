@@ -55,7 +55,7 @@ function YourApplications() {
         if (!res.ok) throw new Error("Failed to fetch applications");
         const data = await res.json();
 
-        // ✅ Ensure only this user's applications are shown
+        // only this user's applications are shown
         const filtered = data.filter(
           (app) => app.employee_id === employeeId
         );

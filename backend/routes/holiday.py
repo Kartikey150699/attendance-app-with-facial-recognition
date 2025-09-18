@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
 from utils.db import get_db
 from models.Holiday import Holiday
@@ -38,17 +38,29 @@ class HolidayResponse(BaseModel):
 # Routes
 # -----------------------------
 
-# Get all holidays
+# Get all holidays (with optional month/year filter)
 @router.get("/", response_model=List[HolidayResponse])
-def get_holidays(db: Session = Depends(get_db)):
-    holidays = db.query(Holiday).order_by(Holiday.date.asc()).all()
+def get_holidays(
+    db: Session = Depends(get_db),
+    year: Optional[int] = Query(None),
+    month: Optional[int] = Query(None),
+):
+    query = db.query(Holiday)
+    if year and month:
+        from calendar import monthrange
+        from datetime import date
+        start_date = date(year, month, 1)
+        end_date = date(year, month, monthrange(year, month)[1])
+        query = query.filter(Holiday.date >= start_date, Holiday.date <= end_date)
+
+    holidays = query.order_by(Holiday.date.asc()).all()
     return holidays
 
 
 # Add a holiday
 @router.post("/", response_model=HolidayResponse)
 def add_holiday(payload: HolidayBase, db: Session = Depends(get_db)):
-    # 🔹 Remove uniqueness check if you want multiple holidays on same date
+    # 🔹 Remove uniqueness check if multiple holidays on same date are allowed
     existing = db.query(Holiday).filter(Holiday.date == payload.date).first()
     if existing:
         raise HTTPException(status_code=400, detail="Holiday already exists on this date")
@@ -56,7 +68,7 @@ def add_holiday(payload: HolidayBase, db: Session = Depends(get_db)):
     new_holiday = Holiday(
         date=payload.date,
         holiday_name=payload.holiday_name,
-        created_by=payload.created_by,  # ✅ keep it integer (nullable)
+        created_by=payload.created_by,
     )
     db.add(new_holiday)
     db.commit()
