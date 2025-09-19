@@ -23,13 +23,13 @@ function HolidayManagement() {
   const [search, setSearch] = useState("");
   const [sortConfig, setSortConfig] = useState({ key: "", direction: "" });
 
-  // Pagination
-  const [currentPage, setCurrentPage] = useState(1);
-  const [rowsPerPage, setRowsPerPage] = useState(10);
-
   // Modal state
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [newHoliday, setNewHoliday] = useState({ date: "", holiday_name: "", created_by: 1 });
+  const [newHoliday, setNewHoliday] = useState({
+    date: "",
+    holiday_name: "",
+    created_by: 1,
+  });
   const [editHoliday, setEditHoliday] = useState(null);
 
   // Delete confirmation modal
@@ -38,13 +38,14 @@ function HolidayManagement() {
   // Validation Error Modal
   const [validationError, setValidationError] = useState(null);
 
+  // Month & Year state
   const [month, setMonth] = useState(new Date().getMonth() + 1);
   const [year, setYear] = useState(new Date().getFullYear());
 
   const monthNames = [
-  "January","February","March","April","May","June",
-  "July","August","September","October","November","December"
-];
+    "January","February","March","April","May","June",
+    "July","August","September","October","November","December"
+  ];
 
   // Fetch holidays from backend
   useEffect(() => {
@@ -93,38 +94,29 @@ function HolidayManagement() {
 
   // Filter + sort data
   const filteredHolidays = holidays
-  .filter((h) => {
-    if (!h.date) return false;
-    const d = new Date(h.date);
-    return d.getMonth() + 1 === month && d.getFullYear() === year;
-  })
-  .filter((h) =>
-    Object.values(h).join(" ").toLowerCase().includes(search.toLowerCase())
-  )
+    .filter((h) => {
+      if (!h.date) return false;
+      const d = new Date(h.date);
+      return d.getMonth() + 1 === month && d.getFullYear() === year;
+    })
+    .filter((h) =>
+      Object.values(h).join(" ").toLowerCase().includes(search.toLowerCase())
+    );
 
-  // Pagination logic
-  const totalPages = Math.ceil(filteredHolidays.length / rowsPerPage);
-  const startIndex = (currentPage - 1) * rowsPerPage;
-  const currentRows = filteredHolidays.slice(
-    startIndex,
-    startIndex + rowsPerPage
-  );
-
+  // Reset filters
   const resetFilters = () => {
-  setSearch("");
-  setSortConfig({ key: "", direction: "" });
-  setMonth(new Date().getMonth() + 1);  
-  setYear(new Date().getFullYear());  
-  setCurrentPage(1);
-  setRowsPerPage(10);
-};
+    setSearch("");
+    setSortConfig({ key: "", direction: "" });
+    setMonth(new Date().getMonth() + 1);
+    setYear(new Date().getFullYear());
+  };
 
   // Add or Edit holiday
   const handleSaveHoliday = async () => {
     if (!newHoliday.date || !newHoliday.holiday_name.trim()) {
-  setValidationError("⚠️ Please enter both date and holiday name.");
-  return;
-}
+      setValidationError("⚠️ Please enter both date and holiday name.");
+      return;
+    }
 
     try {
       if (editHoliday) {
@@ -186,6 +178,25 @@ function HolidayManagement() {
     setIsModalOpen(true);
   };
 
+  // Handle month navigation
+  const handlePrevMonth = () => {
+    if (month === 1) {
+      setMonth(12);
+      setYear((prev) => prev - 1);
+    } else {
+      setMonth((prev) => prev - 1);
+    }
+  };
+
+  const handleNextMonth = () => {
+    if (month === 12) {
+      setMonth(1);
+      setYear((prev) => prev + 1);
+    } else {
+      setMonth((prev) => prev + 1);
+    }
+  };
+
   return (
     <div className="flex flex-col min-h-screen bg-gradient-to-tr from-gray-100 via-indigo-100 to-blue-200">
       {/* Header */}
@@ -201,12 +212,12 @@ function HolidayManagement() {
         </h1>
         <div className="absolute right-10">
           <button
-  onClick={() => navigate(-1)}
-  className="w-40 px-6 py-3 bg-red-500 hover:bg-red-600 hover:scale-105 active:scale-95 transition-transform duration-200 text-white font-bold rounded-lg shadow flex items-center justify-center gap-2"
->
-  <ArrowUturnLeftIcon className="h-5 w-5 text-white" />
-  <span>Back</span>
-</button>
+            onClick={() => navigate("/hr-portal")}
+            className="w-40 px-6 py-3 bg-red-500 hover:bg-red-600 hover:scale-105 active:scale-95 transition-transform duration-200 text-white font-bold rounded-lg shadow flex items-center justify-center gap-2"
+          >
+            <ArrowUturnLeftIcon className="h-5 w-5 text-white" />
+            <span>Back</span>
+          </button>
         </div>
       </div>
 
@@ -234,41 +245,26 @@ function HolidayManagement() {
           </div>
 
           {/* Month & Year Selectors */}
-<div className="flex gap-3">
-  <select
-    value={month}
-    onChange={(e) => setMonth(Number(e.target.value))}
-    className="px-3 py-2 border rounded-md text-base"
-  >
-    {monthNames.map((m, i) => (
-      <option key={i + 1} value={i + 1}>
-        {m}
-      </option>
-    ))}
-  </select>
-  <select
-    value={year}
-    onChange={(e) => setYear(Number(e.target.value))}
-    className="px-3 py-2 border rounded-md text-base"
-  >
-    {Array.from({ length: 5 }, (_, i) => year - 2 + i).map((y) => (
-      <option key={y} value={y}>
-        {y}
-      </option>
-    ))}
-  </select>
-</div>
-
-          {/* Rows per page */}
-          <div>
+          <div className="flex gap-3">
             <select
-              value={rowsPerPage}
-              onChange={(e) => setRowsPerPage(Number(e.target.value))}
+              value={month}
+              onChange={(e) => setMonth(Number(e.target.value))}
               className="px-3 py-2 border rounded-md text-base"
             >
-              {[10, 20, 50].map((num) => (
-                <option key={num} value={num}>
-                  {num} rows
+              {monthNames.map((m, i) => (
+                <option key={i + 1} value={i + 1}>
+                  {m}
+                </option>
+              ))}
+            </select>
+            <select
+              value={year}
+              onChange={(e) => setYear(Number(e.target.value))}
+              className="px-3 py-2 border rounded-md text-base"
+            >
+              {Array.from({ length: 5 }, (_, i) => year - 2 + i).map((y) => (
+                <option key={y} value={y}>
+                  {y}
                 </option>
               ))}
             </select>
@@ -303,18 +299,24 @@ function HolidayManagement() {
         <table className="w-full border-collapse bg-white shadow-lg rounded-xl overflow-hidden text-lg">
           <thead>
             <tr className="bg-indigo-500 text-white text-lg">
-              <th className="p-4 cursor-pointer" onClick={() => requestSort("date")}>
+              <th
+                className="p-4 cursor-pointer"
+                onClick={() => requestSort("date")}
+              >
                 Date {getArrow("date")}
               </th>
-              <th className="p-4 cursor-pointer" onClick={() => requestSort("holiday_name")}>
+              <th
+                className="p-4 cursor-pointer"
+                onClick={() => requestSort("holiday_name")}
+              >
                 Holiday Name {getArrow("holiday_name")}
               </th>
               <th className="p-4">Actions</th>
             </tr>
           </thead>
           <tbody>
-            {currentRows.length > 0 ? (
-              currentRows.map((h) => (
+            {filteredHolidays.length > 0 ? (
+              filteredHolidays.map((h) => (
                 <tr key={h.id} className="text-center border-b">
                   <td className="p-4">{formatDate(h.date)}</td>
                   <td className="p-4">{h.holiday_name}</td>
@@ -344,37 +346,27 @@ function HolidayManagement() {
           </tbody>
         </table>
 
-        {/* Pagination */}
+        {/* Month Navigation */}
         <div className="flex justify-between items-center mt-6">
           <button
-            disabled={currentPage === 1}
-            onClick={() => setCurrentPage((prev) => prev - 1)}
-            className={`px-4 py-2 rounded-md font-semibold shadow ${
-              currentPage === 1
-                ? "bg-gray-300 text-gray-600 cursor-not-allowed"
-                : "bg-indigo-600 text-white hover:bg-indigo-700"
-            }`}
+            onClick={handlePrevMonth}
+            className="px-4 py-2 rounded-md font-semibold shadow bg-indigo-600 text-white hover:bg-indigo-700"
           >
-            Previous
+            Previous Month
           </button>
           <span className="text-lg font-semibold">
-            Page {currentPage} of {totalPages || 1}
+            {monthNames[month - 1]} {year}
           </span>
           <button
-            disabled={currentPage === totalPages || totalPages === 0}
-            onClick={() => setCurrentPage((prev) => prev + 1)}
-            className={`px-4 py-2 rounded-md font-semibold shadow ${
-              currentPage === totalPages || totalPages === 0
-                ? "bg-gray-300 text-gray-600 cursor-not-allowed"
-                : "bg-indigo-600 text-white hover:bg-indigo-700"
-            }`}
+            onClick={handleNextMonth}
+            className="px-4 py-2 rounded-md font-semibold shadow bg-indigo-600 text-white hover:bg-indigo-700"
           >
-            Next
+            Next Month
           </button>
         </div>
       </div>
 
-      {/* Modal for Add/Edit Holiday */}
+      {/* Modals (Add/Edit, Delete, Validation Error) */}
       {isModalOpen && (
         <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-40 z-50">
           <div className="bg-white p-8 rounded-lg shadow-lg w-[400px] relative">
@@ -424,7 +416,6 @@ function HolidayManagement() {
         </div>
       )}
 
-      {/* Delete Confirmation Modal */}
       {deleteHoliday && (
         <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-40 z-50">
           <div className="bg-white p-8 rounded-lg shadow-lg w-[400px] relative text-center">
@@ -456,21 +447,22 @@ function HolidayManagement() {
         </div>
       )}
 
-      {/* Validation Error Modal */}
-{validationError && (
-  <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-40 z-50">
-    <div className="bg-white p-6 rounded-lg shadow-lg w-[350px] text-center relative">
-      <h3 className="text-xl font-bold text-red-600 mb-4">Validation Error</h3>
-      <p className="text-gray-700 mb-6">{validationError}</p>
-      <button
-        onClick={() => setValidationError(null)}
-        className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-md shadow font-semibold"
-      >
-        OK
-      </button>
-    </div>
-  </div>
-)}
+      {validationError && (
+        <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-40 z-50">
+          <div className="bg-white p-6 rounded-lg shadow-lg w-[350px] text-center relative">
+            <h3 className="text-xl font-bold text-red-600 mb-4">
+              Validation Error
+            </h3>
+            <p className="text-gray-700 mb-6">{validationError}</p>
+            <button
+              onClick={() => setValidationError(null)}
+              className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-md shadow font-semibold"
+            >
+              OK
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* Footer */}
       <Footer />

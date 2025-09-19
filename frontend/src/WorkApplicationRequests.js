@@ -165,12 +165,12 @@ function WorkApplicationRequests() {
         </h1>
         <div className="absolute right-10">
           <button
-            onClick={() => navigate(-1)}
-            className="w-40 px-6 py-3 bg-red-500 hover:bg-red-600 hover:scale-105 active:scale-95 transition-transform duration-200 text-white font-bold rounded-lg shadow flex items-center justify-center gap-2"
-          >
-            <ArrowUturnLeftIcon className="h-5 w-5 text-white" />
-            <span>Back</span>
-          </button>
+  onClick={() => navigate("/hr-portal")}
+  className="w-40 px-6 py-3 bg-red-500 hover:bg-red-600 hover:scale-105 active:scale-95 transition-transform duration-200 text-white font-bold rounded-lg shadow flex items-center justify-center gap-2"
+>
+  <ArrowUturnLeftIcon className="h-5 w-5 text-white" />
+  <span>Back</span>
+</button>
         </div>
       </div>
 

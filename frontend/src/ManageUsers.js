@@ -154,7 +154,7 @@ function ManageUsers() {
 
       {/* Body */}
       <div className="flex flex-col items-center flex-grow py-10">
-        <h2 className="text-3xl font-bold text-indigo-700 mb-10 flex items-center gap-2">
+        <h2 className="text-4xl font-bold text-indigo-700 mb-10 flex items-center gap-2">
           <UsersIcon className="h-8 w-8 text-indigo-700" />
           Manage Users
         </h2>

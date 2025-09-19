@@ -28,12 +28,50 @@ def get_db():
 JST = timezone(timedelta(hours=9))
 
 # -------------------------
-# Cosine similarity
+# Cosine similarity (vectorized version will be used inside)
 # -------------------------
 def cosine_similarity(vec1, vec2):
     v1, v2 = np.array(vec1, dtype=float), np.array(vec2, dtype=float)
     v1, v2 = v1 / np.linalg.norm(v1), v2 / np.linalg.norm(v2)
     return float(np.dot(v1, v2))
+
+# -------------------------
+# Embedding Cache in Memory
+# -------------------------
+embedding_cache = []  # list of dicts {id, name, embeddings, np_embeddings}
+
+def load_embeddings(db: Session):
+    """Load all active user embeddings into memory cache."""
+    global embedding_cache
+    users = db.query(User).filter(User.is_active == True).all()
+    cache = []
+    for user in users:
+        try:
+            stored_embeddings = json.loads(user.embedding)
+            if isinstance(stored_embeddings[0], (int, float)):
+                stored_embeddings = [stored_embeddings]
+            np_embs = np.array(stored_embeddings, dtype=float)
+            # normalize once for fast cosine similarity
+            np_embs = np_embs / np.linalg.norm(np_embs, axis=1, keepdims=True)
+            cache.append({
+                "id": user.id,
+                "name": user.name,
+                "embeddings": stored_embeddings,
+                "np_embeddings": np_embs
+            })
+        except Exception as e:
+            print(f"⚠️ Failed to load embeddings for {user.name}: {e}")
+    embedding_cache = cache
+    print(f"✅ Loaded {len(embedding_cache)} users into embedding cache.")
+
+# initialize cache at startup
+with SessionLocal() as db:
+    load_embeddings(db)
+
+def refresh_embeddings():
+    """Call this after adding/removing/updating users."""
+    with SessionLocal() as db:
+        load_embeddings(db)
 
 # -------------------------
 # Helper: calculate total work
@@ -63,7 +101,7 @@ def detect_faces(tmp_path):
         reps = DeepFace.represent(
             img_path=tmp_path,
             model_name="ArcFace",
-            detector_backend="mtcnn",  # change to "retinaface" for more accuracy but slower
+            detector_backend="mtcnn",  # change to "retinaface" for deployment
             enforce_detection=False
         )
 
@@ -136,10 +174,31 @@ def detect_faces(tmp_path):
     return faces
 
 # -------------------------
+# Vectorized Matching Helper
+# -------------------------
+def find_best_match(embedding, threshold, fallback_threshold=0.0):
+    embedding = np.array(embedding, dtype=float)
+    embedding = embedding / np.linalg.norm(embedding)
+
+    best_match, best_score = None, -1
+    for user in embedding_cache:
+        sims = np.dot(user["np_embeddings"], embedding)
+        score = float(np.max(sims))
+        if score > best_score:
+            best_match, best_score = user, score
+
+    if best_match and best_score >= threshold:
+        return best_match, best_score, "match"
+    elif best_match and best_score >= fallback_threshold:
+        return best_match, best_score, "maybe"
+    else:
+        return None, best_score, "unknown"
+
+# -------------------------
 # Preview API
 # -------------------------
 @router.post("/preview")
-async def preview_faces(file: UploadFile = None, db: Session = Depends(get_db)):
+async def preview_faces(file: UploadFile = None):
     if not file:
         return {"error": "No image uploaded"}
 
@@ -153,28 +212,16 @@ async def preview_faces(file: UploadFile = None, db: Session = Depends(get_db)):
         return {"results": []}
 
     results = []
-    users = db.query(User).filter(User.is_active == True).all()
     threshold = 0.55
 
     for face in faces:
         embedding = face.get("embedding")
         box = face.get("facial_area", {})
-        best_match, best_score = None, -1
+        best_match, best_score, status = find_best_match(embedding, threshold)
 
-        if embedding is not None:
-            for user in users:
-                stored_embeddings = json.loads(user.embedding)
-                if isinstance(stored_embeddings[0], (int, float)):
-                    stored_embeddings = [stored_embeddings]
-
-                for stored_emb in stored_embeddings:
-                    score = cosine_similarity(embedding, stored_emb)
-                    if score > best_score:
-                        best_match, best_score = user, score
-
-        if best_match and best_score >= threshold:
+        if status == "match":
             results.append({
-                "name": best_match.name,
+                "name": best_match["name"],
                 "box": [box.get("x"), box.get("y"), box.get("w"), box.get("h")],
                 "status": "preview"
             })
@@ -261,27 +308,17 @@ async def mark_attendance(
         # -------------------------
         # Normal Attendance Flow
         # -------------------------
-        best_match, best_score = None, -1
-        users = db.query(User).filter(User.is_active == True).all()
-        for user in users:
-            stored_embeddings = json.loads(user.embedding)
-            if isinstance(stored_embeddings[0], (int, float)):
-                stored_embeddings = [stored_embeddings]
+        best_match, best_score, status = find_best_match(embedding, threshold, fallback_threshold)
 
-            for stored_emb in stored_embeddings:
-                score = cosine_similarity(embedding, stored_emb)
-                if score > best_score:
-                    best_match, best_score = user, score
-
-        if best_match and best_score >= threshold:
+        if status == "match":
             record = db.query(Attendance).filter(
-                Attendance.user_id == best_match.id,
+                Attendance.user_id == best_match["id"],
                 Attendance.date == today
             ).first()
 
             if not record:
-                record = Attendance(user_id=best_match.id,
-                                    user_name_snapshot=best_match.name,
+                record = Attendance(user_id=best_match["id"],
+                                    user_name_snapshot=best_match["name"],
                                     date=today)
                 db.add(record)
 
@@ -340,14 +377,14 @@ async def mark_attendance(
             db.refresh(record)
 
             results.append({
-                "name": best_match.name,
+                "name": best_match["name"],
                 "box": [box.get("x"), box.get("y"), box.get("w"), box.get("h")],
                 "status": status,
                 "total_work": record.total_work
             })
 
-        elif best_match and best_score >= fallback_threshold:
-            results.append({"name": best_match.name,
+        elif status == "maybe":
+            results.append({"name": best_match["name"],
                             "box": [box.get("x"), box.get("y"), box.get("w"), box.get("h")],
                             "status": "maybe_match"})
         else:

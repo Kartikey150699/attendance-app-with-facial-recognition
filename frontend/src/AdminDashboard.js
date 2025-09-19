@@ -85,13 +85,13 @@ function AdminDashboard() {
 
       {/* Dashboard Content */}
       <div className="flex flex-col items-center flex-grow py-10">
-        <h2 className="text-4xl font-bold text-indigo-700 mb-2 flex items-center justify-center gap-2">
+        <h2 className="text-4xl font-bold text-indigo-700 mb-2 flex items-center justify-center gap-4">
           <Cog6ToothIcon className="h-8 w-8 text-indigo-700" />
           Admin Dashboard
         </h2>
 
         {currentAdmin && (
-          <p className="text-xl font-semibold text-gray-700 mb-12">
+          <p className="text-2xl font-semibold text-gray-700 mb-12">
             Welcome <span className="text-indigo-700 font-bold">{currentAdmin}</span>
           </p>
         )}
@@ -100,8 +100,8 @@ function AdminDashboard() {
           {/* Row 1 */}
           <button
             onClick={() => navigate("/register-user")}
-            className="px-10 py-6 bg-green-500 hover:bg-green-600 hover:scale-105 active:scale-95 
-                       transition-transform duration-200 text-white text-xl font-bold rounded-lg shadow"
+            className="px-14 py-8 bg-green-500 hover:bg-green-600 hover:scale-105 active:scale-95 
+                       transition-transform duration-200 text-white text-2xl font-bold rounded-lg shadow"
           >
             <UserPlusIcon className="h-6 w-6 inline-block mr-2" />
             Register User
@@ -109,8 +109,8 @@ function AdminDashboard() {
 
           <button
             onClick={() => navigate("/attendance-logs")}
-            className="px-10 py-6 bg-blue-500 hover:bg-blue-600 hover:scale-105 active:scale-95 
-                       transition-transform duration-200 text-white text-xl font-bold rounded-lg shadow"
+            className="px-14 py-8 bg-blue-500 hover:bg-blue-600 hover:scale-105 active:scale-95 
+                       transition-transform duration-200 text-white text-2xl font-bold rounded-lg shadow"
           >
             <DocumentTextIcon className="h-6 w-6 inline-block mr-2" />
             View Attendance Logs
@@ -119,8 +119,8 @@ function AdminDashboard() {
           {/* Row 2 */}
           <button
             onClick={() => navigate("/change-password")}
-            className="px-10 py-6 bg-yellow-500 hover:bg-yellow-600 hover:scale-105 active:scale-95 
-                       transition-transform duration-200 text-white text-xl font-bold rounded-lg shadow"
+            className="px-14 py-8 bg-yellow-500 hover:bg-yellow-600 hover:scale-105 active:scale-95 
+                       transition-transform duration-200 text-white text-2xl font-bold rounded-lg shadow"
           >
             <LockClosedIcon className="h-6 w-6 inline-block mr-2" />
             Change Admin Password
@@ -129,8 +129,8 @@ function AdminDashboard() {
           {/* HR Portal with inside notification */}
           <button
             onClick={() => navigate("/hr-portal")}
-            className="relative px-10 py-6 bg-purple-500 hover:bg-purple-600 hover:scale-105 active:scale-95 
-                       transition-transform duration-200 text-white text-xl font-bold rounded-lg shadow flex items-center justify-center"
+            className="relative px-14 py-8 bg-purple-500 hover:bg-purple-600 hover:scale-105 active:scale-95 
+                       transition-transform duration-200 text-white text-2xl font-bold rounded-lg shadow flex items-center justify-center"
           >
             <UserGroupIcon className="h-6 w-6 inline-block mr-2" />
             HR Portal
@@ -144,8 +144,8 @@ function AdminDashboard() {
           {/* Row 3 */}
           <button
             onClick={() => navigate("/manage-users")}
-            className="px-10 py-6 bg-indigo-500 hover:bg-indigo-600 hover:scale-105 active:scale-95 
-                       transition-transform duration-200 text-white text-xl font-bold rounded-lg shadow"
+            className="px-14 py-8 bg-indigo-500 hover:bg-indigo-600 hover:scale-105 active:scale-95 
+                       transition-transform duration-200 text-white text-2xl font-bold rounded-lg shadow"
           >
             <UsersIcon className="h-6 w-6 inline-block mr-2" />
             Manage Users
@@ -153,8 +153,8 @@ function AdminDashboard() {
 
           <button
             onClick={() => navigate("/manage-admin")}
-            className="px-10 py-6 bg-pink-500 hover:bg-pink-600 hover:scale-105 active:scale-95 
-                       transition-transform duration-200 text-white text-xl font-bold rounded-lg shadow"
+            className="px-14 py-8 bg-pink-500 hover:bg-pink-600 hover:scale-105 active:scale-95 
+                       transition-transform duration-200 text-white text-2xl font-bold rounded-lg shadow"
           >
             <ShieldCheckIcon className="h-6 w-6 inline-block mr-2" />
             Manage Admins

@@ -71,14 +71,14 @@ function HrPortal() {
 
       {/* HR Portal Title */}
       <div className="flex justify-center py-8">
-        <h2 className="text-3xl font-bold text-indigo-700 flex items-center gap-3">
+        <h2 className="text-4xl font-bold text-indigo-700 flex items-center gap-3 mt-8">
           <UserGroupIcon className="h-8 w-8 text-indigo-700" />
           HR Portal
         </h2>
       </div>
 
       {/* 2x2 Grid Buttons */}
-      <div className="grid grid-cols-2 gap-8 max-w-4xl mx-auto mb-12">
+      <div className="grid grid-cols-2 gap-8 max-w-4xl mx-auto mb-12 mt-6">
         {/* Work Applications */}
         <div className="relative">
           <button

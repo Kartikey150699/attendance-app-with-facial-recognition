@@ -11,6 +11,9 @@ import cv2
 from pydantic import BaseModel
 from typing import List
 
+# Import refresh function from attendance
+from routes.attendance import refresh_embeddings
+
 router = APIRouter(prefix="/users", tags=["Users"])
 
 # -------------------------
@@ -128,6 +131,9 @@ async def register_user(
     db.commit()
     db.refresh(new_user)
 
+    # Refresh cache
+    refresh_embeddings()
+
     employee_id = format_employee_id(new_user.id)
     return {
         "message": f"✅ User {name} registered successfully!",
@@ -153,6 +159,10 @@ async def update_user_name(payload: UpdateNameRequest, db: Session = Depends(get
 
     user.name = payload.new_name
     db.commit()
+
+    # Refresh cache
+    refresh_embeddings()
+
     return {"message": f"✏️ User name updated from '{payload.current_name}' to '{payload.new_name}'"}
 
 # -------------------------
@@ -172,6 +182,10 @@ async def delete_user(name: str, db: Session = Depends(get_db)):
 
     db.delete(user)
     db.commit()
+
+    # Refresh cache
+    refresh_embeddings()
+
     return {"message": f"🗑️ User {user.name} deleted successfully (attendance preserved)."}
 
 # -------------------------

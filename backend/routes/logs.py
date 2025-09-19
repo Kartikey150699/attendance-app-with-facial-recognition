@@ -69,7 +69,7 @@ def get_attendance_logs(
 
     formatted_logs = []
     for log in logs:
-        # ✅ Ensure total_work is always up to date
+        # Ensure total_work is always up to date
         old_total = log.total_work
         calculate_total_work(log)
         if log.total_work != old_total:

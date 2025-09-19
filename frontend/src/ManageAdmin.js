@@ -217,7 +217,7 @@ function ManageAdmin() {
       <div className="flex flex-col items-center flex-grow py-10">
         <h2 className="text-3xl font-bold text-indigo-700 mb-10 flex items-center justify-center gap-2">
   <ShieldCheckIcon className="h-8 w-8 text-indigo-700" />
-  Manage Admin
+  Manage Admins
 </h2>
 
         {!showAddForm && !showDeleteForm && (
