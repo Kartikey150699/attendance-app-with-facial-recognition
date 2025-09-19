@@ -115,11 +115,19 @@ function CalendarView() {
           <HeaderDateTime />
         </div>
         <h1
-          onClick={() => navigate("/")}
-          className="text-5xl font-bold text-blue-900 cursor-pointer hover:text-blue-700 transition-colors"
-        >
-          FaceTrack Attendance
-        </h1>
+  onClick={() => {
+    // Clear *all* session-related storage
+    localStorage.removeItem("user");
+    localStorage.removeItem("employeeId");
+    localStorage.removeItem("currentAdmin");
+
+    // Replace history so no back navigation into logged-in pages
+    navigate("/", { replace: true });
+  }}
+  className="text-5xl font-bold text-blue-900 cursor-pointer hover:text-blue-700 transition-colors"
+>
+  FaceTrack Attendance
+</h1>
         <div className="absolute right-10">
           <button
             onClick={handleBack}

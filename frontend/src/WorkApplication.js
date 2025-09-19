@@ -19,9 +19,8 @@ function WorkApplication() {
     employee_id: localStorage.getItem("employeeId"),
   };
 
-  const user = location.state?.user || storedUser.name || "Guest";
-  const employeeId =
-    location.state?.employeeId || storedUser.employee_id || "EMP000";
+  const user = location.state?.user || storedUser.name || null;
+  const employeeId = location.state?.employeeId || storedUser.employee_id || null;
 
   const [dateTime, setDateTime] = useState(new Date());
 
@@ -40,6 +39,13 @@ function WorkApplication() {
     const timer = setInterval(() => setDateTime(new Date()), 1000);
     return () => clearInterval(timer);
   }, []);
+
+  // ✅ Protect route: redirect if not logged in
+  useEffect(() => {
+    if (!user || !employeeId) {
+      navigate("/work-application-login", { replace: true });
+    }
+  }, [user, employeeId, navigate]);
 
   // Format optional time
   const formatTime = (t) => (t ? (t.length === 5 ? `${t}:00` : t) : null);
@@ -115,11 +121,11 @@ function WorkApplication() {
 
         {/* Title */}
         <h1
-          onClick={() => navigate("/")}
-          className="text-5xl font-bold text-blue-900 cursor-pointer hover:text-blue-700 transition-colors"
-        >
-          FaceTrack Attendance
-        </h1>
+  onClick={() => navigate("/", { replace: true })}
+  className="text-5xl font-bold text-blue-900 cursor-pointer hover:text-blue-700 transition-colors"
+>
+  FaceTrack Attendance
+</h1>
 
         {/* Logout Button */}
         <div className="absolute right-10">
@@ -128,7 +134,8 @@ function WorkApplication() {
               // ✅ clear storage on logout
               localStorage.removeItem("user");
               localStorage.removeItem("employeeId");
-              navigate("/work-application-login");
+              navigate("/work-application-login", { replace: true });
+              window.location.reload();
             }}
             className="w-40 px-6 py-3 bg-red-500 hover:bg-red-600 hover:scale-105 active:scale-95 
                        transition-transform duration-200 text-white font-bold rounded-lg shadow flex items-center justify-center gap-2"

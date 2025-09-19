@@ -138,11 +138,20 @@ function LogsReports() {
           <HeaderDateTime />
         </div>
         <h1
-          onClick={() => navigate("/")}
-          className="text-5xl font-bold text-blue-900 cursor-pointer hover:text-blue-700 transition-colors"
-        >
-          FaceTrack Attendance
-        </h1>
+  onClick={() => {
+    // Clear admin session
+    localStorage.removeItem("currentAdmin");
+
+    // First replace current page with /admin-login
+    navigate("/admin-login", { replace: true });
+
+    // Then push home on top
+    navigate("/", { replace: false });
+  }}
+  className="text-5xl font-bold text-blue-900 cursor-pointer hover:text-blue-700 transition-colors"
+>
+  FaceTrack Attendance
+</h1>
         <div className="absolute right-10">
           <button
   onClick={() => navigate("/hr-portal")}

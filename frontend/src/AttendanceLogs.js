@@ -324,11 +324,16 @@ const getArrow = (key) => {
           <HeaderDateTime />
         </div>
         <h1
-          onClick={() => navigate("/admin-dashboard")}
-          className="text-5xl font-bold text-blue-900 cursor-pointer hover:text-blue-700 transition-colors"
-        >
-          FaceTrack Attendance
-        </h1>
+  onClick={() => {
+    // clear admin session
+    localStorage.removeItem("currentAdmin");
+    // redirect home and prevent back navigation
+    navigate("/", { replace: true });
+  }}
+  className="text-5xl font-bold text-blue-900 cursor-pointer hover:text-blue-700 transition-colors"
+>
+  FaceTrack Attendance
+</h1>
         <div className="absolute right-10 flex gap-3">
   <button
     onClick={() => setShowExportPopup(true)}

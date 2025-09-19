@@ -51,11 +51,16 @@ function HrPortal() {
 
         {/* Title */}
         <h1
-          onClick={() => navigate("/")}
-          className="text-5xl font-bold text-blue-900 cursor-pointer hover:text-blue-700 transition-colors"
-        >
-          FaceTrack Attendance
-        </h1>
+  onClick={() => {
+    // clear admin session
+    localStorage.removeItem("currentAdmin");
+    // redirect to admin login and prevent back navigation
+    navigate("/admin-login", { replace: true });
+  }}
+  className="text-5xl font-bold text-blue-900 cursor-pointer hover:text-blue-700 transition-colors"
+>
+  FaceTrack Attendance
+</h1>
 
         {/* Back Button */}
         <div className="absolute right-10">

@@ -25,10 +25,15 @@ function AdminDashboard() {
     }, 1000);
 
     const admin = localStorage.getItem("currentAdmin");
-    if (admin) setCurrentAdmin(admin);
+    if (admin) {
+      setCurrentAdmin(admin);
+    } else {
+      // Redirect to login if not logged in
+      navigate("/admin-login");
+    }
 
     return () => clearInterval(timer);
-  }, []);
+  }, [navigate]);
 
   // Fetch pending requests count
   useEffect(() => {
@@ -52,7 +57,7 @@ function AdminDashboard() {
     localStorage.removeItem("currentAdmin");
     setCurrentAdmin(null);
     navigate("/admin-login");
-    window.location.reload();
+    window.location.reload(); 
   };
 
   return (
@@ -64,11 +69,16 @@ function AdminDashboard() {
         </div>
 
         <h1
-          onClick={() => navigate("/")}
-          className="text-5xl font-bold text-blue-900 cursor-pointer hover:text-blue-700 transition-colors"
-        >
-          FaceTrack Attendance
-        </h1>
+  onClick={() => {
+    // clear admin session
+    localStorage.removeItem("currentAdmin");
+    // redirect home and prevent back navigation
+    navigate("/", { replace: true });
+  }}
+  className="text-5xl font-bold text-blue-900 cursor-pointer hover:text-blue-700 transition-colors"
+>
+  FaceTrack Attendance
+</h1>
 
         <div className="absolute right-10">
           <button
@@ -128,18 +138,18 @@ function AdminDashboard() {
 
           {/* HR Portal with inside notification */}
           <button
-            onClick={() => navigate("/hr-portal")}
-            className="relative px-14 py-8 bg-purple-500 hover:bg-purple-600 hover:scale-105 active:scale-95 
-                       transition-transform duration-200 text-white text-2xl font-bold rounded-lg shadow flex items-center justify-center"
-          >
-            <UserGroupIcon className="h-6 w-6 inline-block mr-2" />
-            HR Portal
-            {pendingCount > 0 && (
-              <span className="absolute top-2 right-2 bg-red-600 text-white text-xs font-bold rounded-full w-6 h-6 flex items-center justify-center shadow">
-                {pendingCount}
-              </span>
-            )}
-          </button>
+  onClick={() => navigate("/hr-portal", { replace: true })}
+  className="relative px-14 py-8 bg-purple-500 hover:bg-purple-600 hover:scale-105 active:scale-95 
+             transition-transform duration-200 text-white text-2xl font-bold rounded-lg shadow flex items-center justify-center"
+>
+  <UserGroupIcon className="h-6 w-6 inline-block mr-2" />
+  HR Portal
+  {pendingCount > 0 && (
+    <span className="absolute top-2 right-2 bg-red-600 text-white text-xs font-bold rounded-full w-6 h-6 flex items-center justify-center shadow">
+      {pendingCount}
+    </span>
+  )}
+</button>
 
           {/* Row 3 */}
           <button

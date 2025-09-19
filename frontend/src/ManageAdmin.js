@@ -157,7 +157,12 @@ function ManageAdmin() {
         </div>
 
         <h1
-  onClick={() => navigate("/")}
+  onClick={() => {
+    // clear admin session
+    localStorage.removeItem("currentAdmin");
+    // redirect home and prevent back navigation
+    navigate("/", { replace: true });
+  }}
   className="text-5xl font-bold text-blue-900 cursor-pointer hover:text-blue-700 transition-colors"
 >
   FaceTrack Attendance
