@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import Calendar from "react-calendar";
 import "react-calendar/dist/Calendar.css";
 import {
@@ -11,8 +11,9 @@ import HeaderDateTime from "./HeaderDateTime";
 
 function CalendarView() {
   const navigate = useNavigate();
+  const location = useLocation(); // check where user came from
 
-  // ✅ Utility: Date → YYYY-MM-DD string
+  // Date → YYYY-MM-DD string
   const formatDateLocal = (d) => {
     const year = d.getFullYear();
     const month = String(d.getMonth() + 1).padStart(2, "0");
@@ -20,7 +21,7 @@ function CalendarView() {
     return `${year}-${month}-${day}`;
   };
 
-  // ✅ Utility: Human-readable format
+  // Human-readable format
   const formatReadableDate = (d) => {
     return d
       .toLocaleDateString("en-US", {
@@ -95,6 +96,17 @@ function CalendarView() {
     return d.getMonth() === currentMonth && d.getFullYear() === currentYear;
   });
 
+  // Handle back button
+  const handleBack = () => {
+    if (location.state?.from === "work") {
+      navigate("/work-application");
+    } else if (location.state?.from === "hr") {
+      navigate("/hr-portal");
+    } else {
+      navigate(-1); // fallback
+    }
+  };
+
   return (
     <div className="flex flex-col min-h-screen bg-gradient-to-tr from-gray-100 via-indigo-100 to-blue-200 overflow-hidden">
       {/* Header */}
@@ -110,7 +122,7 @@ function CalendarView() {
         </h1>
         <div className="absolute right-10">
           <button
-            onClick={() => navigate("/admin-dashboard")}
+            onClick={handleBack}
             className="w-40 px-6 py-3 bg-red-500 hover:bg-red-600 hover:scale-105 active:scale-95 
                        transition-transform duration-200 text-white font-bold rounded-lg shadow flex items-center justify-center gap-2"
           >

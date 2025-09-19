@@ -14,7 +14,11 @@ function WorkApplication() {
   const navigate = useNavigate();
 
   // Get user from location OR localStorage
-  const storedUser = JSON.parse(localStorage.getItem("currentUser") || "{}");
+  const storedUser = {
+    name: localStorage.getItem("user"),
+    employee_id: localStorage.getItem("employeeId"),
+  };
+
   const user = location.state?.user || storedUser.name || "Guest";
   const employeeId =
     location.state?.employeeId || storedUser.employee_id || "EMP000";
@@ -54,15 +58,15 @@ function WorkApplication() {
     }
 
     const payload = {
-  employee_id: employeeId,
-  name: user,  // send user name
-  application_type: applicationType,
-  start_date: startDate,
-  end_date: endDate,
-  start_time: formatTime(startTime), // optional
-  end_time: formatTime(endTime),     // optional
-  reason: reason,
-};
+      employee_id: employeeId,
+      name: user,
+      application_type: applicationType,
+      start_date: startDate,
+      end_date: endDate,
+      start_time: formatTime(startTime),
+      end_time: formatTime(endTime),
+      reason: reason,
+    };
 
     try {
       const res = await fetch("http://localhost:8000/work-applications/", {
@@ -120,13 +124,18 @@ function WorkApplication() {
         {/* Logout Button */}
         <div className="absolute right-10">
           <button
-  onClick={() => navigate(-1)}
-  className="w-40 px-6 py-3 bg-red-500 hover:bg-red-600 hover:scale-105 active:scale-95 
-             transition-transform duration-200 text-white font-bold rounded-lg shadow flex items-center justify-center gap-2"
->
-  <ArrowRightOnRectangleIcon className="h-5 w-5" />
-  Logout
-</button>
+            onClick={() => {
+              // ✅ clear storage on logout
+              localStorage.removeItem("user");
+              localStorage.removeItem("employeeId");
+              navigate("/work-application-login");
+            }}
+            className="w-40 px-6 py-3 bg-red-500 hover:bg-red-600 hover:scale-105 active:scale-95 
+                       transition-transform duration-200 text-white font-bold rounded-lg shadow flex items-center justify-center gap-2"
+          >
+            <ArrowRightOnRectangleIcon className="h-5 w-5 text-white" />
+            <span>Logout</span>
+          </button>
         </div>
       </div>
 
@@ -143,7 +152,7 @@ function WorkApplication() {
           Your Applications
         </button>
         <button
-          onClick={() => navigate("/calendar-view")}
+          onClick={() => navigate("/calendar-view", { state: { from: "work" } })}
           className="px-5 py-2 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-lg shadow flex items-center gap-2 
                      transition-transform hover:scale-105 active:scale-95"
         >
@@ -187,11 +196,19 @@ function WorkApplication() {
                          focus:outline-none focus:ring-2 focus:ring-indigo-400"
               required
             >
-              <option value="">Select type</option>
-              <option value="Half Day">Half Day</option>
-              <option value="Leave">Leave</option>
-              <option value="Absent">Absent</option>
-              <option value="Others">Others</option>
+              <option value="">未選択</option>
+              <option value="有給休暇（全日)">有給休暇（全日)</option>
+              <option value="有給休暇（半日)">有給休暇（半日)</option>
+              <option value="慶弔休暇">慶弔休暇</option>
+              <option value="欠勤">欠勤</option>
+              <option value="直行">直行</option>
+              <option value="直帰">直帰</option>
+              <option value="直行直帰">直行直帰</option>
+              <option value="出張">出張</option>
+              <option value="遅刻">遅刻</option>
+              <option value="早退">早退</option>
+              <option value="振替休日">振替休日</option>
+              <option value="早出">早出</option>
             </select>
           </div>
 

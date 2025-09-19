@@ -254,7 +254,7 @@ function Home() {
             </button>
           </div>
         ) : (
-          <div className="flex flex-col items-center w-full gap-6 mt-10">
+          <div className="flex flex-col items-center w-full gap-12 -mt-8">
             {/* Camera Selection Dropdown */}
             <div className="flex flex-col items-center mt-0 mb-0">
               <label className="text-xl font-semibold text-indigo-700 mb-2">

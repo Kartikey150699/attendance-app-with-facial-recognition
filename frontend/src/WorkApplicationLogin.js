@@ -21,7 +21,7 @@ function WorkApplicationLogin() {
   const navigate = useNavigate();
 
   const videoWidth = 580;
-  const videoHeight = 343;
+  const videoHeight = 323;
 
   // update time
   useEffect(() => {
@@ -109,10 +109,13 @@ function WorkApplicationLogin() {
 
         if (face.status === "logged_in") {
           setStatusMessages([`✅ Welcome ${face.name}`]);
+
+          // ✅ Persist user in localStorage
+          localStorage.setItem("user", face.name);
+          localStorage.setItem("employeeId", employeeId);
+
           setTimeout(() => {
-            navigate("/work-application", { 
-  state: { user: face.name, employeeId }   // pass both
-});
+            navigate("/work-application");
           }, 500);
         } else if (face.status === "invalid_employee_id") {
           setStatusMessages([`❌ Invalid Employee ID`]);
@@ -156,7 +159,7 @@ function WorkApplicationLogin() {
         <div className="absolute right-10 flex flex-col items-end gap-3">
           {/* Back button */}
           <button
-            onClick={() => navigate(-1)}
+            onClick={() => navigate("/")}
             className="w-40 px-6 py-3 bg-red-500 hover:bg-red-600 hover:scale-105 active:scale-95 
                        transition-transform duration-200 text-white font-bold rounded-lg shadow flex items-center justify-center gap-2"
           >
@@ -187,8 +190,14 @@ function WorkApplicationLogin() {
         </div>
       </div>
 
-      {/* Camera + Input Section */}
-      <div className="flex flex-col items-center w-full gap-6 mt-10">
+      {/* Camera + Input Section (wrapped in a form for Enter support) */}
+      <form
+        onSubmit={(e) => {
+          e.preventDefault();
+          captureAndSendFrame();
+        }}
+        className="flex flex-col items-center w-full gap-6 mt-10"
+      >
         {/* Employee ID Input */}
         <div className="flex flex-col items-center mb-4">
           <label className="text-xl font-semibold text-indigo-700 mb-2">
@@ -214,8 +223,8 @@ function WorkApplicationLogin() {
                 screenshotFormat="image/jpeg"
                 className="transform scale-x-[-1]"
                 videoConstraints={{
-                  width: videoWidth,
-                  height: videoHeight,
+                  width: { ideal: 1920 },  // request HD feed
+                  height: { ideal: 1080 }, // request HD feed
                   deviceId: selectedCamera ? { exact: selectedCamera } : undefined,
                 }}
               />
@@ -244,7 +253,7 @@ function WorkApplicationLogin() {
             {/* Buttons */}
             <div className="flex gap-4 mt-6 mb-4 justify-center">
               <button
-                onClick={captureAndSendFrame}
+                type="submit" 
                 className="px-6 py-3 bg-green-500 hover:bg-green-600 hover:scale-105 active:scale-95 
                   transition-transform duration-200 text-white font-bold rounded-lg shadow flex items-center gap-2"
               >
@@ -280,7 +289,7 @@ function WorkApplicationLogin() {
             )}
           </div>
         </div>
-      </div>
+      </form>
 
       {/* Footer */}
       <Footer />

@@ -63,7 +63,7 @@ def detect_faces(tmp_path):
         reps = DeepFace.represent(
             img_path=tmp_path,
             model_name="ArcFace",
-            detector_backend="mtcnn",
+            detector_backend="mtcnn",  # change to "retinaface" for more accuracy but slower
             enforce_detection=False
         )
 
@@ -169,7 +169,6 @@ async def preview_faces(file: UploadFile = None, db: Session = Depends(get_db)):
 
                 for stored_emb in stored_embeddings:
                     score = cosine_similarity(embedding, stored_emb)
-                    # print(f"🔍 Comparing with {user.name}, Score={score:.4f}")
                     if score > best_score:
                         best_match, best_score = user, score
 
@@ -225,7 +224,9 @@ async def mark_attendance(
         # -------------------------
         if action == "work-application-login":
             if not employee_id:
-                results.append({"name": "Unknown", "employee_id": None, "box": [box.get("x"), box.get("y"), box.get("w"), box.get("h")], "status": "employee_id_missing"})
+                results.append({"name": "Unknown", "employee_id": None,
+                                "box": [box.get("x"), box.get("y"), box.get("w"), box.get("h")],
+                                "status": "employee_id_missing"})
                 continue
 
             user_id = employee_id.replace("IFNT", "")
@@ -237,7 +238,9 @@ async def mark_attendance(
             user = db.query(User).filter(User.id == user_id, User.is_active == True).first()
 
             if not user:
-                results.append({"name": "Unknown", "employee_id": employee_id, "box": [box.get("x"), box.get("y"), box.get("w"), box.get("h")], "status": "invalid_employee_id"})
+                results.append({"name": "Unknown", "employee_id": employee_id,
+                                "box": [box.get("x"), box.get("y"), box.get("w"), box.get("h")],
+                                "status": "invalid_employee_id"})
                 continue
 
             stored_embeddings = json.loads(user.embedding)
@@ -245,7 +248,6 @@ async def mark_attendance(
                 stored_embeddings = [stored_embeddings]
 
             matched = any(cosine_similarity(embedding, stored_emb) >= threshold for stored_emb in stored_embeddings)
-
             status = "logged_in" if matched else "face_mismatch"
 
             results.append({
@@ -278,7 +280,9 @@ async def mark_attendance(
             ).first()
 
             if not record:
-                record = Attendance(user_id=best_match.id, user_name_snapshot=best_match.name, date=today)
+                record = Attendance(user_id=best_match.id,
+                                    user_name_snapshot=best_match.name,
+                                    date=today)
                 db.add(record)
 
             now_jst = datetime.now(JST)
@@ -297,9 +301,7 @@ async def mark_attendance(
                     status = "checkin_missing"
                 elif record.check_out:
                     status = "already_checked_out"
-                elif record.break_end:
-                    status = "already_break_ended"
-                elif record.break_start:
+                elif record.break_start and not record.break_end:
                     status = "already_on_break"
                 else:
                     record.break_start = now_jst
@@ -317,6 +319,7 @@ async def mark_attendance(
                 else:
                     record.break_end = now_jst
                     status = "break_ended"
+                    calculate_total_work(record) 
 
             elif action == "checkout":
                 if not record.check_in:
@@ -328,11 +331,10 @@ async def mark_attendance(
                 else:
                     record.check_out = now_jst
                     status = "checked_out"
+                    calculate_total_work(record) 
+
             else:
                 status = "invalid_action"
-
-            # Recalculate total work
-            calculate_total_work(record)
 
             db.commit()
             db.refresh(record)
@@ -345,8 +347,12 @@ async def mark_attendance(
             })
 
         elif best_match and best_score >= fallback_threshold:
-            results.append({"name": best_match.name, "box": [box.get("x"), box.get("y"), box.get("w"), box.get("h")], "status": "maybe_match"})
+            results.append({"name": best_match.name,
+                            "box": [box.get("x"), box.get("y"), box.get("w"), box.get("h")],
+                            "status": "maybe_match"})
         else:
-            results.append({"name": "Unknown", "box": [box.get("x"), box.get("y"), box.get("w"), box.get("h")], "status": "unknown"})
+            results.append({"name": "Unknown",
+                            "box": [box.get("x"), box.get("y"), box.get("w"), box.get("h")],
+                            "status": "unknown"})
 
     return {"results": results}

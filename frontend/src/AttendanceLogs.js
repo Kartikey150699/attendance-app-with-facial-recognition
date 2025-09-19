@@ -49,20 +49,45 @@ function AttendanceLogs() {
 
   // Fetch logs
   useEffect(() => {
-    async function fetchLogs() {
-      try {
-        const res = await fetch(
-          `http://localhost:8000/logs?year=${year}&month=${month}`
-        );
-        const data = await res.json();
-        setLogs(data);
-        setFilteredLogs(data);
-      } catch (err) {
-        console.error("Error fetching logs:", err);
-      }
+  async function fetchLogs() {
+    try {
+      const res = await fetch(
+        `http://localhost:8000/logs?year=${year}&month=${month}`
+      );
+      const data = await res.json();
+
+      // Recalculate total work before saving
+      const normalized = data.map((log) => {
+        if (!log.total_work) {
+          if (log.check_in && log.check_out) {
+            const start = new Date(log.check_in);
+            const end = new Date(log.check_out);
+            let total = (end - start) / (1000 * 60);
+
+            if (log.break_start && log.break_end) {
+              const bs = new Date(log.break_start);
+              const be = new Date(log.break_end);
+              total -= (be - bs) / (1000 * 60);
+            }
+
+            const hours = Math.floor(total / 60);
+            const minutes = Math.floor(total % 60);
+            log.total_work = `${hours}h ${minutes}m`;
+          } else {
+            log.total_work = "-";
+          }
+        }
+        return log;
+      });
+
+      setLogs(normalized);
+      setFilteredLogs(normalized);
+    } catch (err) {
+      console.error("Error fetching logs:", err);
     }
-    fetchLogs();
-  }, [year, month]);
+  }
+  fetchLogs();
+}, [year, month]);
 
   // Filters + search
   useEffect(() => {

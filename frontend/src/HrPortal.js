@@ -117,12 +117,12 @@ function HrPortal() {
 
         {/* Calendar View */}
         <button
-          onClick={() => navigate("/calendar-view")}
-          className="p-10 bg-yellow-500 hover:bg-yellow-600 text-white rounded-2xl shadow-lg text-2xl font-bold flex flex-col items-center gap-4 transition-transform hover:scale-105"
-        >
-          <CalendarDaysIcon className="h-12 w-12" />
-          Calendar View
-        </button>
+  onClick={() => navigate("/calendar-view", { state: { from: "hr" } })}
+  className="p-10 bg-yellow-500 hover:bg-yellow-600 text-white rounded-2xl shadow-lg text-2xl font-bold flex flex-col items-center gap-4 transition-transform hover:scale-105"
+>
+  <CalendarDaysIcon className="h-12 w-12" />
+  Calendar View
+</button>
       </div>
 
       {/* Footer */}
