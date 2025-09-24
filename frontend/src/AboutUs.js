@@ -5,6 +5,7 @@ import { Canvas } from "@react-three/fiber";
 import { OrbitControls } from "@react-three/drei";
 import Lottie from "lottie-react";
 import Lenis from "@studio-freight/lenis";
+import logo from "./lottie/logo.png"; 
 
 
 // Import JSON files
@@ -102,6 +103,7 @@ function CameraScanSection() {
     offset: ["start end", "end start"],
   });
 
+  // Scan line movement
   const scanY = useTransform(scrollYProgress, [0, 1], ["-100%", "100%"]);
   const opacity = useTransform(scrollYProgress, [0, 0.3, 1], [0, 1, 0]);
 
@@ -110,31 +112,77 @@ function CameraScanSection() {
       ref={ref}
       className="relative z-10 min-h-screen flex flex-col items-center justify-center text-center px-6"
     >
-      <div className="relative w-[320px] h-[240px] bg-gray-900 rounded-xl overflow-hidden shadow-2xl border border-cyan-400">
+      {/* Section Heading */}
+<motion.h2
+  initial={{ opacity: 0, scale: 0.8, y: -40 }}
+  whileInView={{ opacity: 1, scale: 1, y: 0 }}
+  transition={{ duration: 1, ease: "easeOut" }}
+  animate={{
+    y: [0, -10, 0], // floating effect
+    transition: { duration: 3, repeat: Infinity, ease: "easeInOut" },
+  }}
+  className="text-4xl md:text-5xl font-[Sora] font-bold 
+             bg-gradient-to-r from-cyan-400 via-indigo-400 to-purple-400
+             bg-clip-text text-transparent mb-4 tracking-wide"
+>
+  Camera Scan in Action
+</motion.h2>
+      <motion.p
+        initial={{ opacity: 0, y: -20 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        transition={{ duration: 1, delay: 0.2 }}
+        className="text-lg text-gray-400 mb-12 max-w-2xl"
+      >
+        Real-time scanning and verification powered by AI.
+      </motion.p>
+
+      {/* Camera Box with entrance animation */}
+      <motion.div
+        initial={{ opacity: 0, scale: 0.8, rotate: -5 }}
+        whileInView={{ opacity: 1, scale: 1, rotate: 0 }}
+        transition={{ duration: 1, ease: "easeOut" }}
+        className="relative w-[320px] h-[240px] bg-gray-900 rounded-xl overflow-hidden shadow-2xl border border-cyan-400"
+      >
         {/* Fake camera feed */}
-        <img
+        <motion.img
           src="https://images.unsplash.com/photo-1529626455594-4ff0802cfb7e"
           alt="Face example"
           className="w-full h-full object-cover opacity-80"
+          initial={{ scale: 1.2 }}
+          whileInView={{ scale: 1 }}
+          transition={{ duration: 1.5, ease: "easeOut" }}
         />
 
         {/* Scanning line */}
         <motion.div
           style={{ y: scanY, opacity }}
-          className="absolute left-0 w-full h-[2px] bg-gradient-to-r from-transparent via-cyan-400 to-transparent"
+          className="absolute left-0 w-full h-[3px] 
+                     bg-gradient-to-r from-transparent via-cyan-400 to-transparent
+                     shadow-[0_0_15px_#00e0ff]"
         />
-      </div>
 
+        {/* Face outline effect */}
+        <motion.div
+          initial={{ opacity: 0, scale: 0.5 }}
+          whileInView={{ opacity: 1, scale: 1 }}
+          transition={{ duration: 1, delay: 0.5 }}
+          className="absolute inset-6 border-2 border-cyan-400 rounded-lg"
+        />
+      </motion.div>
+
+      {/* Description with smooth fade-up */}
       <motion.p
         initial={{ opacity: 0, y: 40 }}
         whileInView={{ opacity: 1, y: 0 }}
-        transition={{ duration: 1 }}
+        transition={{ duration: 1, delay: 0.3 }}
         className="mt-8 text-lg max-w-xl text-gray-300"
       >
-        AI-powered face recognition in action. Even with{" "}
-        <span className="text-cyan-400 font-semibold">masks</span> or in{" "}
+        <span className="text-cyan-400 font-semibold">AI-powered</span> face
+        recognition in action. Even with{" "}
+        <span className="text-cyan-400 font-semibold">masks</span> or{" "}
         <span className="text-indigo-400 font-semibold">glasses</span>, FaceTrack
-        ensures secure and accurate verification in real time.
+        ensures secure and accurate verification in{" "}
+        <span className="font-semibold text-green-400">real time</span>.
       </motion.p>
     </section>
   );
@@ -217,42 +265,54 @@ function AboutUs() {
       <AnimatedNetwork mouseX={mousePos.x} mouseY={mousePos.y} />
 
       {/* Hero Section */}
-      <section className="relative z-10 min-h-screen flex flex-col items-center justify-center text-center px-6">
-        <Parallax speed={-20}>
-          <motion.h1
-            initial={{ opacity: 0, scale: 0.85 }}
-            whileInView={{ opacity: 1, scale: 1 }}
-            transition={{ duration: 1 }}
-            animate="animate"
-            variants={floating}
-            style={{
-              textShadow: `${mousePos.x / 100}px ${mousePos.y / 100}px 20px rgba(0,255,255,0.6)`,
-            }}
-            className="text-5xl md:text-7xl font-[Sora] font-extrabold 
-                       bg-gradient-to-r from-indigo-400 to-cyan-400 bg-clip-text 
-                       text-transparent tracking-wide drop-shadow-lg"
-          >
-            FaceTrack Attendance
-          </motion.h1>
-        </Parallax>
-        <Parallax speed={10}>
-          <motion.p
-            initial={{ opacity: 0, y: 30 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.3, duration: 1 }}
-            className="mt-16 text-xl text-gray-300 max-w-3xl mx-auto leading-relaxed"
-          >
-            Redefining attendance management with AI-powered precision and
-            seamless experience — built to simplify and impress.
-            <br />
-            <br />
-            Powered by <span className="text-cyan-400 font-semibold">Machine Learning </span> 
-            and <span className="text-indigo-400 font-semibold">Computer Vision</span>, 
-            FaceTrack recognizes employees instantly — even with masks or in 
-            glasses.
-          </motion.p>
-        </Parallax>
-      </section>
+<section className="relative z-10 min-h-screen flex flex-col items-center justify-center text-center px-6">
+  <Parallax speed={-20}>
+    <motion.h1
+      initial={{ opacity: 0, scale: 0.85 }}
+      whileInView={{ opacity: 1, scale: 1 }}
+      transition={{ duration: 1 }}
+      animate="animate"
+      variants={floating}
+      style={{
+        textShadow: `${mousePos.x / 100}px ${mousePos.y / 100}px 20px rgba(0,255,255,0.6)`,
+      }}
+      className="text-5xl md:text-7xl font-[Sora] font-extrabold 
+                 bg-gradient-to-r from-indigo-400 to-cyan-400 bg-clip-text 
+                 text-transparent tracking-wide drop-shadow-lg"
+    >
+      FaceTrack Attendance
+    </motion.h1>
+  </Parallax>
+
+  <Parallax speed={10}>
+    <motion.div
+      initial={{ opacity: 0, y: 30 }}
+      whileInView={{ opacity: 1, y: 0 }}
+      transition={{ delay: 0.3, duration: 1 }}
+      className="mt-20 text-xl text-gray-300 max-w-3xl mx-auto leading-relaxed space-y-6"
+    >
+      <p>
+        Introducing the{" "}
+        <span className="text-cyan-400 font-semibold">
+          Face Recognition Attendance System
+        </span>{" "}
+        — built to eliminate manual errors and deliver seamless, automated
+        workforce tracking.
+      </p>
+
+      <p>
+        Powered by{" "}
+        <span className="text-cyan-400 font-semibold">Machine Learning</span>{" "}
+        and{" "}
+        <span className="text-indigo-400 font-semibold">Computer Vision</span>,{" "}
+        FaceTrack identifies employees instantly — even with{" "}
+        <span className="text-indigo-300">masks</span> or{" "}
+        <span className="text-indigo-300">glasses</span>. A smart, secure, and
+        futuristic solution for modern workplaces.
+      </p>
+    </motion.div>
+  </Parallax>
+</section>
 
       {/* 3D Cube Section */}
       <section className="relative z-10 min-h-screen flex flex-col md:flex-row items-center justify-around px-6 py-12">
@@ -383,29 +443,155 @@ function AboutUs() {
         </motion.p>
       </section>
 
+      {/* Company Overview Section */}
+<section className="relative z-10 min-h-screen flex flex-col md:flex-row items-center justify-center px-6 md:px-16 py-16 gap-12">
+  {/* Left Column with Logo + Text */}
+  <div className="flex-1 flex flex-col items-center text-center">
+    {/* Logo Centered */}
+    <motion.div
+      initial={{ opacity: 0, scale: 0.8 }}
+      whileInView={{ opacity: 1, scale: 1 }}
+      transition={{ duration: 1 }}
+      className="mb-8 w-28 h-28 rounded-full overflow-hidden shadow-xl border border-cyan-400 flex items-center justify-center"
+    >
+      <img
+        src={logo}
+        alt="IFNET Logo"
+        className="w-full h-full object-contain"
+      />
+    </motion.div>
+
+    {/* Heading */}
+    <motion.h2
+      initial={{ opacity: 0, y: 40 }}
+      whileInView={{ opacity: 1, y: 0 }}
+      transition={{ duration: 1 }}
+      className="text-4xl md:text-5xl font-[Sora] font-bold 
+                 bg-gradient-to-r from-cyan-400 to-indigo-400 
+                 bg-clip-text text-transparent mb-6 tracking-wide"
+    >
+      Developed by IFNET
+    </motion.h2>
+
+    {/* Animated Paragraph */}
+    <motion.div
+      initial="hidden"
+      whileInView="visible"
+      variants={{
+        hidden: {},
+        visible: { transition: { staggerChildren: 0.08 } },
+      }}
+      className="text-lg md:text-xl text-gray-400 max-w-lg leading-loose font-[Inter]"
+    >
+      {[
+        "IFNET is dedicated to building secure, innovative, and scalable solutions powered by ",
+        <span key="ai" className="text-cyan-400 font-semibold">Artificial Intelligence</span>,
+        ", ",
+        <span key="ml" className="text-indigo-400 font-semibold">Machine Learning</span>,
+        ", and ",
+        <span key="cloud" className="text-green-400 font-semibold">Cloud Technologies</span>,
+        ".",
+        <br key="br1" />,
+        <br key="br2" />,
+        "We offer end-to-end IT services, helping businesses transform digitally through cutting-edge solutions and seamless integration."
+      ].map((chunk, i) => (
+        <motion.span
+          key={i}
+          variants={{
+            hidden: { opacity: 0, y: 10 },
+            visible: { opacity: 1, y: 0 },
+          }}
+          transition={{ duration: 0.5 }}
+        >
+          {chunk}
+        </motion.span>
+      ))}
+    </motion.div>
+  </div>
+
+  {/* Right Column with 6 Boxes */}
+  <div className="flex-1 grid sm:grid-cols-2 gap-6">
+    {[
+      {
+        title: "Application Development",
+        desc: "Business analysis, system design, development, maintenance, and operations.",
+      },
+      {
+        title: "Database Solutions",
+        desc: "Design, build, maintenance, and operations of robust database systems.",
+      },
+      {
+        title: "Server Infrastructure",
+        desc: "SSL-WWW, DNS, Samba, Mail server design, setup, and operations.",
+      },
+      {
+        title: "In-House Services",
+        desc: "Our proprietary attendance management system “B-ROSTER”.",
+      },
+      {
+        title: "Website Development",
+        desc: "Responsive, modern websites tailored to client needs.",
+      },
+      {
+        title: "E-Commerce Solutions",
+        desc: "Development and implementation of secure e-commerce platforms.",
+      },
+    ].map((service, i) => (
+      <motion.div
+        key={i}
+        initial={{ opacity: 0, y: 40 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.8, delay: i * 0.2 }}
+        whileHover={{
+          scale: 1.05,
+          boxShadow: "0px 0px 20px rgba(0,255,255,0.3)",
+        }}
+        className="p-6 bg-gray-900 rounded-xl border border-gray-700 shadow-md cursor-pointer"
+      >
+        <h3 className="text-xl font-[Sora] font-bold text-cyan-400 mb-2">
+          {service.title}
+        </h3>
+        <p className="text-gray-400 font-[Inter] leading-relaxed">
+          {service.desc}
+        </p>
+      </motion.div>
+    ))}
+  </div>
+</section>
 
       {/* Final Section */}
-      <section className="relative z-10 min-h-screen flex flex-col items-center justify-center text-center px-6">
-        <motion.h2
-          initial={{ opacity: 0, y: 60 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          transition={{ duration: 1 }}
-          animate="animate"
-          variants={floating}
-          className="text-5xl md:text-6xl font-[Sora] font-extrabold bg-gradient-to-r from-indigo-400 to-cyan-400 bg-clip-text text-transparent mb-6 tracking-wider"
-        >
-          Ready for the Future
-        </motion.h2>
-        <motion.p
-          initial={{ opacity: 0, y: 50 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          transition={{ duration: 1.2, delay: 0.3 }}
-          className="text-lg md:text-xl text-gray-400 max-w-2xl mx-auto leading-relaxed"
-        >
-          Designed with speed, precision, and elegance — FaceTrack isn’t just
-          attendance. It’s the next step in workplace experience.
-        </motion.p>
-      </section>
+<section className="relative z-10 min-h-screen flex flex-col items-center justify-center text-center px-6">
+  <motion.h2
+    initial={{ opacity: 0, y: 60 }}
+    whileInView={{ opacity: 1, y: 0 }}
+    transition={{ duration: 1 }}
+    animate="animate"
+    variants={floating}
+    className="text-5xl md:text-6xl font-[Sora] font-extrabold bg-gradient-to-r from-indigo-400 to-cyan-400 bg-clip-text text-transparent mb-6 tracking-wider"
+  >
+    Ready for the Future
+  </motion.h2>
+
+  <motion.p
+    initial={{ opacity: 0, y: 50 }}
+    whileInView={{ opacity: 1, y: 0 }}
+    transition={{ duration: 1.2, delay: 0.3 }}
+    className="text-lg md:text-xl text-gray-400 max-w-2xl mx-auto leading-relaxed"
+  >
+    Designed with speed, precision, and elegance — FaceTrack isn’t just
+    attendance. It’s the next step in workplace experience.
+  </motion.p>
+
+  {/* Footer text */}
+  <motion.p
+  initial={{ opacity: 0, y: 50 }}
+  whileInView={{ opacity: 1, y: 0 }}
+  transition={{ duration: 0.4, delay: 0 }}
+  className="absolute bottom-6 w-full text-center text-lg md:text-xl text-gray-400 max-w-2xl mx-auto leading-relaxed font-[Inter]"
+>
+  Developed by <span className="font-semibold text-cyan-400">IFNET</span> - Tokyo, Japan
+</motion.p>
+</section>
     </div>
   );
 }
