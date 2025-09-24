@@ -111,7 +111,7 @@ async def register_user(
     if not embeddings:
         raise HTTPException(status_code=400, detail="❌ No face detected. Try again!")
 
-    # Prevent duplicate registration
+    # Prevent duplicate registration with the same face again
     users = db.query(User).all()
     threshold = 0.55
     for user in users:

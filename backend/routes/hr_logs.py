@@ -50,7 +50,7 @@ def get_hr_logs(
         .filter(Attendance.date >= start_date, Attendance.date <= end_date)
         .all()
     )
-    # ✅ Normalize to .date()
+    # Normalize to date
     attendance_map = {(log.user_id, log.date.date()): log for log in attendance_logs}
 
     # Fetch all approved leaves
@@ -80,7 +80,7 @@ def get_hr_logs(
         for day in range(1, monthrange(year, month)[1] + 1):
             current_date = date(year, month, day)
 
-            # ✅ fixed: lookup using normalized date
+            # Fixed: lookup using normalized date
             log = attendance_map.get((user.id, current_date))
             holiday_name = holidays.get(current_date)
             leave_reason = leave_map.get((employee_id, current_date))
@@ -93,7 +93,7 @@ def get_hr_logs(
                 status = "Worked on Holiday"
             elif holiday_name:
                 status = "Holiday"
-            elif log and log.check_in:  # ✅ check-in alone = present
+            elif log and log.check_in:  # check-in only = present
                 if weekday == 5:
                     status = "Present on Saturday"
                 elif weekday == 6:

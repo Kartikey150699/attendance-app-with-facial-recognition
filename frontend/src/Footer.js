@@ -22,8 +22,16 @@ function Footer() {
       </div>
 
       {/* Centered Copyright */}
-      <div className="absolute left-1/2 transform -translate-x-1/2 text-center">
+      <div className="absolute left-1/2 transform -translate-x-1/2 text-center whitespace-nowrap">
         © 2025 FaceTrack. All rights reserved - Kartikey Koli - IFNET
+      </div>
+
+      {/* Right side link */}
+      <div
+        onClick={() => navigate("/about-us")}
+        className="underline cursor-pointer hover:text-gray-300 hover:scale-105 transition-transform duration-200"
+      >
+        About Us
       </div>
     </footer>
   );

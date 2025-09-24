@@ -5,7 +5,7 @@ from models.Admin import Admin
 
 router = APIRouter(prefix="/admin", tags=["Admin"])
 
-# Database session dependency
+# DB session dependency
 def get_db():
     db = SessionLocal()
     try:

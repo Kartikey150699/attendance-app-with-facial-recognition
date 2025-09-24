@@ -38,7 +38,7 @@ def cosine_similarity(vec1, vec2):
 # -------------------------
 # Embedding Cache in Memory
 # -------------------------
-embedding_cache = []  # list of dicts {id, name, embeddings, np_embeddings}
+embedding_cache = []  # list of dicts (id, name, embeddings, np_embeddings)
 
 def load_embeddings(db: Session):
     """Load all active user embeddings into memory cache."""
@@ -101,7 +101,7 @@ def detect_faces(tmp_path):
         reps = DeepFace.represent(
             img_path=tmp_path,
             model_name="ArcFace",
-            detector_backend="mtcnn",  # change to "retinaface" for deployment
+            detector_backend="mtcnn",  # change to "retinaface" for deployment, mtcnn after the code opimization is around ~0.7s, retinaface with optimizations would be around 0.3~0.4s but needs strong GPU.
             enforce_detection=False
         )
 

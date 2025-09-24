@@ -1,5 +1,10 @@
 import { BrowserRouter as Router, Routes, Route, useLocation } from "react-router-dom";
 import { AnimatePresence, motion } from "framer-motion";
+import { ParallaxProvider } from "react-scroll-parallax";
+import { useEffect } from "react";
+import Lenis from "@studio-freight/lenis";
+
+// Import pages
 import Home from "./Home";
 import AdminLogin from "./AdminLogin";
 import AdminDashboard from "./AdminDashboard";
@@ -18,6 +23,7 @@ import WorkApplicationRequests from "./WorkApplicationRequests";
 import HolidayManagement from "./HolidayManagement";
 import LogsReports from "./LogsReports";
 import CalendarView from "./CalendarView";
+import AboutUs from "./AboutUs";
 
 function AnimatedRoutes() {
   const location = useLocation();
@@ -193,28 +199,53 @@ function AnimatedRoutes() {
           }
         />
 
+        {/* Calendar View */}
         <Route
-  path="/calendar-view"
-  element={
-    <motion.div
-      initial={{ opacity: 0, x: 40 }}
-      animate={{ opacity: 1, x: 0 }}
-      exit={{ opacity: 0, x: -40 }}
-      transition={{ duration: 0.4 }}
-    >
-      <CalendarView />
-    </motion.div>
-  }
-/>
+          path="/calendar-view"
+          element={
+            <motion.div initial={{ opacity: 0, x: 40 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -40 }} transition={{ duration: 0.4 }}>
+              <CalendarView />
+            </motion.div>
+          }
+        />
+
+        {/* About Us */}
+        <Route
+          path="/about-us"
+          element={
+            <motion.div initial={{ opacity: 0, y: 50 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -50 }} transition={{ duration: 0.4 }}>
+              <AboutUs />
+            </motion.div>
+          }
+        />
       </Routes>
     </AnimatePresence>
   );
 }
 
 function App() {
+  // Add Lenis scroll once globally
+  useEffect(() => {
+    const lenis = new Lenis({
+      smooth: true,
+      duration: 1.3,
+      easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
+    });
+
+    function raf(time) {
+      lenis.raf(time);
+      requestAnimationFrame(raf);
+    }
+    requestAnimationFrame(raf);
+
+    return () => lenis.destroy();
+  }, []);
+
   return (
     <Router>
-      <AnimatedRoutes />
+      <ParallaxProvider>
+        <AnimatedRoutes />
+      </ParallaxProvider>
     </Router>
   );
 }

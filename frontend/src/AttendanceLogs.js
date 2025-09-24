@@ -325,7 +325,7 @@ const getArrow = (key) => {
         </div>
         <h1
   onClick={() => {
-    // clear admin session
+    // clear admin session to prevent unauthorized logins
     localStorage.removeItem("currentAdmin");
     // redirect home and prevent back navigation
     navigate("/", { replace: true });
@@ -503,6 +503,7 @@ const getArrow = (key) => {
                     {log.total_work}
                   </td>
                   <td className="p-4 flex gap-2 justify-center">
+
   {/* Show Edit only if not deleted */}
   {log.employee_id !== "DELETED" && (
     <button
@@ -514,7 +515,7 @@ const getArrow = (key) => {
     </button>
   )}
 
-  {/* History should always be visible */}
+  {/* History should always be visible even for deleted users */}
   <button
     onClick={() => openAuditTrail(log)}
     className="px-3 py-1 bg-blue-500 hover:bg-blue-600 text-white rounded-lg shadow flex items-center gap-1"

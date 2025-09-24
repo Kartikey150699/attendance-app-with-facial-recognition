@@ -41,5 +41,5 @@ app.include_router(hr_logs.router)
 def home():
     return {"message": "✅ FaceTrack Backend is running 🚀"}
 
-# Auto-create tables (includes WorkApplication & Holiday)
+# Auto-create tables
 Base.metadata.create_all(bind=engine)

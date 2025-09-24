@@ -160,13 +160,12 @@ function RegisterUser() {
         </div>
         <h1
   onClick={() => {
-    // clear admin session
+    // clear admin session to prevent the unaithorized logins
     localStorage.removeItem("currentAdmin");
     // redirect home and prevent back navigation
     navigate("/", { replace: true });
   }}
-  className="text-5xl font-bold text-blue-900 cursor-pointer hover:text-blue-700 transition-colors"
->
+  className="text-5xl font-bold text-blue-900 cursor-pointer hover:text-blue-700 transition-colors">
   FaceTrack Attendance
 </h1>
         <div className="absolute right-10 top-4 flex flex-col items-end">
