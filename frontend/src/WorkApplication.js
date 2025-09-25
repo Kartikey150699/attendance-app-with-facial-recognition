@@ -22,9 +22,9 @@ function WorkApplication() {
   };
 
   const user = location.state?.user || storedUser.name || null;
-  const employeeId =
-    location.state?.employeeId || storedUser.employee_id || null;
+  const employeeId = location.state?.employeeId || storedUser.employee_id || null;
 
+  const [department, setDepartment] = useState(null); // fetched from backend
   const [dateTime, setDateTime] = useState(new Date());
 
   // Form states
@@ -33,8 +33,8 @@ function WorkApplication() {
   const [endDate, setEndDate] = useState("");
   const [startTime, setStartTime] = useState("");
   const [endTime, setEndTime] = useState("");
-  const [reason, setReason] = useState(""); // keep it string only
-  const [usePaidHoliday, setUsePaidHoliday] = useState(""); // separate state
+  const [reason, setReason] = useState("");
+  const [usePaidHoliday, setUsePaidHoliday] = useState("");
 
   // Remaining Paid Holidays
   const [remainingDays, setRemainingDays] = useState(null);
@@ -47,27 +47,39 @@ function WorkApplication() {
     return () => clearInterval(timer);
   }, []);
 
-  // Protect route: redirect if not logged in
+  // Protect route
   useEffect(() => {
     if (!user || !employeeId) {
       navigate("/work-application-login", { replace: true });
     }
   }, [user, employeeId, navigate]);
 
-  // Fetch remaining paid holidays for employee
+  // Fetch department dynamically
+  useEffect(() => {
+    const fetchDepartment = async () => {
+      try {
+        const res = await fetch(`http://localhost:8000/users/active`);
+        const data = await res.json();
+        const record = data.find((u) => u.employee_id === employeeId);
+        if (record) {
+          setDepartment(record.department);
+        }
+      } catch (err) {
+        console.error("Error fetching department:", err);
+      }
+    };
+    if (employeeId) fetchDepartment();
+  }, [employeeId]);
+
+  // Fetch remaining paid holidays
   useEffect(() => {
     const fetchRemaining = async () => {
       try {
         const res = await fetch("http://localhost:8000/paid-holidays/");
         if (!res.ok) throw new Error("Failed to fetch paid holidays");
         const data = await res.json();
-
         const record = data.find((h) => h.employee_id === employeeId);
-        if (record) {
-          setRemainingDays(record.remaining_days);
-        } else {
-          setRemainingDays(0);
-        }
+        setRemainingDays(record ? record.remaining_days : 0);
       } catch (error) {
         console.error("Error fetching remaining holidays:", error);
         setRemainingDays(0);
@@ -77,10 +89,10 @@ function WorkApplication() {
     if (employeeId) fetchRemaining();
   }, [employeeId]);
 
-  // Format optional time
+  // Format time
   const formatTime = (t) => (t ? (t.length === 5 ? `${t}:00` : t) : null);
 
-  // Handle submit
+  // Submit
   const handleSubmit = async (e) => {
     e.preventDefault();
 
@@ -101,8 +113,8 @@ function WorkApplication() {
       end_date: endDate,
       start_time: formatTime(startTime),
       end_time: formatTime(endTime),
-      reason: reason, // ✅ plain string
-      use_paid_holiday: usePaidHoliday || "no", // ✅ dropdown state
+      reason: reason,
+      use_paid_holiday: usePaidHoliday || "no",
     };
 
     try {
@@ -122,7 +134,7 @@ function WorkApplication() {
       });
       console.log("Submitted Application:", data);
 
-      // Reset form
+      // Reset
       setApplicationType("");
       setStartDate("");
       setEndDate("");
@@ -187,9 +199,7 @@ function WorkApplication() {
             }`}
           />
           Remaining Paid Holidays:{" "}
-          <span>
-            {remainingDays !== null ? remainingDays : "Loading..."}
-          </span>
+          <span>{remainingDays !== null ? remainingDays : "Loading..."}</span>
         </div>
 
         <div className="flex gap-3">
@@ -235,7 +245,7 @@ function WorkApplication() {
             Submit New Request
           </h3>
 
-          {/* Name & Employee ID */}
+          {/* Name, Employee ID & Department */}
           <div className="flex justify-between items-center">
             <div className="flex items-center gap-2">
               <label className="text-gray-700 font-semibold">Name:</label>
@@ -244,6 +254,10 @@ function WorkApplication() {
             <div className="flex items-center gap-2">
               <label className="text-gray-700 font-semibold">Employee ID:</label>
               <span className="text-red-600 font-bold">{employeeId}</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <label className="text-gray-700 font-semibold">Department:</label>
+              <span className="text-red-600 font-bold">{department || "—"}</span>
             </div>
           </div>
 

@@ -12,6 +12,7 @@ import HeaderDateTime from "./HeaderDateTime";
 
 function RegisterUser() {
   const [name, setName] = useState("");
+  const [department, setDepartment] = useState(""); // <-- new state
   const [dateTime, setDateTime] = useState(new Date());
   const [showPopup, setShowPopup] = useState(false);
   const [popupMessage, setPopupMessage] = useState("");
@@ -59,7 +60,6 @@ function RegisterUser() {
         const videoDevices = devices.filter((d) => d.kind === "videoinput");
         setDevices(videoDevices);
 
-        // Set default camera on first load
         if (videoDevices.length > 0) {
           const saved = localStorage.getItem("selectedCamera");
           if (saved && videoDevices.some((d) => d.deviceId === saved)) {
@@ -84,6 +84,11 @@ function RegisterUser() {
       setShowPopup(true);
       return;
     }
+    if (!department.trim()) {
+      setPopupMessage("⚠️ Please enter department of the user!");
+      setShowPopup(true);
+      return;
+    }
     if (!webcamRef.current) {
       setPopupMessage("⚠️ Camera not available!");
       setShowPopup(true);
@@ -96,6 +101,7 @@ function RegisterUser() {
     try {
       const formData = new FormData();
       formData.append("name", name);
+      formData.append("department", department); // <-- include department
 
       for (let i = 0; i < 10; i++) {
         const imageSrc = webcamRef.current.getScreenshot();
@@ -131,12 +137,14 @@ function RegisterUser() {
 
       setShowPopup(true);
       setName("");
+      setDepartment("");
     } catch (error) {
       console.error("❌ Error registering user:", error);
       setPopupMessage("❌ Failed to register user.");
       setShowPopup(true);
       setIsSubmitting(false);
       setName("");
+      setDepartment("");
     }
   };
 
@@ -159,15 +167,14 @@ function RegisterUser() {
           <HeaderDateTime />
         </div>
         <h1
-  onClick={() => {
-    // clear admin session to prevent the unaithorized logins
-    localStorage.removeItem("currentAdmin");
-    // redirect home and prevent back navigation
-    navigate("/", { replace: true });
-  }}
-  className="text-5xl font-bold text-blue-900 cursor-pointer hover:text-blue-700 transition-colors">
-  FaceTrack Attendance
-</h1>
+          onClick={() => {
+            localStorage.removeItem("currentAdmin");
+            navigate("/", { replace: true });
+          }}
+          className="text-5xl font-bold text-blue-900 cursor-pointer hover:text-blue-700 transition-colors"
+        >
+          FaceTrack Attendance
+        </h1>
         <div className="absolute right-10 top-4 flex flex-col items-end">
           <button
             onClick={() => navigate("/admin-dashboard")}
@@ -177,7 +184,7 @@ function RegisterUser() {
             <span>Back</span>
           </button>
           {/* Camera selection */}
-          <div className="flex flex-col items-center mt-6">
+          <div className="flex flex-col items-center mt-8">
             <label className="text-xl font-semibold text-indigo-700 mb-2">
               Select Camera
             </label>
@@ -200,7 +207,7 @@ function RegisterUser() {
       </div>
 
       {/* Body */}
-      <div className="flex flex-col items-center flex-grow py-4">
+      <div className="flex flex-col items-center flex-grow py-4 mt-8">
         <h2 className="text-3xl font-bold text-indigo-700 mb-4 flex items-center justify-center gap-2">
           <UserPlusIcon className="h-8 w-8 text-indigo-700" />
           Register New User
@@ -260,6 +267,14 @@ function RegisterUser() {
               placeholder="Enter user's name"
               value={name}
               onChange={(e) => setName(e.target.value)}
+              disabled={isSubmitting}
+              className="w-80 px-4 py-2 mb-4 border rounded-lg shadow focus:outline-none focus:ring-2 focus:ring-indigo-400 disabled:bg-gray-200"
+            />
+            <input
+              type="text"
+              placeholder="Enter department"
+              value={department}
+              onChange={(e) => setDepartment(e.target.value)}
               disabled={isSubmitting}
               className="w-80 px-4 py-2 mb-4 border rounded-lg shadow focus:outline-none focus:ring-2 focus:ring-indigo-400 disabled:bg-gray-200"
             />

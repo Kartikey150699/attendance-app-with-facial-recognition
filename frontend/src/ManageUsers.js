@@ -15,6 +15,7 @@ function ManageUsers() {
   const [users, setUsers] = useState([]);
   const [currentName, setCurrentName] = useState("");
   const [newName, setNewName] = useState("");
+  const [newDepartment, setNewDepartment] = useState("");
   const [popupMessage, setPopupMessage] = useState("");
   const [showPopup, setShowPopup] = useState(false);
   const [popupMode, setPopupMode] = useState(null);
@@ -72,48 +73,43 @@ function ManageUsers() {
     }
   };
 
-  // Handle name update
-  const handleUpdateName = async () => {
-    if (!currentName || !newName) {
-      setPopupMessage("⚠️ Please enter both current and new name.");
-      setPopupMode("message");
-      setShowPopup(true);
-      return;
-    }
+  // Handle update user
+  const handleUpdateUser = async () => {
+  if (!currentName || (!newName && !newDepartment)) {
+    setPopupMessage("⚠️ Please enter new name and/or department.");
+    setPopupMode("message");
+    setShowPopup(true);
+    return;
+  }
 
-    if (currentName.trim().toLowerCase() === newName.trim().toLowerCase()) {
-      setPopupMessage("⚠️ Current name and new name cannot be the same.");
-      setPopupMode("message");
-      setShowPopup(true);
-      return;
-    }
+  try {
+    const res = await fetch("http://127.0.0.1:8000/users/update-user", {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        current_name: currentName.trim(),
+        new_name: newName.trim() || selectedUser.name,
+        new_department: newDepartment.trim() || selectedUser.department,
+      }),
+    });
 
-    try {
-      const res = await fetch("http://127.0.0.1:8000/users/update-name", {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          current_name: currentName.trim(),
-          new_name: newName.trim(),
-        }),
-      });
-
-      const data = await res.json();
-      if (!res.ok) {
-        setPopupMessage(data.detail || "❌ Failed to update user name.");
-      } else {
-        setPopupMessage(`✅ User name updated successfully!\nNew Name: ${newName}`);
-        fetchUsers();
-      }
-    } catch (err) {
-      setPopupMessage("❌ Could not connect to the server.");
-    } finally {
-      setPopupMode("message");
-      setShowPopup(true);
-      setCurrentName("");
-      setNewName("");
+    const data = await res.json();
+    if (!res.ok) {
+      setPopupMessage(data.detail || "❌ Failed to update user.");
+    } else {
+      setPopupMessage("✅ User updated successfully!");
+      fetchUsers();
     }
-  };
+  } catch (err) {
+    setPopupMessage("❌ Could not connect to the server.");
+  } finally {
+    setPopupMode("message");
+    setShowPopup(true);
+    setCurrentName("");
+    setNewName("");
+    setNewDepartment("");
+  }
+};
 
   // Handle delete user
   const confirmDeleteUser = async () => {
@@ -224,9 +220,12 @@ function ManageUsers() {
           </button>
 
           {/* User Info */}
-          <h2 className="text-3xl font-bold text-indigo-700 mb-6">
-            {selectedUser.name} ({formatEmployeeId(selectedUser.id)})
-          </h2>
+          <h2 className="text-3xl font-bold text-indigo-700 mb-2">
+  {selectedUser.name} ({formatEmployeeId(selectedUser.id)})
+</h2>
+<p className="text-lg text-gray-700 mb-6">
+  <b>Department:</b> {selectedUser.department || "—"}
+</p>
           <p className="text-lg mb-4 text-gray-700">
             <b>Created At:</b>{" "}
             {new Date(selectedUser.created_at).toLocaleString("en-US", {
@@ -353,69 +352,169 @@ function ManageUsers() {
               <thead>
                 <tr className="bg-gray-200">
                   <th className="p-2 border">Employee ID</th>
+                  <th className="p-2 border">Department</th>
                   <th className="p-2 border">Name</th>
                   <th className="p-2 border">Created At</th>
                   <th className="p-2 border">Actions</th>
                 </tr>
               </thead>
               <tbody>
-                {filteredUsers.length > 0 ? (
-                  filteredUsers.map((u) => {
-                    const d = new Date(u.created_at);
-                    const formattedDate = `${d.toLocaleDateString()} - ${d.toLocaleTimeString([], {
-                      hour: "2-digit",
-                      minute: "2-digit",
-                      hour12: false,
-                    })}`;
-                    return (
-                      <tr key={u.id} className="text-center">
-                        <td className="p-2 border">{formatEmployeeId(u.id)}</td>
-                        <td
-                          className="p-2 border text-blue-600 cursor-pointer hover:underline"
-                          onClick={() => fetchAttendance(u)}
-                        >
-                          {u.name}
-                        </td>
-                        <td className="p-2 border">{formattedDate}</td>
-                        <td className="p-2 border flex gap-2 justify-center">
-                          <button
-                            onClick={() => {
-                              setSelectedUser(u);
-                              setCurrentName(u.name);
-                              setNewName("");
-                              setPopupMode("edit");
-                              setShowPopup(true);
-                            }}
-                            className="px-3 py-1 bg-yellow-500 text-white rounded-lg shadow hover:bg-yellow-600 flex items-center gap-1"
-                          >
-                            <PencilSquareIcon className="h-4 w-4" /> Edit
-                          </button>
-                          <button
-                            onClick={() => {
-                              setSelectedUser(u);
-                              setPopupMode("delete");
-                              setShowPopup(true);
-                            }}
-                            className="px-3 py-1 bg-red-600 text-white rounded-lg shadow hover:bg-red-700 flex items-center gap-1"
-                          >
-                            <TrashIcon className="h-4 w-4" /> Delete
-                          </button>
-                        </td>
-                      </tr>
-                    );
-                  })
-                ) : (
-                  <tr>
-                    <td colSpan="4" className="p-4 text-gray-500">
-                      No users found
-                    </td>
-                  </tr>
-                )}
-              </tbody>
+  {filteredUsers.length > 0 ? (
+    filteredUsers.map((u) => {
+      const d = new Date(u.created_at);
+      const formattedDate = `${d.toLocaleDateString()} - ${d.toLocaleTimeString([], {
+        hour: "2-digit",
+        minute: "2-digit",
+        hour12: false,
+      })}`;
+      return (
+        <tr key={u.id} className="text-center">
+          {/* Employee ID */}
+          <td className="p-2 border">{formatEmployeeId(u.id)}</td>
+
+          {/* Department */}
+          <td className="p-2 border">{u.department || "—"}</td>
+
+          {/* Name */}
+          <td
+            className="p-2 border text-blue-600 cursor-pointer hover:underline"
+            onClick={() => fetchAttendance(u)}
+          >
+            {u.name}
+          </td>
+
+          {/* Created At */}
+          <td className="p-2 border">{formattedDate}</td>
+
+          {/* Actions */}
+          <td className="p-2 border flex gap-2 justify-center">
+            <button
+              onClick={() => {
+  setSelectedUser(u);
+  setCurrentName(u.name);
+  setNewName("");            // always blank
+  setNewDepartment("");      // always blank
+  setPopupMode("edit");
+  setShowPopup(true);
+}}
+              className="px-3 py-1 bg-yellow-500 text-white rounded-lg shadow hover:bg-yellow-600 flex items-center gap-1"
+            >
+              <PencilSquareIcon className="h-4 w-4" /> Edit
+            </button>
+            <button
+              onClick={() => {
+                setSelectedUser(u);
+                setPopupMode("delete");
+                setShowPopup(true);
+              }}
+              className="px-3 py-1 bg-red-600 text-white rounded-lg shadow hover:bg-red-700 flex items-center gap-1"
+            >
+              <TrashIcon className="h-4 w-4" /> Delete
+            </button>
+          </td>
+        </tr>
+      );
+    })
+  ) : (
+    <tr>
+      <td colSpan="5" className="p-4 text-gray-500">
+        No users found
+      </td>
+    </tr>
+  )}
+</tbody>
             </table>
           </div>
         </div>
       )}
+
+      {showPopup && (
+  <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50">
+    <div className="bg-white rounded-lg shadow-lg p-6 w-full max-w-md relative">
+      {/* Close button */}
+      <button
+        onClick={handlePopupClose}
+        className="absolute top-2 right-2 text-gray-500 hover:text-gray-700"
+      >
+        <XMarkIcon className="h-6 w-6" />
+      </button>
+
+      {/* EDIT MODE */}
+      {popupMode === "edit" && selectedUser && (
+  <div className="flex flex-col gap-4">
+    <h3 className="text-xl font-bold text-indigo-700 mb-2">Edit User</h3>
+
+    {/* Show current info */}
+    <p className="text-gray-700">
+      <b>Current Name:</b> {selectedUser.name}
+    </p>
+    <p className="text-gray-700">
+      <b>Current Department:</b> {selectedUser.department || "—"}
+    </p>
+
+    {/* Input for new values */}
+    <input
+      type="text"
+      value={newName}
+      onChange={(e) => setNewName(e.target.value)}
+      placeholder="Enter new name"
+      className="px-4 py-2 border rounded-lg focus:ring-2 focus:ring-indigo-500"
+    />
+    <input
+      type="text"
+      value={newDepartment}
+      onChange={(e) => setNewDepartment(e.target.value)}
+      placeholder="Enter new department"
+      className="px-4 py-2 border rounded-lg focus:ring-2 focus:ring-indigo-500"
+    />
+
+    <button
+      onClick={handleUpdateUser}
+      className="px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700"
+    >
+      Save Changes
+    </button>
+  </div>
+)}
+
+      {/* DELETE MODE */}
+      {popupMode === "delete" && selectedUser && (
+        <div className="text-center">
+          <h3 className="text-xl font-bold text-red-600 mb-4">
+            Delete {selectedUser.name}?
+          </h3>
+          <div className="flex justify-center gap-4">
+            <button
+              onClick={confirmDeleteUser}
+              className="px-6 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700"
+            >
+              Yes, Delete
+            </button>
+            <button
+              onClick={handlePopupClose}
+              className="px-6 py-2 bg-gray-400 text-white rounded-lg hover:bg-gray-500"
+            >
+              Cancel
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* MESSAGE MODE */}
+      {popupMode === "message" && (
+        <div className="text-center">
+          <p className="mb-4">{popupMessage}</p>
+          <button
+            onClick={handlePopupClose}
+            className="px-6 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700"
+          >
+            OK
+          </button>
+        </div>
+      )}
+    </div>
+  </div>
+)}
 
       <Footer />
     </div>

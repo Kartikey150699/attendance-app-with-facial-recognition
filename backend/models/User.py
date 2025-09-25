@@ -11,11 +11,18 @@ class User(Base):
     __tablename__ = "users"
 
     id = Column(Integer, primary_key=True, index=True)
-    name = Column(String(100), nullable=False)
     
+    # New: Employee ID (unique, formatted like IFNT001)
+    employee_id = Column(String(20), unique=True, index=True, nullable=True)
+
+    name = Column(String(100), nullable=False)
+
+    # Column for Department
+    department = Column(String(100), nullable=True)
+
     # Store embeddings as JSON string (can now hold multiple embeddings, e.g., [normal, masked])
     embedding = Column(LONGTEXT, nullable=False)   # Changed to LONGTEXT
-    
+
     # Save in JST instead of UTC
     created_at = Column(DateTime, default=lambda: datetime.now(JST))
 

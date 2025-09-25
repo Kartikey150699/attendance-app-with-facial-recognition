@@ -9,7 +9,7 @@ import json
 import numpy as np
 import cv2
 from pydantic import BaseModel
-from typing import List
+from typing import List, Optional
 
 # Import refresh function from attendance
 from routes.attendance import refresh_embeddings
@@ -25,12 +25,6 @@ def get_db():
         yield db
     finally:
         db.close()
-
-# -------------------------
-# Employee ID formatter
-# -------------------------
-def format_employee_id(user_id: int) -> str:
-    return f"IFNT{user_id:03d}"
 
 # -------------------------
 # Cosine similarity helper
@@ -63,11 +57,18 @@ def apply_synthetic_mask(image_path):
 @router.post("/register")
 async def register_user(
     name: str = Form(...),
+    employee_id: str = Form(...),   # <-- manually assign employee_id
     files: List[UploadFile] = File(...),
+    department: Optional[str] = Form(None),
     db: Session = Depends(get_db)
 ):
     if not files or len(files) == 0:
         raise HTTPException(status_code=400, detail="No images uploaded")
+
+    # Check if employee_id already exists
+    existing = db.query(User).filter(User.employee_id == employee_id).first()
+    if existing:
+        raise HTTPException(status_code=400, detail=f"Employee ID '{employee_id}' already exists")
 
     embeddings = []
 
@@ -111,7 +112,7 @@ async def register_user(
     if not embeddings:
         raise HTTPException(status_code=400, detail="❌ No face detected. Try again!")
 
-    # Prevent duplicate registration with the same face again
+    # Prevent duplicate face registration
     users = db.query(User).all()
     threshold = 0.55
     for user in users:
@@ -126,7 +127,12 @@ async def register_user(
                 )
 
     # Create new user
-    new_user = User(name=name, embedding=json.dumps(embeddings))
+    new_user = User(
+        name=name,
+        employee_id=employee_id,   # <-- save employee_id directly
+        embedding=json.dumps(embeddings),
+        department=department
+    )
     db.add(new_user)
     db.commit()
     db.refresh(new_user)
@@ -134,45 +140,57 @@ async def register_user(
     # Refresh cache
     refresh_embeddings()
 
-    employee_id = format_employee_id(new_user.id)
     return {
         "message": f"✅ User {name} registered successfully!",
-        "employee_id": employee_id,
+        "employee_id": new_user.employee_id,
+        "department": new_user.department,
         "embeddings_stored": len(embeddings)
     }
 
 # -------------------------
-# Pydantic schema for updating name
+# Pydantic schema for updating user
 # -------------------------
-class UpdateNameRequest(BaseModel):
-    current_name: str
-    new_name: str
+class UpdateUserRequest(BaseModel):
+    current_employee_id: str
+    new_name: Optional[str] = None
+    new_department: Optional[str] = None
 
 # -------------------------
-# Update User Name
+# Update User (name + department)
 # -------------------------
-@router.put("/update-name")
-async def update_user_name(payload: UpdateNameRequest, db: Session = Depends(get_db)):
-    user = db.query(User).filter(User.name == payload.current_name).first()
+@router.put("/update-user")
+async def update_user(payload: UpdateUserRequest, db: Session = Depends(get_db)):
+    user = db.query(User).filter(User.employee_id == payload.current_employee_id).first()
     if not user:
-        raise HTTPException(status_code=404, detail=f"No user found named '{payload.current_name}'")
+        raise HTTPException(status_code=404, detail=f"No user found with employee_id '{payload.current_employee_id}'")
 
-    user.name = payload.new_name
+    if payload.new_name:
+        user.name = payload.new_name
+    if payload.new_department is not None:
+        user.department = payload.new_department
+
     db.commit()
+    db.refresh(user)
 
     # Refresh cache
     refresh_embeddings()
 
-    return {"message": f"✏️ User name updated from '{payload.current_name}' to '{payload.new_name}'"}
+    return {
+        "message": "✅ User updated successfully",
+        "id": user.id,
+        "employee_id": user.employee_id,
+        "name": user.name,
+        "department": user.department
+    }
 
 # -------------------------
-# Hard Delete User
+# Hard Delete User (attendance preserved)
 # -------------------------
-@router.delete("/delete-by-name/{name}")
-async def delete_user(name: str, db: Session = Depends(get_db)):
-    user = db.query(User).filter(User.name == name).first()
+@router.delete("/delete-by-id/{employee_id}")
+async def delete_user(employee_id: str, db: Session = Depends(get_db)):
+    user = db.query(User).filter(User.employee_id == employee_id).first()
     if not user:
-        raise HTTPException(status_code=404, detail=f"No user found named '{name}'")
+        raise HTTPException(status_code=404, detail=f"No user found with employee_id '{employee_id}'")
 
     # Preserve attendance history
     records = db.query(Attendance).filter(Attendance.user_id == user.id).all()
@@ -203,6 +221,7 @@ async def list_users(
                 "id": r.id,
                 "employee_id": "DELETED",
                 "name": r.user_name_snapshot or "Unknown",
+                "department": None,
                 "created_at": r.date.isoformat(),
             }
             for r in deleted_records
@@ -212,8 +231,9 @@ async def list_users(
         return [
             {
                 "id": u.id,
-                "employee_id": format_employee_id(u.id),
+                "employee_id": u.employee_id,   # <-- use DB column
                 "name": u.name,
+                "department": u.department,
                 "created_at": u.created_at.isoformat(),
             }
             for u in users
@@ -228,23 +248,27 @@ async def legacy_active_users(db: Session = Depends(get_db)):
     return [
         {
             "id": u.id,
-            "employee_id": format_employee_id(u.id),
+            "employee_id": u.employee_id,
             "name": u.name,
+            "department": u.department,
             "created_at": u.created_at.isoformat(),
         }
         for u in users
     ]
 
+# -------------------------
 # List deleted users
+# -------------------------
 @router.get("/deleted")
 def get_deleted_users(db: Session = Depends(get_db)):
-    users = db.query(User).filter(User.is_deleted == True).all()
+    users = db.query(User).filter(User.is_active == False).all()
     return [
         {
             "id": u.id,
-            "employee_id": f"IFNT{str(u.id).zfill(3)}",
+            "employee_id": u.employee_id or "DELETED",
             "name": u.name,
-            "created_at": u.created_at,
+            "department": u.department,
+            "created_at": u.created_at.isoformat(),
         }
         for u in users
     ]
