@@ -16,6 +16,7 @@ from routes.attendance import refresh_embeddings
 
 router = APIRouter(prefix="/users", tags=["Users"])
 
+
 # -------------------------
 # Dependency: DB session
 # -------------------------
@@ -26,6 +27,14 @@ def get_db():
     finally:
         db.close()
 
+
+# -------------------------
+# Employee ID formatter
+# -------------------------
+def format_employee_id(user_id: int) -> str:
+    return f"IFNT{user_id:03d}"
+
+
 # -------------------------
 # Cosine similarity helper
 # -------------------------
@@ -33,6 +42,7 @@ def cosine_similarity(vec1, vec2):
     v1, v2 = np.array(vec1, dtype=float), np.array(vec2, dtype=float)
     v1, v2 = v1 / np.linalg.norm(v1), v2 / np.linalg.norm(v2)
     return float(np.dot(v1, v2))
+
 
 # -------------------------
 # Helper: apply synthetic mask
@@ -51,13 +61,13 @@ def apply_synthetic_mask(image_path):
     cv2.imwrite(tmp_masked.name, img)
     return tmp_masked.name
 
+
 # -------------------------
-# Register User
+# Register User (auto employee_id)
 # -------------------------
 @router.post("/register")
 async def register_user(
     name: str = Form(...),
-    employee_id: str = Form(...),   # <-- manually assign employee_id
     files: List[UploadFile] = File(...),
     department: Optional[str] = Form(None),
     db: Session = Depends(get_db)
@@ -65,13 +75,7 @@ async def register_user(
     if not files or len(files) == 0:
         raise HTTPException(status_code=400, detail="No images uploaded")
 
-    # Check if employee_id already exists
-    existing = db.query(User).filter(User.employee_id == employee_id).first()
-    if existing:
-        raise HTTPException(status_code=400, detail=f"Employee ID '{employee_id}' already exists")
-
     embeddings = []
-
     for file in files:
         contents = await file.read()
         with tempfile.NamedTemporaryFile(delete=False, suffix=".jpg") as tmp:
@@ -104,7 +108,6 @@ async def register_user(
                     rep_mask = [rep_mask]
                 if rep_mask and "embedding" in rep_mask[0]:
                     embeddings.append(rep_mask[0]["embedding"])
-
         except Exception as e:
             print(f"⚠️ Face not detected in one frame: {e}")
             continue
@@ -126,14 +129,18 @@ async def register_user(
                     detail=f"User '{user.name}' is already registered with this face!"
                 )
 
-    # Create new user
+    # Create new user without employee_id first
     new_user = User(
         name=name,
-        employee_id=employee_id,   # <-- save employee_id directly
         embedding=json.dumps(embeddings),
         department=department
     )
     db.add(new_user)
+    db.commit()
+    db.refresh(new_user)
+
+    # Generate employee_id after we know the auto-incremented ID
+    new_user.employee_id = format_employee_id(new_user.id)
     db.commit()
     db.refresh(new_user)
 
@@ -147,6 +154,7 @@ async def register_user(
         "embeddings_stored": len(embeddings)
     }
 
+
 # -------------------------
 # Pydantic schema for updating user
 # -------------------------
@@ -154,6 +162,7 @@ class UpdateUserRequest(BaseModel):
     current_employee_id: str
     new_name: Optional[str] = None
     new_department: Optional[str] = None
+
 
 # -------------------------
 # Update User (name + department)
@@ -172,7 +181,6 @@ async def update_user(payload: UpdateUserRequest, db: Session = Depends(get_db))
     db.commit()
     db.refresh(user)
 
-    # Refresh cache
     refresh_embeddings()
 
     return {
@@ -182,6 +190,7 @@ async def update_user(payload: UpdateUserRequest, db: Session = Depends(get_db))
         "name": user.name,
         "department": user.department
     }
+
 
 # -------------------------
 # Hard Delete User (attendance preserved)
@@ -201,10 +210,10 @@ async def delete_user(employee_id: str, db: Session = Depends(get_db)):
     db.delete(user)
     db.commit()
 
-    # Refresh cache
     refresh_embeddings()
 
     return {"message": f"🗑️ User {user.name} deleted successfully (attendance preserved)."}
+
 
 # -------------------------
 # List Users (active / deleted toggle)
@@ -231,13 +240,14 @@ async def list_users(
         return [
             {
                 "id": u.id,
-                "employee_id": u.employee_id,   # <-- use DB column
+                "employee_id": u.employee_id,
                 "name": u.name,
                 "department": u.department,
                 "created_at": u.created_at.isoformat(),
             }
             for u in users
         ]
+
 
 # -------------------------
 # Legacy support for frontend
@@ -255,6 +265,7 @@ async def legacy_active_users(db: Session = Depends(get_db)):
         }
         for u in users
     ]
+
 
 # -------------------------
 # List deleted users

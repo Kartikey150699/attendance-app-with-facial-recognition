@@ -12,7 +12,7 @@ import HeaderDateTime from "./HeaderDateTime";
 
 function RegisterUser() {
   const [name, setName] = useState("");
-  const [department, setDepartment] = useState(""); // <-- new state
+  const [department, setDepartment] = useState("");
   const [dateTime, setDateTime] = useState(new Date());
   const [showPopup, setShowPopup] = useState(false);
   const [popupMessage, setPopupMessage] = useState("");
@@ -101,7 +101,7 @@ function RegisterUser() {
     try {
       const formData = new FormData();
       formData.append("name", name);
-      formData.append("department", department); // <-- include department
+      formData.append("department", department);
 
       for (let i = 0; i < 10; i++) {
         const imageSrc = webcamRef.current.getScreenshot();
