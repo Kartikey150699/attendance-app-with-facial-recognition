@@ -87,19 +87,25 @@ function ManageUsers() {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        current_name: currentName.trim(),
+        current_employee_id: selectedUser.employee_id,
         new_name: newName.trim() || selectedUser.name,
         new_department: newDepartment.trim() || selectedUser.department,
       }),
     });
 
     const data = await res.json();
-    if (!res.ok) {
-      setPopupMessage(data.detail || "❌ Failed to update user.");
-    } else {
-      setPopupMessage("✅ User updated successfully!");
-      fetchUsers();
-    }
+if (!res.ok) {
+  if (Array.isArray(data.detail)) {
+    // Pydantic validation error → collect messages
+    const messages = data.detail.map(err => err.msg).join(", ");
+    setPopupMessage(`❌ ${messages}`);
+  } else {
+    setPopupMessage(data.detail || "❌ Failed to update user.");
+  }
+} else {
+  setPopupMessage("✅ User updated successfully!");
+  fetchUsers();
+}
   } catch (err) {
     setPopupMessage("❌ Could not connect to the server.");
   } finally {

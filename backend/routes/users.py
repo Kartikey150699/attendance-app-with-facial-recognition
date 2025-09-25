@@ -193,13 +193,36 @@ async def update_user(payload: UpdateUserRequest, db: Session = Depends(get_db))
 
 
 # -------------------------
-# Hard Delete User (attendance preserved)
+# Hard Delete User (by employee_id)
 # -------------------------
 @router.delete("/delete-by-id/{employee_id}")
-async def delete_user(employee_id: str, db: Session = Depends(get_db)):
+async def delete_user_by_id(employee_id: str, db: Session = Depends(get_db)):
     user = db.query(User).filter(User.employee_id == employee_id).first()
     if not user:
         raise HTTPException(status_code=404, detail=f"No user found with employee_id '{employee_id}'")
+
+    # Preserve attendance history
+    records = db.query(Attendance).filter(Attendance.user_id == user.id).all()
+    for record in records:
+        record.user_name_snapshot = user.name
+        record.user_id = None
+
+    db.delete(user)
+    db.commit()
+
+    refresh_embeddings()
+
+    return {"message": f"🗑️ User {user.name} deleted successfully (attendance preserved)."}
+
+
+# -------------------------
+# Hard Delete User (by name)
+# -------------------------
+@router.delete("/delete-by-name/{name}")
+async def delete_user_by_name(name: str, db: Session = Depends(get_db)):
+    user = db.query(User).filter(User.name == name).first()
+    if not user:
+        raise HTTPException(status_code=404, detail=f"No user found with name '{name}'")
 
     # Preserve attendance history
     records = db.query(Attendance).filter(Attendance.user_id == user.id).all()
