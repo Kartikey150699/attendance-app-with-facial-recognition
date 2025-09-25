@@ -42,13 +42,13 @@ class HolidayResponse(BaseModel):
 @router.get("/", response_model=List[HolidayResponse])
 def get_holidays(
     db: Session = Depends(get_db),
-    year: Optional[int] = Query(None),
-    month: Optional[int] = Query(None),
+    year: Optional[int] = Query(None, description="Filter by year"),
+    month: Optional[int] = Query(None, description="Filter by month"),
 ):
     query = db.query(Holiday)
+
     if year and month:
         from calendar import monthrange
-        from datetime import date
         start_date = date(year, month, 1)
         end_date = date(year, month, monthrange(year, month)[1])
         query = query.filter(Holiday.date >= start_date, Holiday.date <= end_date)
@@ -60,7 +60,7 @@ def get_holidays(
 # Add a holiday
 @router.post("/", response_model=HolidayResponse)
 def add_holiday(payload: HolidayBase, db: Session = Depends(get_db)):
-    # 🔹 Remove uniqueness check if multiple holidays on same date are allowed
+    # If you want multiple holidays on same date, remove this uniqueness check
     existing = db.query(Holiday).filter(Holiday.date == payload.date).first()
     if existing:
         raise HTTPException(status_code=400, detail="Holiday already exists on this date")

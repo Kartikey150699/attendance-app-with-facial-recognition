@@ -5,6 +5,8 @@ import {
   ClipboardDocumentListIcon,
   PencilSquareIcon,
   BuildingOffice2Icon,
+  ClockIcon,
+  GiftIcon,
 } from "@heroicons/react/24/solid";
 import Footer from "./Footer";
 import HeaderDateTime from "./HeaderDateTime";
@@ -20,7 +22,8 @@ function WorkApplication() {
   };
 
   const user = location.state?.user || storedUser.name || null;
-  const employeeId = location.state?.employeeId || storedUser.employee_id || null;
+  const employeeId =
+    location.state?.employeeId || storedUser.employee_id || null;
 
   const [dateTime, setDateTime] = useState(new Date());
 
@@ -30,7 +33,11 @@ function WorkApplication() {
   const [endDate, setEndDate] = useState("");
   const [startTime, setStartTime] = useState("");
   const [endTime, setEndTime] = useState("");
-  const [reason, setReason] = useState("");
+  const [reason, setReason] = useState(""); // keep it string only
+  const [usePaidHoliday, setUsePaidHoliday] = useState(""); // separate state
+
+  // Remaining Paid Holidays
+  const [remainingDays, setRemainingDays] = useState(null);
 
   // Popup state
   const [popup, setPopup] = useState({ show: false, message: "", type: "" });
@@ -40,12 +47,35 @@ function WorkApplication() {
     return () => clearInterval(timer);
   }, []);
 
-  // ✅ Protect route: redirect if not logged in
+  // Protect route: redirect if not logged in
   useEffect(() => {
     if (!user || !employeeId) {
       navigate("/work-application-login", { replace: true });
     }
   }, [user, employeeId, navigate]);
+
+  // Fetch remaining paid holidays for employee
+  useEffect(() => {
+    const fetchRemaining = async () => {
+      try {
+        const res = await fetch("http://localhost:8000/paid-holidays/");
+        if (!res.ok) throw new Error("Failed to fetch paid holidays");
+        const data = await res.json();
+
+        const record = data.find((h) => h.employee_id === employeeId);
+        if (record) {
+          setRemainingDays(record.remaining_days);
+        } else {
+          setRemainingDays(0);
+        }
+      } catch (error) {
+        console.error("Error fetching remaining holidays:", error);
+        setRemainingDays(0);
+      }
+    };
+
+    if (employeeId) fetchRemaining();
+  }, [employeeId]);
 
   // Format optional time
   const formatTime = (t) => (t ? (t.length === 5 ? `${t}:00` : t) : null);
@@ -71,7 +101,8 @@ function WorkApplication() {
       end_date: endDate,
       start_time: formatTime(startTime),
       end_time: formatTime(endTime),
-      reason: reason,
+      reason: reason, // ✅ plain string
+      use_paid_holiday: usePaidHoliday || "no", // ✅ dropdown state
     };
 
     try {
@@ -98,6 +129,7 @@ function WorkApplication() {
       setStartTime("");
       setEndTime("");
       setReason("");
+      setUsePaidHoliday("");
     } catch (error) {
       console.error("Error submitting application:", error);
       setPopup({
@@ -114,24 +146,18 @@ function WorkApplication() {
     <div className="flex flex-col min-h-screen bg-gradient-to-tr from-gray-100 via-indigo-100 to-blue-200 overflow-x-hidden">
       {/* Header */}
       <div className="w-full flex items-center justify-center px-10 py-4 bg-indigo-300 shadow-md relative">
-        {/* Date & Time */}
         <div className="absolute left-10 text-blue-800 text-xl font-bold">
           <HeaderDateTime />
         </div>
-
-        {/* Title */}
         <h1
-  onClick={() => navigate("/", { replace: true })}
-  className="text-5xl font-bold text-blue-900 cursor-pointer hover:text-blue-700 transition-colors"
->
-  FaceTrack Attendance
-</h1>
-
-        {/* Logout Button */}
+          onClick={() => navigate("/", { replace: true })}
+          className="text-5xl font-bold text-blue-900 cursor-pointer hover:text-blue-700 transition-colors"
+        >
+          FaceTrack Attendance
+        </h1>
         <div className="absolute right-10">
           <button
             onClick={() => {
-              // ✅ clear storage on logout
               localStorage.removeItem("user");
               localStorage.removeItem("employeeId");
               navigate("/work-application-login", { replace: true });
@@ -146,26 +172,56 @@ function WorkApplication() {
         </div>
       </div>
 
-      {/* Action Buttons below header */}
-      <div className="flex justify-end gap-3 px-10 mt-4">
-        <button
-          onClick={() =>
-            navigate("/your-applications", { state: { user, employeeId } })
-          }
-          className="px-5 py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-lg shadow flex items-center gap-2 
-                     transition-transform hover:scale-105 active:scale-95"
+      {/* Remaining Paid Holidays + Action Buttons */}
+      <div className="flex justify-between items-center px-10 mt-4">
+        <div
+          className={`shadow-md rounded-lg px-6 py-3 flex items-center gap-2 text-lg font-semibold ${
+            remainingDays === 0
+              ? "bg-red-100 text-red-700 border border-red-400"
+              : "bg-green-100 text-green-700 border border-green-400"
+          }`}
         >
-          <ClipboardDocumentListIcon className="h-5 w-5" />
-          Your Applications
-        </button>
-        <button
-          onClick={() => navigate("/calendar-view", { state: { from: "work" } })}
-          className="px-5 py-2 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-lg shadow flex items-center gap-2 
-                     transition-transform hover:scale-105 active:scale-95"
-        >
-          <BuildingOffice2Icon className="h-5 w-5" />
-          Holiday Calendar
-        </button>
+          <GiftIcon
+            className={`h-6 w-6 ${
+              remainingDays === 0 ? "text-red-600" : "text-green-600"
+            }`}
+          />
+          Remaining Paid Holidays:{" "}
+          <span>
+            {remainingDays !== null ? remainingDays : "Loading..."}
+          </span>
+        </div>
+
+        <div className="flex gap-3">
+          <button
+            onClick={() =>
+              navigate("/your-applications", { state: { user, employeeId } })
+            }
+            className="px-5 py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-lg shadow flex items-center gap-2 
+                       transition-transform hover:scale-105 active:scale-95"
+          >
+            <ClipboardDocumentListIcon className="h-5 w-5" />
+            Your Applications
+          </button>
+          <button
+            onClick={() => navigate("/calendar-view", { state: { from: "work" } })}
+            className="px-5 py-2 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-lg shadow flex items-center gap-2 
+                       transition-transform hover:scale-105 active:scale-95"
+          >
+            <BuildingOffice2Icon className="h-5 w-5" />
+            Holiday Calendar
+          </button>
+          <button
+            onClick={() =>
+              navigate("/my-attendance", { state: { user, employeeId } })
+            }
+            className="px-5 py-2 bg-green-600 hover:bg-green-700 text-white font-bold rounded-lg shadow flex items-center gap-2 
+                       transition-transform hover:scale-105 active:scale-95"
+          >
+            <ClockIcon className="h-5 w-5" />
+            My Attendance
+          </button>
+        </div>
       </div>
 
       {/* Request Form */}
@@ -179,7 +235,7 @@ function WorkApplication() {
             Submit New Request
           </h3>
 
-          {/* Name & Employee ID in one row */}
+          {/* Name & Employee ID */}
           <div className="flex justify-between items-center">
             <div className="flex items-center gap-2">
               <label className="text-gray-700 font-semibold">Name:</label>
@@ -191,38 +247,61 @@ function WorkApplication() {
             </div>
           </div>
 
-          {/* Application Type */}
-          <div className="flex flex-col">
-            <label className="text-gray-700 font-semibold mb-1">
-              Application Type
-            </label>
-            <select
-              value={applicationType}
-              onChange={(e) => setApplicationType(e.target.value)}
-              className="px-3 py-2 text-sm border-2 border-indigo-300 rounded-lg shadow-sm 
-                         focus:outline-none focus:ring-2 focus:ring-indigo-400"
-              required
-            >
-              <option value="">未選択</option>
-              <option value="有給休暇（全日)">有給休暇（全日)</option>
-              <option value="有給休暇（半日)">有給休暇（半日)</option>
-              <option value="慶弔休暇">慶弔休暇</option>
-              <option value="欠勤">欠勤</option>
-              <option value="直行">直行</option>
-              <option value="直帰">直帰</option>
-              <option value="直行直帰">直行直帰</option>
-              <option value="出張">出張</option>
-              <option value="遅刻">遅刻</option>
-              <option value="早退">早退</option>
-              <option value="振替休日">振替休日</option>
-              <option value="早出">早出</option>
-            </select>
+          {/* Application Type + Paid Holidays */}
+          <div className="grid grid-cols-2 gap-4">
+            <div className="flex flex-col">
+              <label className="text-gray-700 font-semibold mb-1">
+                Application Type
+              </label>
+              <select
+                value={applicationType}
+                onChange={(e) => setApplicationType(e.target.value)}
+                className="px-3 py-2 text-sm border-2 border-indigo-300 rounded-lg shadow-sm 
+                           focus:outline-none focus:ring-2 focus:ring-indigo-400"
+                required
+              >
+                <option value="">未選択</option>
+                <option value="有給休暇（全日)">有給休暇（全日)</option>
+                <option value="有給休暇（半日)">有給休暇（半日)</option>
+                <option value="慶弔休暇">慶弔休暇</option>
+                <option value="欠勤">欠勤</option>
+                <option value="直行">直行</option>
+                <option value="直帰">直帰</option>
+                <option value="直行直帰">直行直帰</option>
+                <option value="出張">出張</option>
+                <option value="遅刻">遅刻</option>
+                <option value="早退">早退</option>
+                <option value="振替休日">振替休日</option>
+                <option value="早出">早出</option>
+              </select>
+            </div>
+
+            <div className="flex flex-col">
+              <label className="text-gray-700 font-semibold mb-1">
+                Use Paid Holidays
+              </label>
+              <select
+                value={usePaidHoliday}
+                onChange={(e) => setUsePaidHoliday(e.target.value)}
+                className="px-3 py-2 text-sm border-2 border-indigo-300 rounded-lg shadow-sm 
+                           focus:outline-none focus:ring-2 focus:ring-indigo-400"
+                required
+              >
+                <option value="">Select</option>
+                <option value="yes" disabled={remainingDays === 0}>
+                  Yes {remainingDays === 0 ? "(Not Available)" : ""}
+                </option>
+                <option value="no">No</option>
+              </select>
+            </div>
           </div>
 
-          {/* Dates + Times in single row */}
+          {/* Dates */}
           <div className="grid grid-cols-4 gap-4">
             <div className="flex flex-col">
-              <label className="text-gray-700 font-semibold mb-1">Start Date</label>
+              <label className="text-gray-700 font-semibold mb-1">
+                Start Date
+              </label>
               <input
                 type="date"
                 value={startDate}
@@ -233,7 +312,6 @@ function WorkApplication() {
                 required
               />
             </div>
-
             <div className="flex flex-col">
               <label className="text-gray-700 font-semibold mb-1">End Date</label>
               <input
@@ -246,7 +324,6 @@ function WorkApplication() {
                 required
               />
             </div>
-
             <div className="flex flex-col">
               <label className="text-gray-700 font-semibold mb-1">Start Time</label>
               <input
@@ -257,7 +334,6 @@ function WorkApplication() {
                            focus:outline-none focus:ring-2 focus:ring-indigo-400"
               />
             </div>
-
             <div className="flex flex-col">
               <label className="text-gray-700 font-semibold mb-1">End Time</label>
               <input
@@ -284,7 +360,7 @@ function WorkApplication() {
             ></textarea>
           </div>
 
-          {/* Submit Button */}
+          {/* Submit */}
           <div className="flex justify-center mt-6">
             <button
               type="submit"
@@ -297,7 +373,7 @@ function WorkApplication() {
         </form>
       </div>
 
-      {/* Popup Modal */}
+      {/* Popup */}
       {popup.show && (
         <div className="fixed inset-0 bg-black bg-opacity-40 flex justify-center items-center z-50">
           <div className="bg-white p-6 rounded-xl shadow-lg max-w-sm w-full text-center">
@@ -322,7 +398,6 @@ function WorkApplication() {
         </div>
       )}
 
-      {/* Footer */}
       <Footer />
     </div>
   );

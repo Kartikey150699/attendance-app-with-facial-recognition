@@ -17,10 +17,12 @@ import TermsAndConditions from "./TermsAndConditions";
 import WorkApplication from "./WorkApplication";
 import WorkApplicationLogin from "./WorkApplicationLogin";
 import AttendanceLogs from "./AttendanceLogs";
+import MyAttendance from "./MyAttendance";
 import YourApplications from "./YourApplications";
 import HrPortal from "./HrPortal";
 import WorkApplicationRequests from "./WorkApplicationRequests";
 import HolidayManagement from "./HolidayManagement";
+import PaidHolidays from "./PaidHolidays";  
 import LogsReports from "./LogsReports";
 import CalendarView from "./CalendarView";
 import AboutUs from "./AboutUs";
@@ -141,12 +143,22 @@ function AnimatedRoutes() {
           }
         />
 
-        {/* Attendance Logs */}
+        {/* Attendance Logs (Admin view) */}
         <Route
           path="/attendance-logs"
           element={
             <motion.div initial={{ opacity: 0, y: 40 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -40 }} transition={{ duration: 0.4 }}>
               <AttendanceLogs />
+            </motion.div>
+          }
+        />
+
+        {/* My Attendance (User view) */}
+        <Route
+          path="/my-attendance"
+          element={
+            <motion.div initial={{ opacity: 0, y: 40 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -40 }} transition={{ duration: 0.4 }}>
+              <MyAttendance />
             </motion.div>
           }
         />
@@ -186,6 +198,16 @@ function AnimatedRoutes() {
           element={
             <motion.div initial={{ opacity: 0, x: 40 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -40 }} transition={{ duration: 0.4 }}>
               <HolidayManagement />
+            </motion.div>
+          }
+        />
+
+        {/* Paid Holidays */}
+        <Route
+          path="/paid-holidays"
+          element={
+            <motion.div initial={{ opacity: 0, x: 40 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -40 }} transition={{ duration: 0.4 }}>
+              <PaidHolidays />
             </motion.div>
           }
         />

@@ -286,6 +286,7 @@ function YourApplications() {
               <th className="p-4">Start Time</th>
               <th className="p-4">End Time</th>
               <th className="p-4">Reason</th>
+              <th className="p-4">Paid Holiday</th> {/* ✅ New Column */}
               <th className="p-4 cursor-pointer select-none" onClick={() => requestSort("status")}>
                 Status {getArrow("status")}
               </th>
@@ -312,6 +313,13 @@ function YourApplications() {
                     >
                       {displayReason}
                     </td>
+                    <td className="p-4">
+                      {app.use_paid_holiday === "yes" ? (
+                        <span className="text-green-600 font-bold">Yes</span>
+                      ) : (
+                        <span className="text-red-600 font-bold">No</span>
+                      )}
+                    </td>
                     <td
                       className={`p-4 font-bold ${
                         app.status === "Approved"
@@ -329,7 +337,7 @@ function YourApplications() {
               })
             ) : (
               <tr>
-                <td colSpan="9" className="p-6 text-center text-gray-500">
+                <td colSpan="10" className="p-6 text-center text-gray-500">
                   No applications found for this month.
                 </td>
               </tr>

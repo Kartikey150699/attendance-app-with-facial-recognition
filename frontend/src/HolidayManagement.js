@@ -9,6 +9,7 @@ import {
   PencilSquareIcon,
   TrashIcon,
   XMarkIcon,
+  UsersIcon,
 } from "@heroicons/react/24/solid";
 import Footer from "./Footer";
 import HeaderDateTime from "./HeaderDateTime";
@@ -205,21 +206,18 @@ function HolidayManagement() {
           <HeaderDateTime />
         </div>
         <h1
-  onClick={() => {
-    // Clear admin session
-    localStorage.removeItem("currentAdmin");
+          onClick={() => {
+            localStorage.removeItem("currentAdmin");
+            navigate("/admin-login", { replace: true });
+            navigate("/", { replace: false });
+          }}
+          className="text-5xl font-bold text-blue-900 cursor-pointer hover:text-blue-700 transition-colors"
+        >
+          FaceTrack Attendance
+        </h1>
+        <div className="absolute right-10 flex gap-4">
 
-    // First replace current page with /admin-login
-    navigate("/admin-login", { replace: true });
-
-    // Then push home on top
-    navigate("/", { replace: false });
-  }}
-  className="text-5xl font-bold text-blue-900 cursor-pointer hover:text-blue-700 transition-colors"
->
-  FaceTrack Attendance
-</h1>
-        <div className="absolute right-10">
+          {/* Back Button */}
           <button
             onClick={() => navigate("/hr-portal")}
             className="w-40 px-6 py-3 bg-red-500 hover:bg-red-600 hover:scale-105 active:scale-95 transition-transform duration-200 text-white font-bold rounded-lg shadow flex items-center justify-center gap-2"
@@ -230,15 +228,27 @@ function HolidayManagement() {
         </div>
       </div>
 
-      {/* Page Title */}
-      <div className="flex justify-center py-8">
-        <h2 className="text-3xl font-bold text-indigo-700 flex items-center gap-2">
-          <CalendarDaysIcon className="h-8 w-8 text-indigo-700" />
-          Holiday Management
-        </h2>
-      </div>
+      {/* Page Title with Paid Holidays Button */}
+<div className="flex items-center justify-center relative py-8">
+  {/* Centered Title */}
+  <h2 className="text-3xl font-bold text-indigo-700 flex items-center gap-2">
+    <CalendarDaysIcon className="h-8 w-8 text-indigo-700" />
+    Holiday Management
+  </h2>
 
-      {/* Filters */}
+  {/* Right-Side Button */}
+  <button
+    onClick={() => navigate("/paid-holidays")}
+    className="absolute right-10 flex items-center gap-2 px-5 py-2 
+               bg-purple-600 hover:bg-purple-700 text-white rounded-md shadow 
+               text-base font-semibold"
+  >
+    <UsersIcon className="h-5 w-5" />
+    Paid Holidays Management
+  </button>
+</div>
+
+      {/* Filters Box */}
       <div className="max-w-6xl w-full mx-auto px-6 mb-6">
         <div className="flex flex-wrap gap-4 justify-between items-center bg-white p-5 rounded-lg shadow text-lg">
           {/* Search */}
@@ -308,16 +318,10 @@ function HolidayManagement() {
         <table className="w-full border-collapse bg-white shadow-lg rounded-xl overflow-hidden text-lg">
           <thead>
             <tr className="bg-indigo-500 text-white text-lg">
-              <th
-                className="p-4 cursor-pointer"
-                onClick={() => requestSort("date")}
-              >
+              <th className="p-4 cursor-pointer" onClick={() => requestSort("date")}>
                 Date {getArrow("date")}
               </th>
-              <th
-                className="p-4 cursor-pointer"
-                onClick={() => requestSort("holiday_name")}
-              >
+              <th className="p-4 cursor-pointer" onClick={() => requestSort("holiday_name")}>
                 Holiday Name {getArrow("holiday_name")}
               </th>
               <th className="p-4">Actions</th>
@@ -392,17 +396,13 @@ function HolidayManagement() {
               <input
                 type="date"
                 value={newHoliday.date}
-                onChange={(e) =>
-                  setNewHoliday({ ...newHoliday, date: e.target.value })
-                }
+                onChange={(e) => setNewHoliday({ ...newHoliday, date: e.target.value })}
                 className="px-4 py-2 border rounded-md shadow-sm text-base focus:ring-2 focus:ring-indigo-400"
               />
               <input
                 type="text"
                 value={newHoliday.holiday_name}
-                onChange={(e) =>
-                  setNewHoliday({ ...newHoliday, holiday_name: e.target.value })
-                }
+                onChange={(e) => setNewHoliday({ ...newHoliday, holiday_name: e.target.value })}
                 placeholder="Holiday Name"
                 className="px-4 py-2 border rounded-md shadow-sm text-base focus:ring-2 focus:ring-indigo-400"
               />
@@ -428,14 +428,10 @@ function HolidayManagement() {
       {deleteHoliday && (
         <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-40 z-50">
           <div className="bg-white p-8 rounded-lg shadow-lg w-[400px] relative text-center">
-            <h3 className="text-2xl font-bold text-red-600 mb-6">
-              Confirm Delete
-            </h3>
+            <h3 className="text-2xl font-bold text-red-600 mb-6">Confirm Delete</h3>
             <p className="text-gray-700 mb-6">
               Are you sure you want to delete{" "}
-              <span className="font-semibold">
-                {deleteHoliday.holiday_name}
-              </span>{" "}
+              <span className="font-semibold">{deleteHoliday.holiday_name}</span>{" "}
               ({formatDate(deleteHoliday.date)})?
             </p>
             <div className="flex justify-between">
@@ -459,9 +455,7 @@ function HolidayManagement() {
       {validationError && (
         <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-40 z-50">
           <div className="bg-white p-6 rounded-lg shadow-lg w-[350px] text-center relative">
-            <h3 className="text-xl font-bold text-red-600 mb-4">
-              Validation Error
-            </h3>
+            <h3 className="text-xl font-bold text-red-600 mb-4">Validation Error</h3>
             <p className="text-gray-700 mb-6">{validationError}</p>
             <button
               onClick={() => setValidationError(null)}

@@ -95,6 +95,12 @@ function WorkApplicationRequests() {
     })
     .filter((app) =>
       Object.values(app)
+        .map((val) => {
+          if (val === null || val === undefined) return "";
+          if (val instanceof Date) return val.toISOString();
+          if (typeof val === "object") return JSON.stringify(val); // ✅ fix for nested objects
+          return String(val);
+        })
         .join(" ")
         .toLowerCase()
         .includes(search.toLowerCase())
@@ -158,38 +164,33 @@ function WorkApplicationRequests() {
           <HeaderDateTime />
         </div>
         <h1
-  onClick={() => {
-    // Clear admin session
-    localStorage.removeItem("currentAdmin");
-
-    // First replace current page with /admin-login
-    navigate("/admin-login", { replace: true });
-
-    // Then push home on top
-    navigate("/", { replace: false });
-  }}
-  className="text-5xl font-bold text-blue-900 cursor-pointer hover:text-blue-700 transition-colors"
->
-  FaceTrack Attendance
-</h1>
+          onClick={() => {
+            localStorage.removeItem("currentAdmin");
+            navigate("/admin-login", { replace: true });
+            navigate("/", { replace: false });
+          }}
+          className="text-5xl font-bold text-blue-900 cursor-pointer hover:text-blue-700 transition-colors"
+        >
+          FaceTrack Attendance
+        </h1>
         <div className="absolute right-10">
           <button
-  onClick={() => navigate("/hr-portal")}
-  className="w-40 px-6 py-3 bg-red-500 hover:bg-red-600 hover:scale-105 active:scale-95 transition-transform duration-200 text-white font-bold rounded-lg shadow flex items-center justify-center gap-2"
->
-  <ArrowUturnLeftIcon className="h-5 w-5 text-white" />
-  <span>Back</span>
-</button>
+            onClick={() => navigate("/hr-portal")}
+            className="w-40 px-6 py-3 bg-red-500 hover:bg-red-600 hover:scale-105 active:scale-95 transition-transform duration-200 text-white font-bold rounded-lg shadow flex items-center justify-center gap-2"
+          >
+            <ArrowUturnLeftIcon className="h-5 w-5 text-white" />
+            <span>Back</span>
+          </button>
         </div>
       </div>
 
       {/* Page Title */}
       <div className="flex justify-center py-6">
-  <h2 className="text-3xl font-bold text-indigo-700 flex items-center gap-3">
-    <ClipboardDocumentListIcon className="h-8 w-8 text-indigo-700" />
-    Work Application Requests
-  </h2>
-</div>
+        <h2 className="text-3xl font-bold text-indigo-700 flex items-center gap-3">
+          <ClipboardDocumentListIcon className="h-8 w-8 text-indigo-700" />
+          Work Application Requests
+        </h2>
+      </div>
 
       {/* Filters */}
       <div className="max-w-7xl w-full mx-auto px-6 mt-4 mb-6">
@@ -268,6 +269,7 @@ function WorkApplicationRequests() {
               </th>
               <th className="p-4">Employee ID</th>
               <th className="p-4">Name</th>
+              <th className="p-4">Paid Holiday</th>
               <th className="p-4">Dates<br /><span className="text-xs">(Start → End)</span></th>
               <th className="p-4">Times<br /><span className="text-xs">(Start → End)</span></th>
               <th className="p-4">Reason</th>
@@ -294,6 +296,13 @@ function WorkApplicationRequests() {
                     <td className="p-4">{formatDate(app.created_at)}</td>
                     <td className="p-4">{app.employee_id}</td>
                     <td className="p-4">{app.name || "-"}</td>
+                    <td className="p-4 font-semibold">
+                      {app.use_paid_holiday === "yes" ? (
+                        <span className="text-green-600">Yes</span>
+                      ) : (
+                        <span className="text-gray-600">No</span>
+                      )}
+                    </td>
                     <td className="p-4">
                       {formatDate(app.start_date)} → {formatDate(app.end_date)}
                     </td>
@@ -354,7 +363,7 @@ function WorkApplicationRequests() {
               })
             ) : (
               <tr>
-                <td colSpan="9" className="p-6 text-center text-gray-500">
+                <td colSpan="10" className="p-6 text-center text-gray-500">
                   No applications found.
                 </td>
               </tr>

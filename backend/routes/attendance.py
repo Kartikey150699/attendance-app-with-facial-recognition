@@ -1,4 +1,4 @@
-from fastapi import APIRouter, UploadFile, Form, Depends
+from fastapi import APIRouter, UploadFile, Form, Depends, Query
 from sqlalchemy.orm import Session
 from utils.db import SessionLocal
 from models.User import User
@@ -9,6 +9,7 @@ import json
 import numpy as np
 import cv2
 from datetime import date, datetime, timezone, timedelta
+from calendar import monthrange
 
 router = APIRouter(prefix="/attendance", tags=["Attendance"])
 
@@ -101,7 +102,7 @@ def detect_faces(tmp_path):
         reps = DeepFace.represent(
             img_path=tmp_path,
             model_name="ArcFace",
-            detector_backend="mtcnn",  # change to "retinaface" for deployment, mtcnn after the code opimization is around ~0.7s, retinaface with optimizations would be around 0.3~0.4s but needs strong GPU.
+            detector_backend="mtcnn",
             enforce_detection=False
         )
 
@@ -393,3 +394,90 @@ async def mark_attendance(
                             "status": "unknown"})
 
     return {"results": results}
+
+
+# -------------------------
+# Get Full Attendance Logs for a User (with optional month/year filter)
+# -------------------------
+@router.get("/user/{user_id}")
+async def get_user_attendance(
+    user_id: int,
+    db: Session = Depends(get_db),
+    month: int = Query(None, ge=1, le=12, description="Filter by month (1-12)"),
+    year: int = Query(None, ge=2000, le=2100, description="Filter by year"),
+):
+    query = db.query(Attendance).filter(Attendance.user_id == user_id)
+
+    # Apply filters if month/year are provided
+    if year:
+        query = query.filter(Attendance.date >= date(year, 1, 1),
+                             Attendance.date <= date(year, 12, 31))
+    if month and year:
+        last_day = monthrange(year, month)[1]
+        query = query.filter(Attendance.date >= date(year, month, 1),
+                             Attendance.date <= date(year, month, last_day))
+
+    logs = query.order_by(Attendance.date.desc()).all()
+
+    results = [
+        {
+            "date": log.date,
+            "check_in": log.check_in,
+            "check_out": log.check_out,
+            "break_start": log.break_start,
+            "break_end": log.break_end,
+            "total_work": log.total_work,
+            "user_name_snapshot": log.user_name_snapshot
+        }
+        for log in logs
+    ]
+    return results
+
+# -------------------------
+# Get Attendance for Current User (self view)
+# -------------------------
+@router.get("/my-attendance")
+async def get_my_attendance(
+    employee_id: str = Query(..., description="Employee ID (e.g., IFNT001)"),
+    db: Session = Depends(get_db),
+    month: int = Query(None, ge=1, le=12, description="Filter by month"),
+    year: int = Query(None, ge=2000, le=2100, description="Filter by year"),
+):
+    # Convert employee_id like "IFNT001" → 1
+    user_id = employee_id.replace("IFNT", "")
+    try:
+        user_id = int(user_id)
+    except:
+        return {"error": "Invalid employee_id"}
+
+    query = db.query(Attendance).filter(Attendance.user_id == user_id)
+
+    # Apply filters
+    if year:
+        query = query.filter(
+            Attendance.date >= date(year, 1, 1),
+            Attendance.date <= date(year, 12, 31)
+        )
+    if month and year:
+        from calendar import monthrange
+        last_day = monthrange(year, month)[1]
+        query = query.filter(
+            Attendance.date >= date(year, month, 1),
+            Attendance.date <= date(year, month, last_day)
+        )
+
+    logs = query.order_by(Attendance.date.desc()).all()
+
+    results = [
+        {
+            "date": log.date,
+            "check_in": log.check_in,
+            "check_out": log.check_out,
+            "break_start": log.break_start,
+            "break_end": log.break_end,
+            "total_work": log.total_work,
+            "user_name_snapshot": log.user_name_snapshot,
+        }
+        for log in logs
+    ]
+    return results

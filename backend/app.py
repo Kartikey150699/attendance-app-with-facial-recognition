@@ -2,9 +2,18 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 # absolute imports
-from routes import users, attendance, admin, logs, work_applications, holiday, hr_logs
+from routes import (
+    users,
+    attendance,
+    admin,
+    logs,
+    work_applications,
+    holiday,
+    hr_logs,
+    paid_holidays,  
+)
 from utils.db import Base, engine
-from models import User, Attendance, Admin, WorkApplication, Holiday  
+from models import User, Attendance, Admin, WorkApplication, Holiday, PaidHoliday 
 
 # FastAPI App
 app = FastAPI(
@@ -34,7 +43,8 @@ app.include_router(admin.router)
 app.include_router(logs.router)
 app.include_router(work_applications.router)
 app.include_router(holiday.router)
-app.include_router(hr_logs.router)  
+app.include_router(hr_logs.router)
+app.include_router(paid_holidays.router)   # ✅ correct router include
 
 # Root endpoint
 @app.get("/")
