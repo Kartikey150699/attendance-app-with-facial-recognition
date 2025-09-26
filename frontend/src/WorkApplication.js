@@ -7,6 +7,7 @@ import {
   BuildingOffice2Icon,
   ClockIcon,
   GiftIcon,
+  CheckCircleIcon,
 } from "@heroicons/react/24/solid";
 import Footer from "./Footer";
 import HeaderDateTime from "./HeaderDateTime";
@@ -24,7 +25,7 @@ function WorkApplication() {
   const user = location.state?.user || storedUser.name || null;
   const employeeId = location.state?.employeeId || storedUser.employee_id || null;
 
-  const [department, setDepartment] = useState(null); // fetched from backend
+  const [department, setDepartment] = useState(null); 
   const [dateTime, setDateTime] = useState(new Date());
 
   // Form states
@@ -38,6 +39,9 @@ function WorkApplication() {
 
   // Remaining Paid Holidays
   const [remainingDays, setRemainingDays] = useState(null);
+
+  // Notification count
+  const [pendingApprovals, setPendingApprovals] = useState(0);
 
   // Popup state
   const [popup, setPopup] = useState({ show: false, message: "", type: "" });
@@ -87,6 +91,25 @@ function WorkApplication() {
     };
 
     if (employeeId) fetchRemaining();
+  }, [employeeId]);
+
+  // Fetch pending approvals count
+  useEffect(() => {
+    const fetchPendingApprovals = async () => {
+      try {
+        const res = await fetch(
+          `http://localhost:8000/approvers/by-approver/${employeeId}`
+        );
+        if (!res.ok) throw new Error("Failed to fetch approvals");
+        const data = await res.json();
+        const pending = data.filter((a) => a.status === "Pending").length;
+        setPendingApprovals(pending);
+      } catch (err) {
+        console.error("Error fetching approvals:", err);
+      }
+    };
+
+    if (employeeId) fetchPendingApprovals();
   }, [employeeId]);
 
   // Format time
@@ -202,7 +225,24 @@ function WorkApplication() {
           <span>{remainingDays !== null ? remainingDays : "Loading..."}</span>
         </div>
 
-        <div className="flex gap-3">
+        <div className="flex gap-3 relative">
+          {/* My Approvals with Notification Badge */}
+          <div className="relative">
+            <button
+              onClick={() => navigate("/my-approvals", { state: { employeeId } })}
+              className="px-5 py-2 bg-purple-600 hover:bg-purple-700 text-white font-bold rounded-lg shadow flex items-center gap-2 
+                         transition-transform hover:scale-105 active:scale-95 relative"
+            >
+              <CheckCircleIcon className="h-5 w-5" />
+              My Approvals
+            </button>
+            {pendingApprovals > 0 && (
+              <span className="absolute -top-2 -right-2 bg-red-600 text-white text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center shadow">
+                {pendingApprovals}
+              </span>
+            )}
+          </div>
+
           <button
             onClick={() =>
               navigate("/your-applications", { state: { user, employeeId } })

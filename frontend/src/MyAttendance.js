@@ -70,6 +70,17 @@ function MyAttendance() {
     return `${otHrs}h ${otMins}m`;
   };
 
+  // Get all days in selected month
+  const getAllDaysInMonth = (month, year) => {
+    const date = new Date(year, month - 1, 1);
+    const days = [];
+    while (date.getMonth() === month - 1) {
+      days.push(new Date(date));
+      date.setDate(date.getDate() + 1);
+    }
+    return days;
+  };
+
   return (
     <div className="flex flex-col min-h-screen bg-gradient-to-tr from-gray-100 via-indigo-100 to-blue-200">
       {/* Header */}
@@ -97,9 +108,9 @@ function MyAttendance() {
 
       {/* Page Title */}
       <h2 className="text-3xl font-bold text-indigo-700 text-center mt-8 mb-6 flex items-center justify-center gap-2">
-  <ClipboardDocumentCheckIcon className="h-8 w-8 text-indigo-700" /> 
-  My Attendance Records
-</h2>
+        <ClipboardDocumentCheckIcon className="h-8 w-8 text-indigo-700" /> 
+        My Attendance Records
+      </h2>
 
       {/* Attendance Box */}
       <div className="flex justify-center px-6 mb-12">
@@ -160,46 +171,54 @@ function MyAttendance() {
                 </tr>
               </thead>
               <tbody>
-                {attendanceData.length > 0 ? (
-                  attendanceData.map((log, i) => (
+                {getAllDaysInMonth(selectedMonth, selectedYear).map((day, i) => {
+                  const log = attendanceData.find(
+                    (l) => new Date(l.date).toDateString() === day.toDateString()
+                  );
+                  const isWeekend = day.getDay() === 0 || day.getDay() === 6;
+
+                  return (
                     <tr key={i} className="text-center">
-                      <td className="p-2 border">
-                        {new Date(log.date).toLocaleDateString("en-US", {
+                      <td className="p-2 border font-semibold">
+                        {day.toLocaleDateString("en-US", {
                           year: "numeric",
                           month: "short",
                           day: "numeric",
                         })}
                       </td>
-                      <td className="p-2 border">
-                        {log.check_in
-                          ? new Date(log.check_in).toLocaleTimeString([], {
-                              hour: "2-digit",
-                              minute: "2-digit",
-                            })
-                          : "-"}
-                      </td>
-                      <td className="p-2 border">
-                        {log.check_out
-                          ? new Date(log.check_out).toLocaleTimeString([], {
-                              hour: "2-digit",
-                              minute: "2-digit",
-                            })
-                          : "-"}
-                      </td>
-                      <td className="p-2 border">{log.total_work || "-"}</td>
-                      <td className="p-2 border">
-                        {calculateOvertime(log.total_work)}
-                      </td>
-                      <td className="p-2 border">{log.status || "-"}</td>
+
+                      {isWeekend ? (
+                        <td colSpan="5" className="p-2 border text-red-600 font-bold">
+                          {day.getDay() === 0 ? "Sunday" : "Saturday"}
+                        </td>
+                      ) : (
+                        <>
+                          <td className="p-2 border">
+                            {log?.check_in
+                              ? new Date(log.check_in).toLocaleTimeString([], {
+                                  hour: "2-digit",
+                                  minute: "2-digit",
+                                })
+                              : "-"}
+                          </td>
+                          <td className="p-2 border">
+                            {log?.check_out
+                              ? new Date(log.check_out).toLocaleTimeString([], {
+                                  hour: "2-digit",
+                                  minute: "2-digit",
+                                })
+                              : "-"}
+                          </td>
+                          <td className="p-2 border">{log?.total_work || "-"}</td>
+                          <td className="p-2 border">
+                            {calculateOvertime(log?.total_work)}
+                          </td>
+                          <td className="p-2 border">{log?.status || "-"}</td>
+                        </>
+                      )}
                     </tr>
-                  ))
-                ) : (
-                  <tr>
-                    <td colSpan="6" className="p-4 text-gray-500 text-center">
-                      No attendance records found
-                    </td>
-                  </tr>
-                )}
+                  );
+                })}
               </tbody>
             </table>
           )}

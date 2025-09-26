@@ -4,6 +4,7 @@ from utils.db import get_db
 from models.WorkApplication import WorkApplication
 from models.PaidHoliday import PaidHoliday
 from models.User import User
+from models.Approver import Approver  # ✅ include approvers
 from typing import Optional
 from pydantic import BaseModel
 from datetime import datetime
@@ -22,24 +23,42 @@ class StatusUpdate(BaseModel):
 
 
 # -----------------------------
+# Helper: compute final status
+# -----------------------------
+def compute_final_status(db: Session, app: WorkApplication) -> str:
+    approvers = db.query(Approver).filter(Approver.work_application_id == app.id).all()
+
+    if not approvers or len(approvers) == 0:
+        return app.status  # fallback: original
+
+    statuses = [a.status for a in approvers]
+    if "Rejected" in statuses:
+        return "Rejected"
+    elif all(s == "Approved" for s in statuses):
+        return "Approved"
+    else:
+        return "Pending"
+
+
+# -----------------------------
 # Serializer helper
 # -----------------------------
-def serialize_application(app: WorkApplication, user: Optional[User] = None):
+def serialize_application(app: WorkApplication, db: Session, user: Optional[User] = None):
     return {
         "id": app.id,
         "employee_id": app.employee_id,
         "name": app.name,
         "department": user.department if user else None,
         "application_type": app.application_type,
-        "start_date": app.start_date,
-        "end_date": app.end_date,
-        "start_time": app.start_time,
-        "end_time": app.end_time,
+        "start_date": str(app.start_date) if app.start_date else None,
+        "end_date": str(app.end_date) if app.end_date else None,
+        "start_time": str(app.start_time) if app.start_time else None,
+        "end_time": str(app.end_time) if app.end_time else None,
         "reason": app.reason,
         "use_paid_holiday": app.use_paid_holiday,
-        "status": app.status,
+        "status": compute_final_status(db, app), 
         "hr_notes": app.hr_notes,
-        "created_at": app.created_at.isoformat() if app.created_at else None, 
+        "created_at": app.created_at.isoformat() if app.created_at else None,
     }
 
 
@@ -51,8 +70,8 @@ def get_work_applications(db: Session = Depends(get_db)):
     apps = db.query(WorkApplication).all()
     results = []
     for app in apps:
-        user = db.query(User).filter(User.id == app.employee_id).first()
-        results.append(serialize_application(app, user))
+        user = db.query(User).filter(User.employee_id == app.employee_id).first()
+        results.append(serialize_application(app, db, user))
     return results
 
 
@@ -80,7 +99,7 @@ async def create_work_application(request: Request, db: Session = Depends(get_db
     use_paid_holiday = data.get("use_paid_holiday", "no")
 
     # Fetch department
-    user = db.query(User).filter(User.id == employee_id).first()
+    user = db.query(User).filter(User.employee_id == employee_id).first()
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
     department = user.department
@@ -123,7 +142,7 @@ async def create_work_application(request: Request, db: Session = Depends(get_db
 
     return {
         "message": "✅ Work application submitted successfully!",
-        "application": serialize_application(new_app, user)
+        "application": serialize_application(new_app, db, user)
     }
 
 
@@ -147,13 +166,16 @@ def update_status(app_id: int, payload: StatusUpdate, db: Session = Depends(get_
                 ph.used_days = 0
             db.add(ph)
 
-    app.status = payload.status
+    # Update HR notes always
     app.hr_notes = payload.hr_notes
+
+    # Update raw status if HR explicitly changes
+    app.status = payload.status
     db.commit()
     db.refresh(app)
 
-    user = db.query(User).filter(User.id == app.employee_id).first()
-    return serialize_application(app, user)
+    user = db.query(User).filter(User.employee_id == app.employee_id).first()
+    return serialize_application(app, db, user)
 
 
 # -----------------------------
