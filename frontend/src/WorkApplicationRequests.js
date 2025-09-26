@@ -6,6 +6,7 @@ import {
   ArrowPathIcon,
   XMarkIcon,
   ClipboardDocumentListIcon,
+  PlusIcon,
 } from "@heroicons/react/24/solid";
 import Footer from "./Footer";
 import HeaderDateTime from "./HeaderDateTime";
@@ -797,11 +798,12 @@ const openApproverModal = async (application) => {
 
       {/* Add Approver Button */}
       <button
-        onClick={() => setAddApproverModal(true)}
-        className="w-full px-4 py-2 bg-green-500 hover:bg-green-600 text-white rounded-lg shadow"
-      >
-        + Add Approver
-      </button>
+  onClick={() => setAddApproverModal(true)}
+  className="w-full flex items-center justify-center gap-2 px-4 py-2 bg-green-500 hover:bg-green-600 text-white rounded-lg shadow"
+>
+  <PlusIcon className="w-5 h-5" />
+  Add Approver
+</button>
     </div>
   </div>
 )}

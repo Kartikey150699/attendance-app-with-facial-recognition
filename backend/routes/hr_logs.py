@@ -80,7 +80,7 @@ def get_hr_logs(
         for day in range(1, monthrange(year, month)[1] + 1):
             current_date = date(year, month, day)
 
-            # Fixed: lookup using normalized date
+            # Lookup logs using normalized date
             log = attendance_map.get((user.id, current_date))
             holiday_name = holidays.get(current_date)
             leave_reason = leave_map.get((employee_id, current_date))
@@ -111,6 +111,7 @@ def get_hr_logs(
                 "date": current_date.strftime("%Y-%m-%d"),
                 "employee_id": employee_id,
                 "name": user.name or "Unknown",
+                "department": user.department or "-", 
                 "status": status,
                 "check_in": log.check_in.strftime("%H:%M") if log and log.check_in else "-",
                 "check_out": log.check_out.strftime("%H:%M") if log and log.check_out else "-",

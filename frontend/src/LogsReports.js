@@ -126,7 +126,7 @@ function LogsReports() {
     setSortConfig({ key: "", direction: "" });
     setCurrentPage(1);
     setRowsPerPage(10);
-    setSelectedDate(todayStr); 
+    setSelectedDate(todayStr);
     setQuickFilter(null);
   };
 
@@ -138,28 +138,28 @@ function LogsReports() {
           <HeaderDateTime />
         </div>
         <h1
-  onClick={() => {
-    // Clear admin session
-    localStorage.removeItem("currentAdmin");
+          onClick={() => {
+            // Clear admin session
+            localStorage.removeItem("currentAdmin");
 
-    // First replace current page with /admin-login
-    navigate("/admin-login", { replace: true });
+            // First replace current page with /admin-login
+            navigate("/admin-login", { replace: true });
 
-    // Then push home on top
-    navigate("/", { replace: false });
-  }}
-  className="text-5xl font-bold text-blue-900 cursor-pointer hover:text-blue-700 transition-colors"
->
-  FaceTrack Attendance
-</h1>
+            // Then push home on top
+            navigate("/", { replace: false });
+          }}
+          className="text-5xl font-bold text-blue-900 cursor-pointer hover:text-blue-700 transition-colors"
+        >
+          FaceTrack Attendance
+        </h1>
         <div className="absolute right-10">
           <button
-  onClick={() => navigate("/hr-portal")}
-  className="w-40 px-6 py-3 bg-red-500 hover:bg-red-600 hover:scale-105 active:scale-95 transition-transform duration-200 text-white font-bold rounded-lg shadow flex items-center justify-center gap-2"
->
-  <ArrowUturnLeftIcon className="h-5 w-5 text-white" />
-  <span>Back</span>
-</button>
+            onClick={() => navigate("/hr-portal")}
+            className="w-40 px-6 py-3 bg-red-500 hover:bg-red-600 hover:scale-105 active:scale-95 transition-transform duration-200 text-white font-bold rounded-lg shadow flex items-center justify-center gap-2"
+          >
+            <ArrowUturnLeftIcon className="h-5 w-5 text-white" />
+            <span>Back</span>
+          </button>
         </div>
       </div>
 
@@ -264,6 +264,7 @@ function LogsReports() {
               </th>
               <th className="p-4">Employee ID</th>
               <th className="p-4">Name</th>
+              <th className="p-4">Department</th> 
               <th className="p-4">Check In</th>
               <th className="p-4">Check Out</th>
               <th className="p-4">Total Work</th>
@@ -277,6 +278,7 @@ function LogsReports() {
                   <td className="p-4">{formatDate(log.date)}</td>
                   <td className="p-4">{log.employee_id}</td>
                   <td className="p-4">{log.name}</td>
+                  <td className="p-4">{log.department || "-"}</td> 
                   <td className="p-4">{log.check_in || "-"}</td>
                   <td className="p-4">{log.check_out || "-"}</td>
                   <td className="p-4">{log.total_work}</td>
@@ -303,7 +305,7 @@ function LogsReports() {
               ))
             ) : (
               <tr>
-                <td colSpan="7" className="p-6 text-gray-500 text-center">
+                <td colSpan="8" className="p-6 text-gray-500 text-center">
                   No logs available.
                 </td>
               </tr>
