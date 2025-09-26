@@ -9,6 +9,8 @@ import {
   UsersIcon,
   ShieldCheckIcon,
   UserGroupIcon,
+  CalendarDaysIcon,
+  ClockIcon,
 } from "@heroicons/react/24/solid";
 import Footer from "./Footer";
 import HeaderDateTime from "./HeaderDateTime";
@@ -28,7 +30,6 @@ function AdminDashboard() {
     if (admin) {
       setCurrentAdmin(admin);
     } else {
-      // Redirect to login if not logged in
       navigate("/admin-login");
     }
 
@@ -42,7 +43,6 @@ function AdminDashboard() {
         const res = await fetch("http://localhost:8000/work-applications/");
         if (!res.ok) throw new Error("Failed to fetch applications");
         const data = await res.json();
-
         const count = data.filter((app) => app.status === "Pending").length;
         setPendingCount(count);
       } catch (error) {
@@ -57,7 +57,7 @@ function AdminDashboard() {
     localStorage.removeItem("currentAdmin");
     setCurrentAdmin(null);
     navigate("/admin-login");
-    window.location.reload(); 
+    window.location.reload();
   };
 
   return (
@@ -69,16 +69,14 @@ function AdminDashboard() {
         </div>
 
         <h1
-  onClick={() => {
-    // clear admin session
-    localStorage.removeItem("currentAdmin");
-    // redirect home and prevent back navigation
-    navigate("/", { replace: true });
-  }}
-  className="text-5xl font-bold text-blue-900 cursor-pointer hover:text-blue-700 transition-colors"
->
-  FaceTrack Attendance
-</h1>
+          onClick={() => {
+            localStorage.removeItem("currentAdmin");
+            navigate("/", { replace: true });
+          }}
+          className="text-5xl font-bold text-blue-900 cursor-pointer hover:text-blue-700 transition-colors"
+        >
+          FaceTrack Attendance
+        </h1>
 
         <div className="absolute right-10">
           <button
@@ -106,7 +104,7 @@ function AdminDashboard() {
           </p>
         )}
 
-        <div className="grid grid-cols-2 gap-8">
+        <div className="grid grid-cols-2 gap-6 -mt-4">
           {/* Row 1 */}
           <button
             onClick={() => navigate("/register-user")}
@@ -136,20 +134,19 @@ function AdminDashboard() {
             Change Admin Password
           </button>
 
-          {/* HR Portal with inside notification */}
           <button
-  onClick={() => navigate("/hr-portal", { replace: true })}
-  className="relative px-14 py-8 bg-purple-500 hover:bg-purple-600 hover:scale-105 active:scale-95 
-             transition-transform duration-200 text-white text-2xl font-bold rounded-lg shadow flex items-center justify-center"
->
-  <UserGroupIcon className="h-6 w-6 inline-block mr-2" />
-  HR Portal
-  {pendingCount > 0 && (
-    <span className="absolute top-2 right-2 bg-red-600 text-white text-xs font-bold rounded-full w-6 h-6 flex items-center justify-center shadow">
-      {pendingCount}
-    </span>
-  )}
-</button>
+            onClick={() => navigate("/hr-portal", { replace: true })}
+            className="relative px-14 py-8 bg-purple-500 hover:bg-purple-600 hover:scale-105 active:scale-95 
+                       transition-transform duration-200 text-white text-2xl font-bold rounded-lg shadow flex items-center justify-center"
+          >
+            <UserGroupIcon className="h-6 w-6 inline-block mr-2" />
+            HR Portal
+            {pendingCount > 0 && (
+              <span className="absolute top-2 right-2 bg-red-600 text-white text-xs font-bold rounded-full w-6 h-6 flex items-center justify-center shadow">
+                {pendingCount}
+              </span>
+            )}
+          </button>
 
           {/* Row 3 */}
           <button
@@ -168,6 +165,25 @@ function AdminDashboard() {
           >
             <ShieldCheckIcon className="h-6 w-6 inline-block mr-2" />
             Manage Admins
+          </button>
+
+          {/* Row 4 - New Buttons */}
+          <button
+            onClick={() => navigate("/paid-holidays")}
+            className="px-14 py-8 bg-orange-500 hover:bg-orange-600 hover:scale-105 active:scale-95 
+                       transition-transform duration-200 text-white text-2xl font-bold rounded-lg shadow"
+          >
+            <CalendarDaysIcon className="h-6 w-6 inline-block mr-2" />
+            Paid Holidays Management
+          </button>
+
+          <button
+            onClick={() => navigate("/shifts-management")}
+            className="px-14 py-8 bg-teal-500 hover:bg-teal-600 hover:scale-105 active:scale-95 
+                       transition-transform duration-200 text-white text-2xl font-bold rounded-lg shadow"
+          >
+            <ClockIcon className="h-6 w-6 inline-block mr-2" />
+            Shifts Management
           </button>
         </div>
       </div>

@@ -235,17 +235,7 @@ function HolidayManagement() {
     <CalendarDaysIcon className="h-8 w-8 text-indigo-700" />
     Holiday Management
   </h2>
-
-  {/* Right-Side Button */}
-  <button
-    onClick={() => navigate("/paid-holidays")}
-    className="absolute right-10 flex items-center gap-2 px-5 py-2 
-               bg-purple-600 hover:bg-purple-700 text-white rounded-md shadow 
-               text-base font-semibold"
-  >
-    <UsersIcon className="h-5 w-5" />
-    Paid Holidays Management
-  </button>
+  
 </div>
 
       {/* Filters Box */}

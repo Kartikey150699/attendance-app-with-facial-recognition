@@ -22,11 +22,12 @@ import YourApplications from "./YourApplications";
 import HrPortal from "./HrPortal";
 import WorkApplicationRequests from "./WorkApplicationRequests";
 import HolidayManagement from "./HolidayManagement";
-import PaidHolidays from "./PaidHolidays";  
+import PaidHolidays from "./PaidHolidays";
 import LogsReports from "./LogsReports";
 import CalendarView from "./CalendarView";
 import AboutUs from "./AboutUs";
-import MyApprovals from "./MyApprovals"; 
+import MyApprovals from "./MyApprovals";
+import ShiftsManagement from "./ShiftsManagement";
 
 function AnimatedRoutes() {
   const location = useLocation();
@@ -223,6 +224,7 @@ function AnimatedRoutes() {
           }
         />
 
+        {/* Logs & Reports */}
         <Route
           path="/hrportal/logs-reports"
           element={
@@ -248,6 +250,16 @@ function AnimatedRoutes() {
           element={
             <motion.div initial={{ opacity: 0, y: 50 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -50 }} transition={{ duration: 0.4 }}>
               <AboutUs />
+            </motion.div>
+          }
+        />
+
+        {/* Shifts Management */}
+        <Route
+          path="/shifts-management"
+          element={
+            <motion.div initial={{ opacity: 0, y: 50 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -50 }} transition={{ duration: 0.4 }}>
+              <ShiftsManagement />
             </motion.div>
           }
         />

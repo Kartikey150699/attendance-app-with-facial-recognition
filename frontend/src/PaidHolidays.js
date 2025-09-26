@@ -148,13 +148,14 @@ function PaidHolidays() {
         </h1>
         <div className="absolute right-10">
           <button
-            onClick={() => navigate("/hrportal/holiday-management")}
-            className="w-40 px-6 py-3 bg-red-500 hover:bg-red-600 hover:scale-105 
-                       active:scale-95 transition-transform duration-200 text-white font-bold rounded-lg shadow flex items-center justify-center gap-2"
-          >
-            <ArrowUturnLeftIcon className="h-5 w-5 text-white" />
-            Back
-          </button>
+  onClick={() => navigate("/admin-dashboard")}
+  className="w-40 px-6 py-3 bg-red-500 hover:bg-red-600 hover:scale-105 active:scale-95 
+             transition-transform duration-200 text-white font-bold rounded-lg shadow flex 
+             items-center justify-center gap-2"
+>
+  <ArrowUturnLeftIcon className="h-5 w-5 text-white" />
+  Back
+</button>
         </div>
       </div>
 
@@ -203,7 +204,7 @@ function PaidHolidays() {
       <div className="max-w-6xl w-full mx-auto px-6 flex-grow mb-12">
         <table className="w-full border-collapse bg-white shadow-lg rounded-xl overflow-hidden text-lg">
           <thead>
-            <tr className="bg-purple-500 text-white text-lg">
+            <tr className="bg-purple-600 text-white text-lg">
               <th className="p-4">Employee ID</th>
               <th className="p-4">Name</th>
               <th className="p-4">Department</th>
