@@ -4,7 +4,7 @@ from utils.db import get_db
 from models.WorkApplication import WorkApplication
 from models.PaidHoliday import PaidHoliday
 from models.User import User
-from models.Approver import Approver  # ✅ include approvers
+from models.Approver import Approver 
 from typing import Optional
 from pydantic import BaseModel
 from datetime import datetime

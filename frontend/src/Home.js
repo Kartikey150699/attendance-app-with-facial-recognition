@@ -55,77 +55,80 @@ function Home() {
   }, []);
 
   // Handle backend response (wrapped in useCallback)
-  const handleBackendResponse = useCallback(
-    (data, mode) => {
-      if (data.error) {
-        setFaces([{ name: "Unknown", status: "unknown", box: [50, 50, 100, 100] }]);
-        setStatusMessages(["❌ Unknown face detected"]);
-        return;
-      }
+const handleBackendResponse = useCallback(
+  (data, mode) => {
+    if (data.error) {
+      setFaces([{ name: "Unknown", status: "unknown", box: [50, 50, 100, 100] }]);
+      setStatusMessages(["❌ Unknown face detected"]);
+      return;
+    }
 
-      if (data.results && Array.isArray(data.results)) {
-        const mappedFaces = data.results.map((face) => ({
-          name: face.name,
-          status: face.status,
-          box: face.box,
-        }));
-        setFaces(mappedFaces);
+    if (data.results && Array.isArray(data.results)) {
+      const mappedFaces = data.results.map((face) => ({
+        name: face.name,
+        status: face.status,
+        box: face.box,
+      }));
 
-        if (mode === "mark" && mappedFaces.length > 0) {
-          const currentDateTime = dateTime.toLocaleString("en-US", {
-            year: "numeric",
-            month: "short",
-            day: "numeric",
-            hour: "2-digit",
-            minute: "2-digit",
-            second: "2-digit",
-            hour12: true,
-          });
+      // Always update faces (so preview shows boxes too)
+      setFaces(mappedFaces);
 
-          const msgs = mappedFaces.map((face) => {
-            if (action === "work-application" && face.status === "logged_in") {
-              navigate("/work-application", { state: { user: face.name } });
-              return `✅ ${face.name} logged in to Work Application — ${currentDateTime}`;
-            }
+      // Only show messages when capturing (mark mode)
+      if (mode === "mark" && mappedFaces.length > 0) {
+        const currentDateTime = dateTime.toLocaleString("en-US", {
+          year: "numeric",
+          month: "short",
+          day: "numeric",
+          hour: "2-digit",
+          minute: "2-digit",
+          second: "2-digit",
+          hour12: true,
+        });
 
-            if (face.status === "checked_in")
-              return `✅ ${face.name} marked Present — ${currentDateTime}`;
-            if (face.status === "already_checked_in")
-              return `⚠️ ${face.name} already Checked In — ${currentDateTime}`;
-            if (face.status === "checked_out")
-              return `✅ ${face.name} Checked Out — ${currentDateTime}`;
-            if (face.status === "already_checked_out")
-              return `⚠️ ${face.name} already Checked Out — ${currentDateTime}`;
-            if (face.status === "break_started")
-              return `⏸️ ${face.name} started Break — ${currentDateTime}`;
-            if (face.status === "already_on_break")
-              return `⚠️ ${face.name} is already on Break — ${currentDateTime}`;
-            if (face.status === "break_ended")
-              return `▶️ ${face.name} ended Break — ${currentDateTime}`;
-            if (face.status === "already_break_ended")
-              return `⚠️ ${face.name} already ended Break — ${currentDateTime}`;
-            if (face.status === "break_not_started")
-              return `⚠️ ${face.name} cannot end Break (not started) — ${currentDateTime}`;
-            if (face.status === "checkin_missing")
-              return `⚠️ ${face.name} cannot proceed → No Check-In found — ${currentDateTime}`;
-            if (face.status === "cannot_checkout_on_break")
-              return `⚠️ ${face.name} cannot Check Out while on Break — ${currentDateTime}`;
-            if (face.status === "spoof")
-              return `❌ Spoof attempt detected (photo) — ${currentDateTime}`;
-            if (face.status === "unknown") return `❌ Unknown face detected`;
-            return `ℹ️ ${face.name} action processed — ${currentDateTime}`;
-          });
-
-          setStatusMessages(msgs);
-          if (action !== "work-application") {
-            setTimeout(() => setStatusMessages([]), 2000);
+        const msgs = mappedFaces.map((face) => {
+          if (action === "work-application" && face.status === "logged_in") {
+            navigate("/work-application", { state: { user: face.name } });
+            return `✅ ${face.name} logged in to Work Application — ${currentDateTime}`;
           }
+
+          if (face.status === "checked_in")
+            return `✅ ${face.name} marked Present — ${currentDateTime}`;
+          if (face.status === "already_checked_in")
+            return `⚠️ ${face.name} already Checked In — ${currentDateTime}`;
+          if (face.status === "checked_out")
+            return `✅ ${face.name} Checked Out — ${currentDateTime}`;
+          if (face.status === "already_checked_out")
+            return `⚠️ ${face.name} already Checked Out — ${currentDateTime}`;
+          if (face.status === "break_started")
+            return `⏸️ ${face.name} started Break — ${currentDateTime}`;
+          if (face.status === "already_on_break")
+            return `⚠️ ${face.name} is already on Break — ${currentDateTime}`;
+          if (face.status === "break_ended")
+            return `▶️ ${face.name} ended Break — ${currentDateTime}`;
+          if (face.status === "already_break_ended")
+            return `⚠️ ${face.name} already ended Break — ${currentDateTime}`;
+          if (face.status === "break_not_started")
+            return `⚠️ ${face.name} cannot end Break (not started) — ${currentDateTime}`;
+          if (face.status === "checkin_missing")
+            return `⚠️ ${face.name} cannot proceed → No Check-In found — ${currentDateTime}`;
+          if (face.status === "cannot_checkout_on_break")
+            return `⚠️ ${face.name} cannot Check Out while on Break — ${currentDateTime}`;
+          if (face.status === "spoof")
+            return `❌ Spoof attempt detected (photo) — ${currentDateTime}`;
+          if (face.status === "unknown") return `❌ Unknown face detected`;
+          return `ℹ️ ${face.name} action processed — ${currentDateTime}`;
+        });
+
+        setStatusMessages(msgs);
+
+        if (action !== "work-application") {
+          setTimeout(() => setStatusMessages([]), 2000);
         }
       }
-    },
-    [action, dateTime, navigate]
-  );
-
+    }
+  },
+  [action, dateTime, navigate]
+);
   // Capture frame function wrapped in useCallback
   const captureAndSendFrame = useCallback(
     async (mode = "preview", subAction = null) => {
@@ -158,14 +161,18 @@ function Home() {
     [action, handleBackendResponse]
   );
 
-  // Auto-preview when camera opens
-  useEffect(() => {
-    let interval;
-    if (showCamera) {
-      interval = setInterval(() => captureAndSendFrame("preview"), 2000);
-    }
-    return () => clearInterval(interval);
-  }, [showCamera, action, captureAndSendFrame]);
+// Auto-preview when camera opens
+useEffect(() => {
+  let interval;
+  if (showCamera) {
+    // Send first frame immediately
+    captureAndSendFrame("preview");
+
+    // Then keep sending every 2 seconds
+    interval = setInterval(() => captureAndSendFrame("preview"), 2000);
+  }
+  return () => clearInterval(interval);
+}, [showCamera, action, captureAndSendFrame]);
 
   // Face box colors
   const getBoxColor = (status) => {
