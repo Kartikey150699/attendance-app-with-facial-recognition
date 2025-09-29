@@ -3,6 +3,8 @@ from sqlalchemy.orm import Session
 from utils.db import SessionLocal
 from models.User import User
 from models.Attendance import Attendance
+from models.Holiday import Holiday
+from models.WorkApplication import WorkApplication
 from deepface import DeepFace
 import tempfile
 import json
@@ -434,50 +436,109 @@ async def get_user_attendance(
     return results
 
 # -------------------------
-# Get Attendance for Current User (self view)
+# Get Attendance for Current User (self view, with status like HR Logs)
 # -------------------------
 @router.get("/my-attendance")
 async def get_my_attendance(
     employee_id: str = Query(..., description="Employee ID (e.g., IFNT001)"),
     db: Session = Depends(get_db),
-    month: int = Query(None, ge=1, le=12, description="Filter by month"),
-    year: int = Query(None, ge=2000, le=2100, description="Filter by year"),
+    month: int = Query(..., ge=1, le=12, description="Filter by month"),
+    year: int = Query(..., ge=2000, le=2100, description="Filter by year"),
 ):
+    from calendar import monthrange
+
     # Convert employee_id like "IFNT001" → 1
-    user_id = employee_id.replace("IFNT", "")
     try:
-        user_id = int(user_id)
-    except:
+        user_id = int(employee_id.replace("IFNT", ""))
+    except ValueError:
         return {"error": "Invalid employee_id"}
 
-    query = db.query(Attendance).filter(Attendance.user_id == user_id)
+    start_date = date(year, month, 1)
+    end_date = date(year, month, monthrange(year, month)[1])
 
-    # Apply filters
-    if year:
-        query = query.filter(
-            Attendance.date >= date(year, 1, 1),
-            Attendance.date <= date(year, 12, 31)
+    # Fetch user
+    user = db.query(User).filter(User.id == user_id).first()
+    if not user:
+        return {"error": "User not found"}
+
+    # Fetch holidays
+    holidays = {
+        h.date: h.holiday_name
+        for h in db.query(Holiday)
+        .filter(Holiday.date >= start_date, Holiday.date <= end_date)
+        .all()
+    }
+
+    # Fetch attendance logs
+    attendance_logs = (
+        db.query(Attendance)
+        .filter(
+            Attendance.user_id == user_id,
+            Attendance.date >= start_date,
+            Attendance.date <= end_date,
         )
-    if month and year:
-        from calendar import monthrange
-        last_day = monthrange(year, month)[1]
-        query = query.filter(
-            Attendance.date >= date(year, month, 1),
-            Attendance.date <= date(year, month, last_day)
+        .all()
+    )
+    attendance_map = {log.date.date(): log for log in attendance_logs}
+
+    # Fetch approved leaves
+    leaves = (
+        db.query(WorkApplication)
+        .filter(
+            WorkApplication.employee_id == employee_id,
+            WorkApplication.start_date <= end_date,
+            WorkApplication.end_date >= start_date,
+            WorkApplication.status == "Approved",
         )
+        .all()
+    )
+    leave_map = {}
+    for leave in leaves:
+        for d in (
+            start_date + timedelta(days=i)
+            for i in range((end_date - start_date).days + 1)
+        ):
+            if leave.start_date <= d <= leave.end_date:
+                leave_map[d] = leave.reason
 
-    logs = query.order_by(Attendance.date.desc()).all()
+    # Build results day by day
+    results = []
+    for day in range(1, monthrange(year, month)[1] + 1):
+        current_date = date(year, month, day)
+        log = attendance_map.get(current_date)
+        holiday_name = holidays.get(current_date)
+        leave_reason = leave_map.get(current_date)
 
-    results = [
-        {
-            "date": log.date,
-            "check_in": log.check_in,
-            "check_out": log.check_out,
-            "break_start": log.break_start,
-            "break_end": log.break_end,
-            "total_work": log.total_work,
-            "user_name_snapshot": log.user_name_snapshot,
-        }
-        for log in logs
-    ]
+        # Decide status
+        weekday = current_date.weekday()  # 0=Mon ... 6=Sun
+        if leave_reason:
+            status = "On Leave"
+        elif holiday_name and log and log.check_in:
+            status = "Worked on Holiday"
+        elif holiday_name:
+            status = "Holiday"
+        elif log and log.check_in:
+            if weekday == 5:
+                status = "Present on Saturday"
+            elif weekday == 6:
+                status = "Present on Sunday"
+            else:
+                status = "Present"
+        else:
+            if weekday in (5, 6) or holiday_name:
+                status = "-"
+            else:
+                status = "Absent"
+
+        results.append({
+            "date": current_date.strftime("%Y-%m-%d"),
+            "employee_id": employee_id,
+            "name": user.name,
+            "department": user.department or "-",
+            "status": status,
+            "check_in": log.check_in.strftime("%Y-%m-%dT%H:%M:%S") if log and log.check_in else None,
+            "check_out": log.check_out.strftime("%Y-%m-%dT%H:%M:%S") if log and log.check_out else None,
+            "total_work": log.total_work if log and log.total_work else "-",
+        })
+
     return results

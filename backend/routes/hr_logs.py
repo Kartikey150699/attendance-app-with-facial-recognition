@@ -20,14 +20,14 @@ def get_db():
     finally:
         db.close()
 
-
 # -------------------------
-# HR Logs (month by month, all users × all days)
+# HR Logs (month by month, all users × all days, with optional employee filter)
 # -------------------------
 @router.get("/")
 def get_hr_logs(
     year: int = Query(...),
     month: int = Query(...),
+    employee_id: str = Query(None, description="Optional employee ID e.g. IFNT001"),
     db: Session = Depends(get_db),
 ):
     start_date = date(year, month, 1)
@@ -35,6 +35,10 @@ def get_hr_logs(
 
     # Fetch all active users
     users = db.query(User).all()
+
+    # If specific employee requested, filter
+    if employee_id:
+        users = [u for u in users if f"IFNT{str(u.id).zfill(3)}" == employee_id]
 
     # Fetch holidays for the month
     holidays = {
@@ -50,7 +54,6 @@ def get_hr_logs(
         .filter(Attendance.date >= start_date, Attendance.date <= end_date)
         .all()
     )
-    # Normalize to date
     attendance_map = {(log.user_id, log.date.date()): log for log in attendance_logs}
 
     # Fetch all approved leaves
@@ -65,25 +68,24 @@ def get_hr_logs(
     )
     leave_map = {}
     for leave in leaves:
-        employee_id = leave.employee_id
+        emp_id = leave.employee_id
         for d in (
             start_date + timedelta(days=i)
             for i in range((end_date - start_date).days + 1)
         ):
             if leave.start_date <= d <= leave.end_date:
-                leave_map[(employee_id, d)] = leave.reason
+                leave_map[(emp_id, d)] = leave.reason
 
     formatted_logs = []
     # Generate logs for every user × every day
     for user in users:
-        employee_id = f"IFNT{str(user.id).zfill(3)}"
+        emp_id = f"IFNT{str(user.id).zfill(3)}"
         for day in range(1, monthrange(year, month)[1] + 1):
             current_date = date(year, month, day)
 
-            # Lookup logs using normalized date
             log = attendance_map.get((user.id, current_date))
             holiday_name = holidays.get(current_date)
-            leave_reason = leave_map.get((employee_id, current_date))
+            leave_reason = leave_map.get((emp_id, current_date))
 
             # Determine status
             weekday = current_date.weekday()  # 0=Mon ... 6=Sun
@@ -93,7 +95,7 @@ def get_hr_logs(
                 status = "Worked on Holiday"
             elif holiday_name:
                 status = "Holiday"
-            elif log and log.check_in:  # check-in only = present
+            elif log and log.check_in:
                 if weekday == 5:
                     status = "Present on Saturday"
                 elif weekday == 6:
@@ -109,10 +111,11 @@ def get_hr_logs(
             formatted_logs.append({
                 "id": log.id if log else None,
                 "date": current_date.strftime("%Y-%m-%d"),
-                "employee_id": employee_id,
+                "employee_id": emp_id,
                 "name": user.name or "Unknown",
-                "department": user.department or "-", 
+                "department": user.department or "-",
                 "status": status,
+                # Always safe strings for frontend
                 "check_in": log.check_in.strftime("%H:%M") if log and log.check_in else "-",
                 "check_out": log.check_out.strftime("%H:%M") if log and log.check_out else "-",
                 "total_work": log.total_work if log and log.total_work else "-",

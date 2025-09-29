@@ -22,4 +22,4 @@ class Approver(Base):
 
     # Relationships
     approver = relationship("User", foreign_keys=[approver_id])  
-    work_application = relationship("WorkApplication", back_populates="approvers")
+    # work_application = relationship("WorkApplication", back_populates="approvers")s

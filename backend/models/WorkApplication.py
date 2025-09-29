@@ -23,8 +23,4 @@ class WorkApplication(Base):
     created_at = Column(DateTime, default=datetime.utcnow)
 
     # Relationship to Approvers
-    approvers = relationship(
-        "Approver",
-        back_populates="work_application",
-        cascade="all, delete-orphan"
-    )
+    # approvers = relationship( "Approver", back_populates="work_application",cascade="all, delete-orphan")

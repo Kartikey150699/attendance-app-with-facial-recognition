@@ -45,28 +45,29 @@ function ManageUsers() {
     fetchUsers();
   }, []);
 
-  // Fetch attendance logs for a user with filters
-  const fetchAttendance = async (user, month = selectedMonth, year = selectedYear) => {
-    try {
-      const res = await fetch(
-        `http://127.0.0.1:8000/attendance/user/${user.id}?month=${month}&year=${year}`
-      );
-      const data = await res.json();
-      if (!res.ok) {
-        setPopupMessage(data.detail || "❌ Failed to fetch attendance.");
-        setPopupMode("message");
-        setShowPopup(true);
-      } else {
-        setSelectedUser(user);
-        setAttendanceData(data);
-        setShowAttendanceView(true);
-      }
-    } catch (err) {
-      setPopupMessage("❌ Could not connect to the server.");
+  // Fetch attendance logs for a user with filters (using hr_logs)
+const fetchAttendance = async (user, month = selectedMonth, year = selectedYear) => {
+  try {
+    const employeeId = `IFNT${String(user.id).padStart(3, "0")}`;
+    const res = await fetch(
+      `http://127.0.0.1:8000/hr_logs?year=${year}&month=${month}&employee_id=${employeeId}`
+    );
+    const data = await res.json();
+    if (!res.ok) {
+      setPopupMessage(data.detail || "❌ Failed to fetch attendance.");
       setPopupMode("message");
       setShowPopup(true);
+    } else {
+      setSelectedUser(user);
+      setAttendanceData(data);
+      setShowAttendanceView(true);
     }
-  };
+  } catch (err) {
+    setPopupMessage("❌ Could not connect to the server.");
+    setPopupMode("message");
+    setShowPopup(true);
+  }
+};
 
   // Handle update user
   const handleUpdateUser = async () => {
@@ -176,6 +177,19 @@ if (!res.ok) {
   const months = Array.from({ length: 12 }, (_, i) =>
     new Date(0, i).toLocaleString("default", { month: "long" })
   );
+
+  // Status → CSS classes
+const getStatusClass = (status) => {
+  if (!status) return "text-gray-600 font-medium";
+
+  if (status.includes("Present")) return "text-green-600 font-bold";
+  if (status === "On Leave") return "text-blue-600 font-bold";
+  if (status === "Holiday") return "text-indigo-600 font-bold";
+  if (status === "Worked on Holiday") return "text-purple-600 font-bold";
+  if (status === "Absent") return "text-red-600 font-bold";
+
+  return "text-gray-600 font-medium";
+};
 
   return (
     <div className="flex flex-col min-h-screen bg-gradient-to-tr from-gray-100 via-indigo-100 to-blue-200">
@@ -297,25 +311,13 @@ if (!res.ok) {
                           day: "numeric",
                         })}
                       </td>
-                      <td className="p-2 border">
-                        {log.check_in
-                          ? new Date(log.check_in).toLocaleTimeString([], {
-                              hour: "2-digit",
-                              minute: "2-digit",
-                            })
-                          : "-"}
-                      </td>
-                      <td className="p-2 border">
-                        {log.check_out
-                          ? new Date(log.check_out).toLocaleTimeString([], {
-                              hour: "2-digit",
-                              minute: "2-digit",
-                            })
-                          : "-"}
-                      </td>
+                      <td className="p-2 border">{log.check_in}</td>
+                      <td className="p-2 border">{log.check_out}</td>
                       <td className="p-2 border">{log.total_work || "-"}</td>
                       <td className="p-2 border">{calculateOvertime(log.total_work)}</td>
-                      <td className="p-2 border">{log.status || "-"}</td>
+                      <td className={`p-2 border ${getStatusClass(log.status)}`}>
+                        {log.status || "-"}
+                      </td>
                     </tr>
                   ))
                 ) : (

@@ -248,7 +248,27 @@ useEffect(() => {
                           <td className="p-2 border">
                             {calculateOvertime(log?.total_work)}
                           </td>
-                          <td className="p-2 border">{log?.status || "-"}</td>
+                          <td
+  className={`p-2 border font-bold ${
+    log?.status === "Present"
+      ? "text-green-600"
+      : log?.status === "Absent"
+      ? "text-red-600"
+      : log?.status === "On Leave"
+      ? "text-yellow-600"
+      : log?.status === "Worked on Holiday"
+      ? "text-blue-600"
+      : log?.status === "Present on Sunday"
+      ? "text-purple-600"
+      : log?.status === "Present on Saturday"
+      ? "text-pink-600"
+      : log?.status === "Holiday"
+      ? "text-gray-500"
+      : "text-gray-700"
+  }`}
+>
+  {log?.status || "-"}
+</td>
                         </>
                       )}
                     </tr>
