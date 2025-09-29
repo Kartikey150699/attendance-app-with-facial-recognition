@@ -164,3 +164,20 @@ body {
     transform: translateX(0);
   }
 }
+/* Force show scrollbars for tables */
+.scrollable-table {
+  max-height: 400px;
+  overflow-y: scroll;
+}
+
+/* Chrome, Edge, Safari */
+.scrollable-table::-webkit-scrollbar {
+  width: 10px;
+}
+.scrollable-table::-webkit-scrollbar-thumb {
+  background: #9ca3af; /* gray-400 */
+  border-radius: 6px;
+}
+.scrollable-table::-webkit-scrollbar-track {
+  background: #f3f4f6; /* gray-100 */
+}
