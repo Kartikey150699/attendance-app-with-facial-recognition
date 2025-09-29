@@ -1,11 +1,15 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { EyeIcon, EyeSlashIcon, LockClosedIcon, ArrowUturnLeftIcon } from "@heroicons/react/24/solid";
+import {
+  EyeIcon,
+  EyeSlashIcon,
+  LockClosedIcon,
+  ArrowUturnLeftIcon,
+} from "@heroicons/react/24/solid";
 import Footer from "./Footer";
-import HeaderDateTime from "./HeaderDateTime"; 
+import HeaderDateTime from "./HeaderDateTime";
 
 function AdminLogin() {
-  const [dateTime, setDateTime] = useState(new Date());
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
@@ -13,37 +17,35 @@ function AdminLogin() {
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
-  useEffect(() => {
-    const timer = setInterval(() => setDateTime(new Date()), 1000);
-    return () => clearInterval(timer);
-  }, []);
-
   const handleLogin = async () => {
-  setError("");
-  try {
-    const formData = new FormData();
-    formData.append("username", username);
-    formData.append("password", password);
+    setError("");
+    setLoading(true); // 🔹 mark as loading
+    try {
+      const formData = new FormData();
+      formData.append("username", username);
+      formData.append("password", password);
 
-    const response = await fetch("http://localhost:8000/admin/login", {
-      method: "POST",
-      body: formData,
-    });
+      const response = await fetch("http://localhost:8000/admin/login", {
+        method: "POST",
+        body: formData,
+      });
 
-    const data = await response.json();
+      const data = await response.json();
 
-    if (response.ok && !data.error) {
-      // Save logged-in admin in localStorage
-      localStorage.setItem("currentAdmin", data.admin.username);
-      localStorage.setItem("currentAdminId", data.admin.id); // optional if needed later
-      navigate("/admin-dashboard");
-    } else {
-      setError("❌ Invalid username or password");
+      if (response.ok && !data.error) {
+        // Save logged-in admin in localStorage
+        localStorage.setItem("currentAdmin", data.admin.username);
+        localStorage.setItem("currentAdminId", data.admin.id); // optional
+        navigate("/admin-dashboard");
+      } else {
+        setError("❌ Invalid username or password");
+      }
+    } catch (err) {
+      setError("⚠️ Server error. Please try again.");
+    } finally {
+      setLoading(false); // 🔹 stop loading
     }
-  } catch (err) {
-    setError("⚠️ Server error. Please try again.");
-  }
-};
+  };
 
   const handleKeyDown = (e) => {
     if (e.key === "Enter") handleLogin();
@@ -60,29 +62,29 @@ function AdminLogin() {
 
         <div className="flex-1 flex justify-start pl-40">
           <h1
-  onClick={() => navigate("/")}
-  className="text-5xl font-bold text-blue-900 cursor-pointer hover:text-blue-700 transition-colors"
->
-  FaceTrack Attendance
-</h1>
+            onClick={() => navigate("/")}
+            className="text-5xl font-bold text-blue-900 cursor-pointer hover:text-blue-700 transition-colors"
+          >
+            FaceTrack Attendance
+          </h1>
         </div>
 
         {/* Back button */}
         <button
-  onClick={() => navigate("/")}
-  className="w-40 px-6 py-3 bg-red-500 hover:bg-red-600 hover:scale-105 active:scale-95 transition-transform duration-200 text-white font-bold rounded-lg shadow flex items-center justify-center gap-2"
->
-  <ArrowUturnLeftIcon className="h-5 w-5 text-white" />
-  Back
-</button>
+          onClick={() => navigate("/")}
+          className="w-40 px-6 py-3 bg-red-500 hover:bg-red-600 hover:scale-105 active:scale-95 transition-transform duration-200 text-white font-bold rounded-lg shadow flex items-center justify-center gap-2"
+        >
+          <ArrowUturnLeftIcon className="h-5 w-5 text-white" />
+          Back
+        </button>
       </div>
 
       {/* Login Form */}
       <div className="bg-white p-8 rounded-xl shadow-md w-96 mx-auto mt-20">
         <h2 className="text-2xl font-bold text-center mb-6 text-indigo-700 flex items-center justify-center gap-2">
-  <LockClosedIcon className="h-6 w-6 text-indigo-700" />
-  Admin Login
-</h2>
+          <LockClosedIcon className="h-6 w-6 text-indigo-700" />
+          Admin Login
+        </h2>
 
         {/* Username */}
         <input
@@ -110,9 +112,9 @@ function AdminLogin() {
             className="absolute inset-y-0 right-3 flex items-center text-gray-600 hover:text-indigo-500"
           >
             {showPassword ? (
-              <EyeSlashIcon className="h-5 w-5" /> 
+              <EyeSlashIcon className="h-5 w-5" />
             ) : (
-              <EyeIcon className="h-5 w-5" /> 
+              <EyeIcon className="h-5 w-5" />
             )}
           </button>
         </div>

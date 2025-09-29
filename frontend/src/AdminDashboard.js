@@ -16,25 +16,18 @@ import Footer from "./Footer";
 import HeaderDateTime from "./HeaderDateTime";
 
 function AdminDashboard() {
-  const [dateTime, setDateTime] = useState(new Date());
   const [currentAdmin, setCurrentAdmin] = useState(null);
   const [pendingCount, setPendingCount] = useState(0);
   const navigate = useNavigate();
 
-  useEffect(() => {
-    const timer = setInterval(() => {
-      setDateTime(new Date());
-    }, 1000);
-
-    const admin = localStorage.getItem("currentAdmin");
-    if (admin) {
-      setCurrentAdmin(admin);
-    } else {
-      navigate("/admin-login");
-    }
-
-    return () => clearInterval(timer);
-  }, [navigate]);
+useEffect(() => {
+  const admin = localStorage.getItem("currentAdmin");
+  if (admin) {
+    setCurrentAdmin(admin);
+  } else {
+    navigate("/admin-login");
+  }
+}, [navigate]);
 
   // Fetch pending requests count
   useEffect(() => {
@@ -142,7 +135,8 @@ function AdminDashboard() {
             <UserGroupIcon className="h-6 w-6 inline-block mr-2" />
             HR Portal
             {pendingCount > 0 && (
-              <span className="absolute top-2 right-2 bg-red-600 text-white text-xs font-bold rounded-full w-6 h-6 flex items-center justify-center shadow">
+              <span className="absolute top-2 right-2 bg-red-600 text-white text-xs font-bold rounded-full w-6 h-6 
+                               flex items-center justify-center shadow">
                 {pendingCount}
               </span>
             )}

@@ -1,17 +1,194 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { ArrowUturnLeftIcon, Cog6ToothIcon } from "@heroicons/react/24/solid";
+import {
+  ArrowUturnLeftIcon,
+  Cog6ToothIcon,
+  ChevronLeftIcon,
+  ChevronRightIcon,
+  MagnifyingGlassIcon,
+} from "@heroicons/react/24/solid";
 import Footer from "./Footer";
 import HeaderDateTime from "./HeaderDateTime";
 
 function ShiftsManagement() {
-  const [dateTime, setDateTime] = useState(new Date());
+  const [viewType, setViewType] = useState("weekly"); // default = weekly
+  const [currentWeekStart, setCurrentWeekStart] = useState(getStartOfWeek(new Date()));
+  const [currentMonth, setCurrentMonth] = useState(new Date().getMonth());
+  const [currentYear, setCurrentYear] = useState(new Date().getFullYear());
+  const [shifts, setShifts] = useState([]);
+  const [employees, setEmployees] = useState([]);
+  const [search, setSearch] = useState("");
+  const [editShift, setEditShift] = useState(null); // for modal
   const navigate = useNavigate();
 
+  // Fetch employees & shifts
   useEffect(() => {
-    const timer = setInterval(() => setDateTime(new Date()), 1000);
-    return () => clearInterval(timer);
+    const fetchData = async () => {
+      try {
+        const [empRes, shiftRes] = await Promise.all([
+          fetch("http://localhost:8000/users/active"),
+          fetch("http://localhost:8000/shifts/"),
+        ]);
+
+        if (!empRes.ok || !shiftRes.ok) throw new Error("Failed to fetch data");
+
+        const empData = await empRes.json();
+        const shiftData = await shiftRes.json();
+
+        setEmployees(empData);
+        setShifts(shiftData);
+      } catch (error) {
+        console.error("Error fetching shifts/employees:", error);
+      }
+    };
+
+    fetchData();
   }, []);
+
+  // Helpers
+  function getStartOfWeek(date) {
+    const d = new Date(date);
+    const day = d.getDay(); // 0=Sun
+    const diff = d.getDate() - day + (day === 0 ? -6 : 1); // Monday start
+    return new Date(d.setDate(diff));
+  }
+
+  function formatDate(date) {
+    return date.toISOString().split("T")[0];
+  }
+
+  function getShiftHours(start, end) {
+    if (!start || !end) return 0;
+    const [sh, sm] = start.split(":").map(Number);
+    const [eh, em] = end.split(":").map(Number);
+    let total = (eh * 60 + em - (sh * 60 + sm)) / 60;
+    if (total > 6) total -= 1;
+    return total;
+  }
+
+  // Week dates
+  const weekDates = [...Array(7)].map((_, i) => {
+    const d = new Date(currentWeekStart);
+    d.setDate(d.getDate() + i);
+    return d;
+  });
+
+  // Weekly Shifts
+  const weeklyShifts = employees.map((emp) => ({
+  ...emp,
+  shifts: weekDates.map((d) => {
+    const shift = shifts.find(
+      (s) => s.employee_id === emp.employee_id && s.date === formatDate(d)
+    );
+
+    if (shift) {
+      // Always show saved shift (even on weekends)
+      return {
+        date: shift.date,
+        start: shift.start_time === "-" ? "-" : shift.start_time.slice(0, 5),
+        end: shift.end_time === "-" ? "-" : shift.end_time.slice(0, 5),
+        hours:
+          shift.start_time === "-" || shift.end_time === "-"
+            ? 0
+            : getShiftHours(shift.start_time, shift.end_time),
+      };
+    }
+
+    // Default for weekends = "-"
+    if (d.getDay() === 0 || d.getDay() === 6) {
+      return { date: formatDate(d), start: "-", end: "-", hours: 0 };
+    }
+
+    // Default for weekdays = 10:00–19:00
+    return {
+      date: formatDate(d),
+      start: "10:00",
+      end: "19:00",
+      hours: getShiftHours("10:00", "19:00"),
+    };
+  }),
+}));
+
+// Monthly summary
+const daysInMonth = new Date(currentYear, currentMonth + 1, 0).getDate();
+const monthDates = [...Array(daysInMonth)].map((_, i) => {
+  return new Date(currentYear, currentMonth, i + 1);
+});
+
+const monthlySummary = employees.map((emp) => {
+  let totalShifts = 0;
+  let totalHours = 0;
+
+  monthDates.forEach((d) => {
+    const day = d.getDay();
+    const dateStr = formatDate(d);
+
+    // Find if employee has an explicit shift in DB
+    const shift = shifts.find(
+      (s) => s.employee_id === emp.employee_id && s.date === dateStr
+    );
+
+    if (shift) {
+      // Only count if not deleted
+      if (shift.start_time !== "-" && shift.end_time !== "-") {
+        totalShifts++;
+        totalHours += getShiftHours(shift.start_time, shift.end_time);
+      }
+    } else {
+      // Default only for weekdays, not for weekends
+      if (day !== 0 && day !== 6) {
+        totalShifts++;
+        totalHours += getShiftHours("10:00", "19:00");
+      }
+    }
+  });
+
+  return { ...emp, totalShifts, totalHours };
+});
+
+    // Apply search filter to weekly & monthly
+const filterBySearch = (list) =>
+  list.filter(
+    (emp) =>
+      emp.name.toLowerCase().includes(search.toLowerCase()) ||
+      emp.employee_id.toLowerCase().includes(search.toLowerCase()) ||
+      (emp.department &&
+        emp.department.toLowerCase().includes(search.toLowerCase()))
+  );
+
+const filteredWeeklyShifts = filterBySearch(weeklyShifts);
+const filteredMonthlySummary = filterBySearch(monthlySummary);
+
+  const today = new Date();
+
+  const saveShift = async () => {
+  try {
+    const response = await fetch("http://localhost:8000/shifts/assign", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        employee_id: editShift.employee_id,
+        date_: editShift.date,
+        start_time: editShift.start,
+        end_time: editShift.end,
+        assigned_by: localStorage.getItem("currentAdmin") || "System",
+      }),
+    });
+
+    if (!response.ok) throw new Error("Failed to save shift");
+
+    await response.json();
+
+    // Re-fetch shifts immediately so table updates
+    const shiftRes = await fetch("http://localhost:8000/shifts/");
+    const shiftData = await shiftRes.json();
+    setShifts(shiftData);
+
+    setEditShift(null); // close popup
+  } catch (error) {
+    console.error("Error saving shift:", error);
+  }
+};
 
   return (
     <div className="flex flex-col min-h-screen bg-gradient-to-tr from-gray-100 via-indigo-100 to-blue-200">
@@ -42,16 +219,317 @@ function ShiftsManagement() {
         </div>
       </div>
 
-      {/* Page Content */}
-      <div className="flex flex-col items-center justify-center flex-grow">
-        <h2 className="text-4xl font-bold text-indigo-700 mb-6 flex items-center gap-3">
+      {/* Title */}
+      <div className="flex justify-center py-6">
+        <h2 className="text-4xl font-bold text-indigo-700 mb-2 flex items-center gap-3">
           <Cog6ToothIcon className="h-8 w-8 text-indigo-700" />
           Shifts Management
         </h2>
-        <p className="text-2xl text-gray-600 font-semibold">
-          🚧 Coming Soon 🚧
-        </p>
       </div>
+
+      {/* Filters + Search + Today (only weekly) */}
+      <div className="max-w-6xl mx-auto px-6 mb-4">
+        <div className="bg-white shadow rounded-lg p-4 flex flex-wrap gap-4 items-center justify-between">
+          <div className="flex items-center gap-2">
+            <label className="font-semibold">View Type:</label>
+            <select
+              value={viewType}
+              onChange={(e) => setViewType(e.target.value)}
+              className="px-3 py-2 border rounded"
+            >
+              <option value="weekly">Weekly</option>
+              <option value="monthly">Monthly</option>
+            </select>
+
+            {viewType === "weekly" && (
+              <button
+                onClick={() => setCurrentWeekStart(getStartOfWeek(new Date()))}
+                className="px-4 py-2 bg-yellow-500 text-white rounded shadow hover:bg-yellow-600"
+              >
+                Today
+              </button>
+            )}
+          </div>
+
+          <div className="flex items-center gap-2">
+            <MagnifyingGlassIcon className="h-5 w-5 text-gray-500" />
+            <input
+              type="text"
+              placeholder="Search by ID, name, or department"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              className="px-3 py-2 border rounded w-64"
+            />
+          </div>
+        </div>
+      </div>
+
+      {/* Period Label */}
+      <div className="max-w-6xl mx-auto px-6 mb-4 text-center">
+        {viewType === "weekly" ? (
+          <h3 className="text-xl font-semibold text-gray-700">
+            Week of{" "}
+            {weekDates[0].toLocaleDateString("en-US", {
+              day: "numeric",
+              month: "short",
+              year: "numeric",
+            })}{" "}
+            -{" "}
+            {weekDates[6].toLocaleDateString("en-US", {
+              day: "numeric",
+              month: "short",
+              year: "numeric",
+            })}
+          </h3>
+        ) : (
+          <h3 className="text-xl font-semibold text-gray-700">
+            {new Date(currentYear, currentMonth).toLocaleDateString("en-US", {
+              month: "long",
+              year: "numeric",
+            })}
+          </h3>
+        )}
+      </div>
+
+      {/* Monthly summary */}
+      {viewType === "monthly" && (
+        <div className="max-w-6xl mx-auto px-6 mb-6">
+          <table className="w-full border border-gray-300 border-collapse bg-white shadow rounded-lg overflow-hidden">
+            <thead>
+              <tr className="bg-indigo-500 text-white">
+                <th className="p-3 border border-gray-300">Employee ID</th>
+                <th className="p-3 border border-gray-300">Name</th>
+                <th className="p-3 border border-gray-300">Department</th>
+                <th className="p-3 border border-gray-300">Total Shifts</th>
+                <th className="p-3 border border-gray-300">Total Hours</th>
+              </tr>
+            </thead>
+            <tbody>
+              {filteredMonthlySummary.map((emp, i) => (
+                <tr key={i} className="text-center">
+                  <td className="p-3 border border-gray-300">{emp.employee_id}</td>
+                  <td className="p-3 border border-gray-300">{emp.name}</td>
+                  <td className="p-3 border border-gray-300">{emp.department}</td>
+                  <td className="p-3 border border-gray-300">{emp.totalShifts}</td>
+                  <td className="p-3 border border-gray-300">{emp.totalHours}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+
+          {/* Monthly navigation */}
+          <div className="flex justify-between items-center mt-6">
+            <button
+              onClick={() => {
+                if (currentMonth === 0) {
+                  setCurrentMonth(11);
+                  setCurrentYear(currentYear - 1);
+                } else {
+                  setCurrentMonth(currentMonth - 1);
+                }
+              }}
+              className="flex items-center gap-2 px-4 py-2 bg-indigo-500 text-white rounded shadow hover:bg-indigo-600"
+            >
+              <ChevronLeftIcon className="h-5 w-5" /> Previous Month
+            </button>
+            <button
+              onClick={() => {
+                if (currentMonth === 11) {
+                  setCurrentMonth(0);
+                  setCurrentYear(currentYear + 1);
+                } else {
+                  setCurrentMonth(currentMonth + 1);
+                }
+              }}
+              className="flex items-center gap-2 px-4 py-2 bg-indigo-500 text-white rounded shadow hover:bg-indigo-600"
+            >
+              Next Month <ChevronRightIcon className="h-5 w-5" />
+            </button>
+          </div>
+        </div>
+      )}
+
+{/* Weekly table */}
+{viewType === "weekly" && (
+  <div className="max-w-7xl mx-auto px-6 mb-6 flex-grow">
+    <table className="w-full border border-gray-300 border-collapse bg-white shadow rounded-lg overflow-hidden text-base">
+      <thead>
+        <tr className="bg-indigo-500 text-white">
+          <th className="p-4 border border-gray-300">Employee ID</th>
+          <th className="p-4 border border-gray-300">Name</th>
+          <th className="p-4 border border-gray-300">Department</th>
+          {weekDates.map((d, i) => (
+            <th
+              key={i}
+              className={`p-4 border border-gray-300 text-center ${
+                d.getDay() === 0 || d.getDay() === 6 ? "bg-red-600" : ""
+              } ${
+                formatDate(d) === formatDate(today)
+                  ? "bg-yellow-200 text-black font-bold"
+                  : ""
+              }`}
+            >
+              {d.toLocaleDateString("en-US", {
+                weekday: "short",
+                day: "numeric",
+                month: "short",
+              })}
+            </th>
+          ))}
+        </tr>
+      </thead>
+      <tbody>
+        {filteredWeeklyShifts.map((emp, i) => (
+          <tr key={i} className="text-center">
+            <td className="p-4 border border-gray-300">{emp.employee_id}</td>
+            <td className="p-4 border border-gray-300">{emp.name}</td>
+            <td className="p-4 border border-gray-300">{emp.department}</td>
+            {emp.shifts.map((s, j) => (
+              <td
+                key={j}
+                className={`p-4 border border-gray-300 cursor-pointer hover:bg-indigo-100 transition ${
+                  new Date(s.date).getDay() === 0 || new Date(s.date).getDay() === 6
+                    ? "bg-red-100"
+                    : ""
+                } ${s.date === formatDate(new Date()) ? "bg-yellow-100 font-bold" : ""}`}
+                onClick={() => {
+                  // Always open modal — even if it's weekend/default "-"
+                  setEditShift({
+                    ...emp,
+                    date: s.date,
+                    start: s.start === "-" ? "" : s.start,
+                    end: s.end === "-" ? "" : s.end,
+                  });
+                }}
+              >
+                {s.start === "-" ? "-" : `${s.start} - ${s.end}`}
+              </td>
+            ))}
+          </tr>
+        ))}
+      </tbody>
+    </table>
+
+    {/* Weekly navigation */}
+    <div className="flex justify-between items-center mt-6">
+      <button
+        onClick={() =>
+          setCurrentWeekStart(
+            new Date(currentWeekStart.setDate(currentWeekStart.getDate() - 7))
+          )
+        }
+        className="flex items-center gap-2 px-6 py-3 bg-indigo-500 text-white rounded shadow hover:bg-indigo-600"
+      >
+        <ChevronLeftIcon className="h-5 w-5" /> Previous Week
+      </button>
+      <button
+        onClick={() => setCurrentWeekStart(getStartOfWeek(new Date()))}
+        className="flex items-center gap-2 px-6 py-3 bg-green-500 text-white rounded shadow hover:bg-green-600"
+      >
+        Today
+      </button>
+      <button
+        onClick={() =>
+          setCurrentWeekStart(
+            new Date(currentWeekStart.setDate(currentWeekStart.getDate() + 7))
+          )
+        }
+        className="flex items-center gap-2 px-6 py-3 bg-indigo-500 text-white rounded shadow hover:bg-indigo-600"
+      >
+        Next Week <ChevronRightIcon className="h-5 w-5" />
+      </button>
+    </div>
+  </div>
+)}
+
+{editShift && (
+  <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+    <div className="bg-white rounded-lg shadow-lg p-6 w-96">
+      <h3 className="text-xl font-bold mb-4 text-indigo-700">Edit Shift</h3>
+      <p>
+        <strong>Employee:</strong> {editShift.name} ({editShift.employee_id})
+      </p>
+      <p><strong>Department:</strong> {editShift.department}</p>
+      <p><strong>Date:</strong> {editShift.date}</p>
+
+      <div className="mt-4">
+        <label className="block font-semibold">Start Time</label>
+        <input
+          type="time"
+          value={editShift.start}
+          onChange={(e) =>
+            setEditShift({ ...editShift, start: e.target.value })
+          }
+          className="border p-2 rounded w-full"
+        />
+      </div>
+
+      <div className="mt-4">
+        <label className="block font-semibold">End Time</label>
+        <input
+          type="time"
+          value={editShift.end}
+          onChange={(e) =>
+            setEditShift({ ...editShift, end: e.target.value })
+          }
+          className="border p-2 rounded w-full"
+        />
+      </div>
+
+      <div className="flex justify-between mt-6">
+        {/* Delete button */}
+        <button
+  onClick={async () => {
+    await fetch(
+      `http://localhost:8000/shifts/delete-by-date?employee_id=${editShift.employee_id}&date_=${editShift.date}`,
+      { method: "DELETE" }
+    );
+
+    // update state instantly with placeholder "-"
+    setShifts((prev) => {
+      const other = prev.filter(
+        (s) =>
+          !(
+            s.employee_id === editShift.employee_id &&
+            s.date === editShift.date
+          )
+      );
+      return [
+        ...other,
+        {
+          employee_id: editShift.employee_id,
+          date: editShift.date,
+          start_time: "-",
+          end_time: "-",
+        },
+      ];
+    });
+
+    setEditShift(null);
+  }}
+  className="px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600"
+>
+  Delete
+</button>
+
+        <div className="flex gap-3">
+          <button
+            onClick={() => setEditShift(null)}
+            className="px-4 py-2 bg-gray-400 text-white rounded hover:bg-gray-500"
+          >
+            Cancel
+          </button>
+          <button
+  onClick={saveShift}
+  className="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700"
+>
+  Save
+</button>
+        </div>
+      </div>
+    </div>
+  </div>
+)}
 
       <Footer />
     </div>

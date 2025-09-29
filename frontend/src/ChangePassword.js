@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { EyeIcon, 
   EyeSlashIcon, 
@@ -10,7 +10,6 @@ import Footer from "./Footer";
 import HeaderDateTime from "./HeaderDateTime"; 
 
 function ChangePassword() {
-  const [dateTime, setDateTime] = useState(new Date());
   const [username, setUsername] = useState(""); 
   const [oldPassword, setOldPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
@@ -22,12 +21,6 @@ function ChangePassword() {
   const [showPopup, setShowPopup] = useState(false);
   const navigate = useNavigate();
 
-  useEffect(() => {
-    const timer = setInterval(() => {
-      setDateTime(new Date());
-    }, 1000);
-    return () => clearInterval(timer);
-  }, []);
 
   const handleSubmit = async () => {
     if (!username || !oldPassword || !newPassword || !confirmPassword) {

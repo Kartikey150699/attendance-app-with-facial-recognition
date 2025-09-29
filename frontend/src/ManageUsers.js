@@ -11,7 +11,6 @@ import Footer from "./Footer";
 import HeaderDateTime from "./HeaderDateTime";
 
 function ManageUsers() {
-  const [dateTime, setDateTime] = useState(new Date());
   const [users, setUsers] = useState([]);
   const [currentName, setCurrentName] = useState("");
   const [newName, setNewName] = useState("");
@@ -30,10 +29,6 @@ function ManageUsers() {
 
   const navigate = useNavigate();
 
-  useEffect(() => {
-    const timer = setInterval(() => setDateTime(new Date()), 1000);
-    return () => clearInterval(timer);
-  }, []);
 
   // Fetch active users only
   const fetchUsers = async () => {

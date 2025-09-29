@@ -71,25 +71,6 @@ const [users, setUsers] = useState([]);
   fetchData();
 }, []);
 
-  // Date formatter
-  const formatDate = (dateString) => {
-    if (!dateString) return "-";
-    return new Date(dateString).toLocaleDateString("en-US", {
-      year: "numeric",
-      month: "short",
-      day: "numeric",
-    });
-  };
-
-  // Time formatter
-  const formatTime = (timeString) => {
-    if (!timeString) return "-";
-    return new Date(`1970-01-01T${timeString}`).toLocaleTimeString("en-US", {
-      hour: "2-digit",
-      minute: "2-digit",
-    });
-  };
-
   // Sorting
   const requestSort = (key) => {
     let direction = "ascending";

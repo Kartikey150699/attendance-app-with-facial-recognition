@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { EyeIcon, 
   EyeSlashIcon, 
@@ -15,7 +15,6 @@ import { EyeIcon,
  import HeaderDateTime from "./HeaderDateTime"; 
 
 function ManageAdmin() {
-  const [dateTime, setDateTime] = useState(new Date());
   const [showAddForm, setShowAddForm] = useState(false);
   const [showDeleteForm, setShowDeleteForm] = useState(false);
   const [showConfirmDelete, setShowConfirmDelete] = useState(false);
@@ -31,13 +30,6 @@ function ManageAdmin() {
   const [popup, setPopup] = useState(null);
 
   const navigate = useNavigate();
-
-  useEffect(() => {
-    const timer = setInterval(() => {
-      setDateTime(new Date());
-    }, 1000);
-    return () => clearInterval(timer);
-  }, []);
 
   const resetForms = () => {
     setUsername("");

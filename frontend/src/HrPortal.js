@@ -13,13 +13,8 @@ import { useState, useEffect } from "react";
 
 function HrPortal() {
   const navigate = useNavigate();
-  const [dateTime, setDateTime] = useState(new Date());
   const [pendingCount, setPendingCount] = useState(0);
 
-  useEffect(() => {
-    const timer = setInterval(() => setDateTime(new Date()), 1000);
-    return () => clearInterval(timer);
-  }, []);
 
   // Fetch pending requests count
   useEffect(() => {

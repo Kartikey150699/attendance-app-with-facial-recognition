@@ -10,7 +10,6 @@ import Footer from "./Footer";
 import HeaderDateTime from "./HeaderDateTime";
 
 function WorkApplicationLogin() {
-  const [dateTime, setDateTime] = useState(new Date());
   const [faces, setFaces] = useState([]);
   const [statusMessages, setStatusMessages] = useState([]);
   const [cameras, setCameras] = useState([]);
@@ -22,12 +21,6 @@ function WorkApplicationLogin() {
 
   const videoWidth = 580;
   const videoHeight = 323;
-
-  // update time
-  useEffect(() => {
-    const timer = setInterval(() => setDateTime(new Date()), 1000);
-    return () => clearInterval(timer);
-  }, []);
 
   // detect cameras
   useEffect(() => {

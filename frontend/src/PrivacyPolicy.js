@@ -1,16 +1,11 @@
-import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { XMarkIcon } from "@heroicons/react/24/solid";
 import HeaderDateTime from "./HeaderDateTime"; 
 
 function PrivacyPolicy() {
-  const [dateTime, setDateTime] = useState(new Date());
+
   const navigate = useNavigate();
 
-  useEffect(() => {
-    const timer = setInterval(() => setDateTime(new Date()), 1000);
-    return () => clearInterval(timer);
-  }, []);
 
   return (
     <div className="flex flex-col min-h-screen bg-gray-50 text-gray-800 leading-relaxed">

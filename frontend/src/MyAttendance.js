@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { ArrowUturnLeftIcon } from "@heroicons/react/24/solid";
 import Footer from "./Footer";
@@ -12,6 +12,7 @@ function MyAttendance() {
   const employeeId = localStorage.getItem("employeeId");
 
   const [attendanceData, setAttendanceData] = useState([]);
+  const [shifts, setShifts] = useState([]); 
   const [selectedMonth, setSelectedMonth] = useState(new Date().getMonth() + 1);
   const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
   const [loading, setLoading] = useState(false);
@@ -29,17 +30,26 @@ function MyAttendance() {
     new Date(0, i).toLocaleString("default", { month: "long" })
   );
 
-  // Fetch attendance
-  const fetchAttendance = async (month, year) => {
+  // Fetch attendance + shifts
+const fetchAttendance = useCallback(
+  async (month, year) => {
     if (!employeeId) return;
     setLoading(true);
     try {
-      const res = await fetch(
-        `http://127.0.0.1:8000/attendance/my-attendance?employee_id=${employeeId}&month=${month}&year=${year}`
-      );
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || "Failed to fetch attendance");
-      setAttendanceData(data);
+      const [attRes, shiftRes] = await Promise.all([
+        fetch(
+          `http://127.0.0.1:8000/attendance/my-attendance?employee_id=${employeeId}&month=${month}&year=${year}`
+        ),
+        fetch(`http://127.0.0.1:8000/shifts?year=${year}&month=${month}`)
+      ]);
+
+      const attData = await attRes.json();
+      const shiftData = await shiftRes.json();
+
+      if (!attRes.ok) throw new Error(attData.error || "Failed to fetch attendance");
+
+      setAttendanceData(attData);
+      setShifts(shiftData);
     } catch (err) {
       console.error("❌ Error fetching attendance:", err);
       setPopup({
@@ -50,11 +60,14 @@ function MyAttendance() {
     } finally {
       setLoading(false);
     }
-  };
+  },
+  [employeeId] // depend only on employeeId
+);
 
-  useEffect(() => {
-    fetchAttendance(selectedMonth, selectedYear);
-  }, [employeeId, selectedMonth, selectedYear]);
+// Call fetchAttendance whenever month/year changes
+useEffect(() => {
+  fetchAttendance(selectedMonth, selectedYear);
+}, [fetchAttendance, selectedMonth, selectedYear]); // now valid
 
   // Overtime (>8h)
   const calculateOvertime = (totalWork) => {
@@ -63,11 +76,19 @@ function MyAttendance() {
     const hours = parseInt(h.trim(), 10) || 0;
     const minutes = parseInt(m?.replace("m", "").trim(), 10) || 0;
     const totalMinutes = hours * 60 + minutes;
-    if (totalMinutes <= 480) return "-"; // 8h = 480m
+    if (totalMinutes <= 480) return "-"; 
     const otMinutes = totalMinutes - 480;
     const otHrs = Math.floor(otMinutes / 60);
     const otMins = otMinutes % 60;
     return `${otHrs}h ${otMins}m`;
+  };
+
+  // Helper: format local date as YYYY-MM-DD
+  const formatDateLocal = (date) => {
+    const y = date.getFullYear();
+    const m = String(date.getMonth() + 1).padStart(2, "0");
+    const d = String(date.getDate()).padStart(2, "0");
+    return `${y}-${m}-${d}`;
   };
 
   // Get all days in selected month
@@ -75,10 +96,22 @@ function MyAttendance() {
     const date = new Date(year, month - 1, 1);
     const days = [];
     while (date.getMonth() === month - 1) {
-      days.push(new Date(date));
+      days.push(new Date(date)); // keep as Date object
       date.setDate(date.getDate() + 1);
     }
     return days;
+  };
+
+  // Helper: get decided shift
+  const getDecidedShift = (empId, dateStr) => {
+    const shift = shifts.find((s) => s.employee_id === empId && s.date === dateStr);
+    if (shift) {
+      if (shift.start_time === "-" || shift.end_time === "-") return "-";
+      return `${shift.start_time.slice(0, 5)} - ${shift.end_time.slice(0, 5)}`;
+    }
+    const d = new Date(dateStr);
+    if (d.getDay() === 0 || d.getDay() === 6) return "-"; 
+    return "10:00 - 19:00"; 
   };
 
   return (
@@ -163,6 +196,7 @@ function MyAttendance() {
               <thead>
                 <tr className="bg-gray-200 text-center">
                   <th className="p-2 border">Date</th>
+                  <th className="p-2 border">Decided Shift</th>
                   <th className="p-2 border">Check-in</th>
                   <th className="p-2 border">Check-out</th>
                   <th className="p-2 border">Total Work</th>
@@ -173,8 +207,9 @@ function MyAttendance() {
               <tbody>
                 {getAllDaysInMonth(selectedMonth, selectedYear).map((day, i) => {
                   const log = attendanceData.find(
-                    (l) => new Date(l.date).toDateString() === day.toDateString()
+                    (l) => formatDateLocal(new Date(l.date)) === formatDateLocal(day)
                   );
+                  const dateStr = formatDateLocal(day);
                   const isWeekend = day.getDay() === 0 || day.getDay() === 6;
 
                   return (
@@ -186,7 +221,7 @@ function MyAttendance() {
                           day: "numeric",
                         })}
                       </td>
-
+                      <td className="p-2 border">{getDecidedShift(employeeId, dateStr)}</td>
                       {isWeekend ? (
                         <td colSpan="5" className="p-2 border text-red-600 font-bold">
                           {day.getDay() === 0 ? "Sunday" : "Saturday"}

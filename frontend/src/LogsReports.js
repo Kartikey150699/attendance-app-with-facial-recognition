@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   ArrowUturnLeftIcon,
@@ -11,13 +11,13 @@ import HeaderDateTime from "./HeaderDateTime";
 
 function LogsReports() {
   const navigate = useNavigate();
-  const [dateTime, setDateTime] = useState(new Date());
 
-  // Logs from backend
+  // Logs & Shifts from backend
   const [logs, setLogs] = useState([]);
+  const [shifts, setShifts] = useState([]);
 
   // Filters
-  const today = new Date();
+  const today = useMemo(() => new Date(), []); // memoized once
   const todayStr = today.toISOString().split("T")[0]; // YYYY-MM-DD
   const [search, setSearch] = useState("");
   const [sortConfig, setSortConfig] = useState({ key: "", direction: "" });
@@ -28,29 +28,36 @@ function LogsReports() {
   const [currentPage, setCurrentPage] = useState(1);
   const [rowsPerPage, setRowsPerPage] = useState(10);
 
+  // Fetch logs & shifts for current month from backend
   useEffect(() => {
-    const timer = setInterval(() => setDateTime(new Date()), 1000);
-    return () => clearInterval(timer);
-  }, []);
-
-  // Fetch logs for current month from backend
-  useEffect(() => {
-    const fetchLogs = async () => {
+    const fetchData = async () => {
       try {
-        const res = await fetch(
-          `http://localhost:8000/hr_logs?year=${today.getFullYear()}&month=${
-            today.getMonth() + 1
-          }`
-        );
-        if (!res.ok) throw new Error("Failed to fetch logs");
-        const data = await res.json();
-        setLogs(data);
+        const [logsRes, shiftsRes] = await Promise.all([
+          fetch(
+            `http://localhost:8000/hr_logs?year=${today.getFullYear()}&month=${
+              today.getMonth() + 1
+            }`
+          ),
+          fetch(
+            `http://localhost:8000/shifts?year=${today.getFullYear()}&month=${
+              today.getMonth() + 1
+            }`
+          ),
+        ]);
+
+        if (!logsRes.ok || !shiftsRes.ok) throw new Error("Failed to fetch data");
+
+        const logsData = await logsRes.json();
+        const shiftsData = await shiftsRes.json();
+
+        setLogs(logsData);
+        setShifts(shiftsData);
       } catch (err) {
-        console.error("Error fetching logs:", err);
+        console.error("Error fetching logs/shifts:", err);
       }
     };
-    fetchLogs();
-  }, []);
+    fetchData();
+  }, [today]);
 
   // Helpers: format date
   const formatDate = (dateStr) => {
@@ -61,6 +68,21 @@ function LogsReports() {
       month: "short",
       day: "numeric",
     });
+  };
+
+  // Helper: get decided shift
+  const getDecidedShift = (empId, date) => {
+    const shift = shifts.find((s) => s.employee_id === empId && s.date === date);
+    if (shift) {
+      if (shift.start_time === "-" || shift.end_time === "-") return "-";
+      return `${shift.start_time.slice(0, 5)} - ${shift.end_time.slice(0, 5)}`;
+    }
+    // default: weekdays = 10–19, weekends = "-"
+    const d = new Date(date);
+    if (d.getDay() === 0 || d.getDay() === 6) {
+      return "-";
+    }
+    return "10:00 - 19:00";
   };
 
   // Sorting
@@ -264,7 +286,8 @@ function LogsReports() {
               </th>
               <th className="p-4">Employee ID</th>
               <th className="p-4">Name</th>
-              <th className="p-4">Department</th> 
+              <th className="p-4">Department</th>
+              <th className="p-4">Decided Shift</th>
               <th className="p-4">Check In</th>
               <th className="p-4">Check Out</th>
               <th className="p-4">Total Work</th>
@@ -278,7 +301,8 @@ function LogsReports() {
                   <td className="p-4">{formatDate(log.date)}</td>
                   <td className="p-4">{log.employee_id}</td>
                   <td className="p-4">{log.name}</td>
-                  <td className="p-4">{log.department || "-"}</td> 
+                  <td className="p-4">{log.department || "-"}</td>
+                  <td className="p-4">{getDecidedShift(log.employee_id, log.date)}</td>
                   <td className="p-4">{log.check_in || "-"}</td>
                   <td className="p-4">{log.check_out || "-"}</td>
                   <td className="p-4">{log.total_work}</td>
@@ -305,7 +329,7 @@ function LogsReports() {
               ))
             ) : (
               <tr>
-                <td colSpan="8" className="p-6 text-gray-500 text-center">
+                <td colSpan="9" className="p-6 text-gray-500 text-center">
                   No logs available.
                 </td>
               </tr>

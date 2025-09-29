@@ -44,9 +44,6 @@ function AttendanceLogs() {
   const isCurrentMonth =
   year === today.getFullYear() && month === today.getMonth() + 1;
 
-  // Logged-in admin name (stored at login)
-  const adminName = localStorage.getItem("admin_username") || "admin";
-
   // Fetch logs
   useEffect(() => {
   async function fetchLogs() {

@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import {
   CheckCircleIcon,
   ClockIcon,
@@ -14,7 +14,7 @@ import {
 import Webcam from "react-webcam";
 import { useNavigate } from "react-router-dom";
 import Footer from "./Footer";
-import HeaderDateTime from "./HeaderDateTime"; 
+import HeaderDateTime from "./HeaderDateTime";
 
 function Home() {
   const [dateTime, setDateTime] = useState(new Date());
@@ -31,11 +31,13 @@ function Home() {
   const videoWidth = 580;
   const videoHeight = 343;
 
+  // Live date/time
   useEffect(() => {
     const timer = setInterval(() => setDateTime(new Date()), 1000);
     return () => clearInterval(timer);
   }, []);
 
+  // Get camera list
   useEffect(() => {
     async function getCameras() {
       try {
@@ -52,119 +54,129 @@ function Home() {
     getCameras();
   }, []);
 
+  // Handle backend response (wrapped in useCallback)
+  const handleBackendResponse = useCallback(
+    (data, mode) => {
+      if (data.error) {
+        setFaces([{ name: "Unknown", status: "unknown", box: [50, 50, 100, 100] }]);
+        setStatusMessages(["❌ Unknown face detected"]);
+        return;
+      }
+
+      if (data.results && Array.isArray(data.results)) {
+        const mappedFaces = data.results.map((face) => ({
+          name: face.name,
+          status: face.status,
+          box: face.box,
+        }));
+        setFaces(mappedFaces);
+
+        if (mode === "mark" && mappedFaces.length > 0) {
+          const currentDateTime = dateTime.toLocaleString("en-US", {
+            year: "numeric",
+            month: "short",
+            day: "numeric",
+            hour: "2-digit",
+            minute: "2-digit",
+            second: "2-digit",
+            hour12: true,
+          });
+
+          const msgs = mappedFaces.map((face) => {
+            if (action === "work-application" && face.status === "logged_in") {
+              navigate("/work-application", { state: { user: face.name } });
+              return `✅ ${face.name} logged in to Work Application — ${currentDateTime}`;
+            }
+
+            if (face.status === "checked_in")
+              return `✅ ${face.name} marked Present — ${currentDateTime}`;
+            if (face.status === "already_checked_in")
+              return `⚠️ ${face.name} already Checked In — ${currentDateTime}`;
+            if (face.status === "checked_out")
+              return `✅ ${face.name} Checked Out — ${currentDateTime}`;
+            if (face.status === "already_checked_out")
+              return `⚠️ ${face.name} already Checked Out — ${currentDateTime}`;
+            if (face.status === "break_started")
+              return `⏸️ ${face.name} started Break — ${currentDateTime}`;
+            if (face.status === "already_on_break")
+              return `⚠️ ${face.name} is already on Break — ${currentDateTime}`;
+            if (face.status === "break_ended")
+              return `▶️ ${face.name} ended Break — ${currentDateTime}`;
+            if (face.status === "already_break_ended")
+              return `⚠️ ${face.name} already ended Break — ${currentDateTime}`;
+            if (face.status === "break_not_started")
+              return `⚠️ ${face.name} cannot end Break (not started) — ${currentDateTime}`;
+            if (face.status === "checkin_missing")
+              return `⚠️ ${face.name} cannot proceed → No Check-In found — ${currentDateTime}`;
+            if (face.status === "cannot_checkout_on_break")
+              return `⚠️ ${face.name} cannot Check Out while on Break — ${currentDateTime}`;
+            if (face.status === "spoof")
+              return `❌ Spoof attempt detected (photo) — ${currentDateTime}`;
+            if (face.status === "unknown") return `❌ Unknown face detected`;
+            return `ℹ️ ${face.name} action processed — ${currentDateTime}`;
+          });
+
+          setStatusMessages(msgs);
+          if (action !== "work-application") {
+            setTimeout(() => setStatusMessages([]), 2000);
+          }
+        }
+      }
+    },
+    [action, dateTime, navigate]
+  );
+
+  // Capture frame function wrapped in useCallback
+  const captureAndSendFrame = useCallback(
+    async (mode = "preview", subAction = null) => {
+      if (!webcamRef.current) return;
+      const imageSrc = webcamRef.current.getScreenshot();
+      if (!imageSrc) return;
+
+      const blob = await (await fetch(imageSrc)).blob();
+      const formData = new FormData();
+      formData.append("file", blob, "frame.jpg");
+
+      // Use proper action mapping
+      if (action === "work-application") {
+        formData.append("action", "login");
+      } else {
+        formData.append("action", subAction || action);
+      }
+
+      try {
+        const response = await fetch(`http://localhost:8000/attendance/${mode}`, {
+          method: "POST",
+          body: formData,
+        });
+        const data = await response.json();
+        handleBackendResponse(data, mode);
+      } catch (error) {
+        console.error("Error sending frame:", error);
+      }
+    },
+    [action, handleBackendResponse]
+  );
+
+  // Auto-preview when camera opens
   useEffect(() => {
     let interval;
     if (showCamera) {
       interval = setInterval(() => captureAndSendFrame("preview"), 2000);
     }
     return () => clearInterval(interval);
-  }, [showCamera, action]);
+  }, [showCamera, action, captureAndSendFrame]);
 
-  const captureAndSendFrame = async (mode = "preview", subAction = null) => {
-    if (!webcamRef.current) return;
-    const imageSrc = webcamRef.current.getScreenshot();
-    if (!imageSrc) return;
-
-    const blob = await (await fetch(imageSrc)).blob();
-    const formData = new FormData();
-    formData.append("file", blob, "frame.jpg");
-
-    // Use proper action mapping
-    if (action === "work-application") {
-      formData.append("action", "login"); // send as login
-    } else {
-      formData.append("action", subAction || action);
-    }
-
-    try {
-      const response = await fetch(`http://localhost:8000/attendance/${mode}`, {
-        method: "POST",
-        body: formData,
-      });
-      const data = await response.json();
-      handleBackendResponse(data, mode);
-    } catch (error) {
-      console.error("Error sending frame:", error);
-    }
-  };
-
-  const handleBackendResponse = (data, mode) => {
-    if (data.error) {
-      setFaces([{ name: "Unknown", status: "unknown", box: [50, 50, 100, 100] }]);
-      setStatusMessages(["❌ Unknown face detected"]);
-      return;
-    }
-
-    if (data.results && Array.isArray(data.results)) {
-      const mappedFaces = data.results.map((face) => ({
-        name: face.name,
-        status: face.status,
-        box: face.box,
-      }));
-      setFaces(mappedFaces);
-
-      if (mode === "mark" && mappedFaces.length > 0) {
-        const currentDateTime = dateTime.toLocaleString("en-US", {
-          year: "numeric",
-          month: "short",
-          day: "numeric",
-          hour: "2-digit",
-          minute: "2-digit",
-          second: "2-digit",
-          hour12: true,
-        });
-
-        const msgs = mappedFaces.map((face) => {
-          if (action === "work-application" && face.status === "logged_in") {
-            navigate("/work-application", { state: { user: face.name } });
-            return `✅ ${face.name} logged in to Work Application — ${currentDateTime}`;
-          }
-
-          if (face.status === "checked_in")
-            return `✅ ${face.name} marked Present — ${currentDateTime}`;
-          if (face.status === "already_checked_in")
-            return `⚠️ ${face.name} already Checked In — ${currentDateTime}`;
-          if (face.status === "checked_out")
-            return `✅ ${face.name} Checked Out — ${currentDateTime}`;
-          if (face.status === "already_checked_out")
-            return `⚠️ ${face.name} already Checked Out — ${currentDateTime}`;
-          if (face.status === "break_started")
-            return `⏸️ ${face.name} started Break — ${currentDateTime}`;
-          if (face.status === "already_on_break")
-            return `⚠️ ${face.name} is already on Break — ${currentDateTime}`;
-          if (face.status === "break_ended")
-            return `▶️ ${face.name} ended Break — ${currentDateTime}`;
-          if (face.status === "already_break_ended")
-            return `⚠️ ${face.name} already ended Break — ${currentDateTime}`;
-          if (face.status === "break_not_started")
-            return `⚠️ ${face.name} cannot end Break (not started) — ${currentDateTime}`;
-          if (face.status === "checkin_missing")
-            return `⚠️ ${face.name} cannot proceed → No Check-In found — ${currentDateTime}`;
-          if (face.status === "cannot_checkout_on_break")
-            return `⚠️ ${face.name} cannot Check Out while on Break — ${currentDateTime}`;
-          if (face.status === "spoof")
-            return `❌ Spoof attempt detected (photo) — ${currentDateTime}`;
-          if (face.status === "unknown") return `❌ Unknown face detected`;
-          return `ℹ️ ${face.name} action processed — ${currentDateTime}`;
-        });
-
-        setStatusMessages(msgs);
-        if (action !== "work-application") {
-          setTimeout(() => setStatusMessages([]), 2000);
-        }
-      }
-    }
-  };
-
+  // Face box colors
   const getBoxColor = (status) => {
     if (status === "checked_in") return "border-green-500";
     if (status === "already_checked_in") return "border-yellow-400";
     if (status === "checked_out") return "border-blue-500";
     if (status === "already_checked_out") return "border-yellow-400";
     if (status === "unknown") return "border-red-600";
-    if (status === "logged_in") return "border-green-500"; 
+    if (status === "logged_in") return "border-green-500";
     if (status === "preview") return "border-green-300";
-    if (status === "spoof") return "border-orange-700"; // Spoof detection color
+    if (status === "spoof") return "border-orange-700";
     return "border-gray-300";
   };
 

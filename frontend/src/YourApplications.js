@@ -24,7 +24,6 @@ function YourApplications() {
 
   // Applications (fetched from backend)
   const [applications, setApplications] = useState([]);
-  const [dateTime, setDateTime] = useState(new Date());
 
   // Filters
   const [search, setSearch] = useState("");
@@ -38,12 +37,6 @@ function YourApplications() {
 
   // Reason modal
   const [selectedReason, setSelectedReason] = useState(null);
-
-  // Auto update time
-  useEffect(() => {
-    const timer = setInterval(() => setDateTime(new Date()), 1000);
-    return () => clearInterval(timer);
-  }, []);
 
   // Fetch user's applications
   useEffect(() => {

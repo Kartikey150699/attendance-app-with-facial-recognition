@@ -11,7 +11,8 @@ from routes import (
     holiday,
     hr_logs,
     paid_holidays,
-    approvers 
+    approvers,
+    shifts   
 )
 from utils.db import Base, engine
 from models import (
@@ -21,7 +22,8 @@ from models import (
     WorkApplication,
     Holiday,
     PaidHoliday,
-    Approver  
+    Approver,
+    Shift   
 )
 
 # FastAPI App
@@ -54,7 +56,8 @@ app.include_router(work_applications.router)
 app.include_router(holiday.router)
 app.include_router(hr_logs.router)
 app.include_router(paid_holidays.router)
-app.include_router(approvers.router)  
+app.include_router(approvers.router)
+app.include_router(shifts.router)  
 
 # Root endpoint
 @app.get("/")

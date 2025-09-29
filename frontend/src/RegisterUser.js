@@ -10,16 +10,24 @@ import {
 import Footer from "./Footer";
 import HeaderDateTime from "./HeaderDateTime";
 
+// Move progress messages outside so it's stable
+const PROGRESS_MESSAGES = [
+  "Initializing Registration...",
+  "Calibrating Sensors...",
+  "Encoding Biometric Data...",
+  "Securing Identity...",
+  "Finalizing Registration...",
+];
+
 function RegisterUser() {
   const [name, setName] = useState("");
   const [department, setDepartment] = useState("");
-  const [dateTime, setDateTime] = useState(new Date());
   const [showPopup, setShowPopup] = useState(false);
   const [popupMessage, setPopupMessage] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [frameCount, setFrameCount] = useState(0);
   const [buttonText, setButtonText] = useState("Register");
-  const [registeredData, setRegisteredData] = useState(null); // <-- new
+  const [registeredData, setRegisteredData] = useState(null);
 
   const [devices, setDevices] = useState([]);
   const [selectedDeviceId, setSelectedDeviceId] = useState("");
@@ -27,28 +35,14 @@ function RegisterUser() {
   const navigate = useNavigate();
   const webcamRef = useRef(null);
 
-  const progressMessages = [
-    "Initializing Registration...",
-    "Calibrating Sensors...",
-    "Encoding Biometric Data...",
-    "Securing Identity...",
-    "Finalizing Registration...",
-  ];
-
-  // Live clock
-  useEffect(() => {
-    const timer = setInterval(() => setDateTime(new Date()), 1000);
-    return () => clearInterval(timer);
-  }, []);
-
   // Button progress text
   useEffect(() => {
     if (!isSubmitting) return;
     let i = 0;
-    setButtonText(progressMessages[0]);
+    setButtonText(PROGRESS_MESSAGES[0]);
     const interval = setInterval(() => {
-      i = (i + 1) % progressMessages.length;
-      setButtonText(progressMessages[i]);
+      i = (i + 1) % PROGRESS_MESSAGES.length;
+      setButtonText(PROGRESS_MESSAGES[i]);
     }, 1500);
     return () => clearInterval(interval);
   }, [isSubmitting]);
@@ -122,22 +116,22 @@ function RegisterUser() {
       const data = await response.json();
 
       if (!response.ok) {
-  if (data.detail) {
-    setPopupMessage(`❌ ${data.detail}`);
-  } else if (data.error) {
-    setPopupMessage(`❌ ${data.error}`);
-  } else {
-    setPopupMessage("❌ Registration failed.");
-  }
-  setIsSubmitting(false);
-} else {
-  setRegisteredData({
-    employee_id: data.employee_id,
-    name: data.name || name,          // use returned name if available
-    department: data.department || department,
-  });
-  setPopupMessage("✅ Registration successful!");
-}
+        if (data.detail) {
+          setPopupMessage(`❌ ${data.detail}`);
+        } else if (data.error) {
+          setPopupMessage(`❌ ${data.error}`);
+        } else {
+          setPopupMessage("❌ Registration failed.");
+        }
+        setIsSubmitting(false);
+      } else {
+        setRegisteredData({
+          employee_id: data.employee_id,
+          name: data.name || name,
+          department: data.department || department,
+        });
+        setPopupMessage("✅ Registration successful!");
+      }
 
       setShowPopup(true);
       setName("");
@@ -314,59 +308,59 @@ function RegisterUser() {
       </div>
 
       {/* Popup */}
-{showPopup && (
-  <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
-    <div
-      className={`p-8 rounded-2xl shadow-2xl text-center transform transition-all duration-300 scale-100 ${
-        popupMessage.startsWith("✅")
-          ? "bg-green-50 border-2 border-green-400"
-          : "bg-red-50 border-2 border-red-400"
-      }`}
-    >
-      <h2
-        className={`text-2xl font-extrabold mb-4 ${
-          popupMessage.startsWith("✅") ? "text-green-700" : "text-red-700"
-        }`}
-      >
-        {popupMessage.startsWith("✅")
-          ? "Registration Successful!"
-          : "Error"}
-      </h2>
+      {showPopup && (
+        <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
+          <div
+            className={`p-8 rounded-2xl shadow-2xl text-center transform transition-all duration-300 scale-100 ${
+              popupMessage.startsWith("✅")
+                ? "bg-green-50 border-2 border-green-400"
+                : "bg-red-50 border-2 border-red-400"
+            }`}
+          >
+            <h2
+              className={`text-2xl font-extrabold mb-4 ${
+                popupMessage.startsWith("✅") ? "text-green-700" : "text-red-700"
+              }`}
+            >
+              {popupMessage.startsWith("✅")
+                ? "Registration Successful!"
+                : "Error"}
+            </h2>
 
-      {/* Successful registration Details */}
-      {popupMessage.startsWith("✅") && registeredData ? (
-        <div className="bg-white rounded-lg shadow-md p-4 mb-6 text-left">
-          <p className="text-gray-800 text-lg">
-            <span className="font-bold">Employee ID:</span>{" "}
-            {registeredData.employee_id}
-          </p>
-          <p className="text-gray-800 text-lg">
-            <span className="font-bold">Name:</span> {registeredData.name}
-          </p>
-          <p className="text-gray-800 text-lg">
-            <span className="font-bold">Department:</span>{" "}
-            {registeredData.department}
-          </p>
+            {/* Successful registration Details */}
+            {popupMessage.startsWith("✅") && registeredData ? (
+              <div className="bg-white rounded-lg shadow-md p-4 mb-6 text-left">
+                <p className="text-gray-800 text-lg">
+                  <span className="font-bold">Employee ID:</span>{" "}
+                  {registeredData.employee_id}
+                </p>
+                <p className="text-gray-800 text-lg">
+                  <span className="font-bold">Name:</span> {registeredData.name}
+                </p>
+                <p className="text-gray-800 text-lg">
+                  <span className="font-bold">Department:</span>{" "}
+                  {registeredData.department}
+                </p>
+              </div>
+            ) : (
+              <p className="text-lg text-gray-800 mb-6 whitespace-pre-line">
+                {popupMessage}
+              </p>
+            )}
+
+            <button
+              onClick={handlePopupOk}
+              className={`px-6 py-2 font-bold rounded-lg shadow ${
+                popupMessage.startsWith("✅")
+                  ? "bg-green-600 text-white hover:bg-green-700"
+                  : "bg-red-600 text-white hover:bg-red-700"
+              }`}
+            >
+              OK
+            </button>
+          </div>
         </div>
-      ) : (
-        <p className="text-lg text-gray-800 mb-6 whitespace-pre-line">
-          {popupMessage}
-        </p>
       )}
-
-      <button
-        onClick={handlePopupOk}
-        className={`px-6 py-2 font-bold rounded-lg shadow ${
-          popupMessage.startsWith("✅")
-            ? "bg-green-600 text-white hover:bg-green-700"
-            : "bg-red-600 text-white hover:bg-red-700"
-        }`}
-      >
-        OK
-      </button>
-    </div>
-  </div>
-)}
 
       <Footer />
 

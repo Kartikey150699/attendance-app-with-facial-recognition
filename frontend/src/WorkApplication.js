@@ -26,8 +26,7 @@ function WorkApplication() {
   const employeeId = location.state?.employeeId || storedUser.employee_id || null;
 
   const [department, setDepartment] = useState(null); 
-  const [dateTime, setDateTime] = useState(new Date());
-
+  
   // Form states
   const [applicationType, setApplicationType] = useState("");
   const [startDate, setStartDate] = useState("");
@@ -46,10 +45,6 @@ function WorkApplication() {
   // Popup state
   const [popup, setPopup] = useState({ show: false, message: "", type: "" });
 
-  useEffect(() => {
-    const timer = setInterval(() => setDateTime(new Date()), 1000);
-    return () => clearInterval(timer);
-  }, []);
 
   // Protect route
   useEffect(() => {
