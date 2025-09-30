@@ -316,7 +316,7 @@ const getStatusClass = (status) => {
                       </td>
                       <td className="p-2 border">{log.check_in}</td>
                       <td className="p-2 border">{log.check_out}</td>
-                      <td className="p-2 border">{log.total_work || "-"}</td>
+                      <td className="p-2 border">{log.actual_work || "-"}</td>
                       <td className="p-2 border">{calculateOvertime(log.total_work)}</td>
                       <td className={`p-2 border ${getStatusClass(log.status)}`}>
                         {log.status || "-"}

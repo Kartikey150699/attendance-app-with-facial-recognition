@@ -298,7 +298,7 @@ function RegisterUser() {
           <ExclamationTriangleIcon className="h-12 w-12 text-yellow-600 flex-shrink-0" />
           <div className="flex flex-col text-left w-full">
             <p className="text-lg font-semibold">
-              Please remove Masks, hats, glasses, and keep forehead clear — show your full face for accurate registration.
+              Please remove Masks, Hats, Glasses, and keep forehead clear — show your full face for accurate registration.
             </p>
             <p className="text-xl font-semibold text-gray-700">
               帽子や眼鏡、マスクを外し、おでこを隠さず、顔全体をカメラに映してください。
