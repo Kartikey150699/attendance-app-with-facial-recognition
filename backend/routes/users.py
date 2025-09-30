@@ -45,7 +45,7 @@ def cosine_similarity(vec1, vec2):
 
 
 # -------------------------
-# Helper: apply synthetic mask
+# Helper: apply synthetic mask and sunglasses 
 # -------------------------
 def apply_synthetic_mask(image_path):
     img = cv2.imread(image_path)
