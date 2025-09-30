@@ -83,7 +83,7 @@ async def register_user(
             tmp_path = tmp.name
 
         try:
-            # Normal embedding
+            # Normal embedding (Creating synthetic embeddings/vectorization for masks and sunglasses)
             rep = DeepFace.represent(
                 img_path=tmp_path,
                 model_name="ArcFace",
@@ -224,7 +224,7 @@ async def delete_user_by_name(name: str, db: Session = Depends(get_db)):
     if not user:
         raise HTTPException(status_code=404, detail=f"No user found with name '{name}'")
 
-    # Preserve attendance history
+    # Preserve attendance history (For deleted users, Shown in the "Attendance Logs")
     records = db.query(Attendance).filter(Attendance.user_id == user.id).all()
     for record in records:
         record.user_name_snapshot = user.name
@@ -273,7 +273,7 @@ async def list_users(
 
 
 # -------------------------
-# Legacy support for frontend
+# Legacy support for frontend (Fetch basic details to the React server)
 # -------------------------
 @router.get("/active")
 async def legacy_active_users(db: Session = Depends(get_db)):

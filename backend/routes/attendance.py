@@ -115,7 +115,7 @@ def calculate_total_work(record: Attendance):
         record.actual_work = "-"
 
 # -------------------------
-# Detect faces using Neural Networks (MTCNN + ArcFace, fallback OpenCV Haar for masks)
+# Detect faces using Neural Networks (MTCNN + ArcFace, fallback OpenCV Haar for masks and sunglasses)
 # -------------------------
 def detect_faces(tmp_path):
     faces = []

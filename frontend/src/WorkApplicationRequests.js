@@ -106,7 +106,7 @@ const [users, setUsers] = useState([]);
         .map((val) => {
           if (val === null || val === undefined) return "";
           if (val instanceof Date) return val.toISOString();
-          if (typeof val === "object") return JSON.stringify(val);
+          if (typeof val === "object") return JSON.stringify(val)
           return String(val);
         })
         .join(" ")
