@@ -199,82 +199,87 @@ useEffect(() => {
                   <th className="p-2 border">Decided Shift</th>
                   <th className="p-2 border">Check-in</th>
                   <th className="p-2 border">Check-out</th>
-                  <th className="p-2 border">Total Work</th>
-                  <th className="p-2 border">Overtime</th>
+                  <th className="p-2 border">Total Work (Hr)</th>
+                  <th className="p-2 border">Overtime (Hr)</th>
                   <th className="p-2 border">Status</th>
                 </tr>
               </thead>
               <tbody>
-                {getAllDaysInMonth(selectedMonth, selectedYear).map((day, i) => {
-                  const log = attendanceData.find(
-                    (l) => formatDateLocal(new Date(l.date)) === formatDateLocal(day)
-                  );
-                  const dateStr = formatDateLocal(day);
-                  const isWeekend = day.getDay() === 0 || day.getDay() === 6;
+  {getAllDaysInMonth(selectedMonth, selectedYear).map((day, i) => {
+    const log = attendanceData.find(
+      (l) => formatDateLocal(new Date(l.date)) === formatDateLocal(day)
+    );
+    const dateStr = formatDateLocal(day);
+    const isWeekend = day.getDay() === 0 || day.getDay() === 6;
+    const dayName = day.toLocaleDateString("en-US", { weekday: "long" });
 
-                  return (
-                    <tr key={i} className="text-center">
-                      <td className="p-2 border font-semibold">
-                        {day.toLocaleDateString("en-US", {
-                          year: "numeric",
-                          month: "short",
-                          day: "numeric",
-                        })}
-                      </td>
-                      <td className="p-2 border">{getDecidedShift(employeeId, dateStr)}</td>
-                      {isWeekend ? (
-                        <td colSpan="5" className="p-2 border text-red-600 font-bold">
-                          {day.getDay() === 0 ? "Sunday" : "Saturday"}
-                        </td>
-                      ) : (
-                        <>
-                          <td className="p-2 border">
-                            {log?.check_in
-                              ? new Date(log.check_in).toLocaleTimeString([], {
-                                  hour: "2-digit",
-                                  minute: "2-digit",
-                                })
-                              : "-"}
-                          </td>
-                          <td className="p-2 border">
-                            {log?.check_out
-                              ? new Date(log.check_out).toLocaleTimeString([], {
-                                  hour: "2-digit",
-                                  minute: "2-digit",
-                                })
-                              : "-"}
-                          </td>
-                          <td className="p-2 border">{log?.total_work || "-"}</td>
-                          <td className="p-2 border">
-                            {calculateOvertime(log?.total_work)}
-                          </td>
-                          <td
-  className={`p-2 border font-bold ${
-    log?.status === "Present"
-      ? "text-green-600"
-      : log?.status === "Absent"
-      ? "text-red-600"
-      : log?.status === "On Leave"
-      ? "text-yellow-600"
-      : log?.status === "Worked on Holiday"
-      ? "text-blue-600"
-      : log?.status === "Present on Sunday"
-      ? "text-purple-600"
-      : log?.status === "Present on Saturday"
-      ? "text-pink-600"
-      : log?.status === "Holiday"
-      ? "text-gray-500"
-      : "text-gray-700"
-  }`}
->
-  {log?.status || "-"}
-</td>
-                        </>
-                      )}
-                    </tr>
-                  );
-                })}
-              </tbody>
+    // Weekend highlight classes
+    const weekendClass =
+      day.getDay() === 0 ? "bg-red-100" : day.getDay() === 6 ? "bg-pink-100" : "";
+
+    return (
+      <tr key={i} className={`text-center ${weekendClass}`}>
+        {/* Date + Day */}
+        <td className="p-2 border font-semibold">
+          {day.toLocaleDateString("en-US", {
+            year: "numeric",
+            month: "short",
+            day: "numeric",
+          })}{" "}
+          ({dayName})
+        </td>
+
+        {/* Decided shift */}
+        <td className="p-2 border">{getDecidedShift(employeeId, dateStr)}</td>
+
+        {/* Check-in/out */}
+        <td className="p-2 border">
+          {log?.check_in
+            ? new Date(log.check_in).toLocaleTimeString([], {
+                hour: "2-digit",
+                minute: "2-digit",
+              })
+              : "-"}
+        </td>
+        <td className="p-2 border">
+          {log?.check_out
+            ? new Date(log.check_out).toLocaleTimeString([], {
+                hour: "2-digit",
+                minute: "2-digit",
+              })
+            : "-"}
+        </td>
+        <td className="p-2 border">{log?.total_work || "-"}</td>
+        <td className="p-2 border">{calculateOvertime(log?.total_work)}</td>
+
+        {/* Status */}
+        <td
+          className={`p-2 border font-bold ${
+            log?.status === "Present"
+              ? "text-green-600"
+              : log?.status === "Absent"
+              ? "text-red-600"
+              : log?.status === "On Leave"
+              ? "text-yellow-600"
+              : log?.status === "Worked on Holiday"
+              ? "text-blue-600"
+              : log?.status === "Present on Sunday"
+              ? "text-purple-600"
+              : log?.status === "Present on Saturday"
+              ? "text-pink-600"
+              : log?.status === "Holiday"
+              ? "text-gray-500"
+              : isWeekend
+              ? "text-red-600"
+              : "text-gray-700"
+          }`}
+        >
+          {log?.status || (isWeekend ? dayName : "-")}
+        </td>
+      </tr>
+    );
+  })}
+</tbody>
             </table>
           )}
         </div>

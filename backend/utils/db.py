@@ -2,7 +2,7 @@ from sqlalchemy import create_engine
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
 
-# ⚡hange username & password to match your MySQL Workbench
+# change username & password to match your MySQL Workbench
 DATABASE_URL = "mysql+pymysql://root:root@localhost:3306/facetrack"
 
 # Create engine

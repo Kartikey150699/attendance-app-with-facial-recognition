@@ -62,7 +62,7 @@ app.include_router(shifts.router)
 # Root endpoint
 @app.get("/")
 def home():
-    return {"message": "✅ FaceTrack Backend is running 🚀"}
+    return {"message": "✅ FaceTrack Backend is running 🚀 - Please visit http://localhost:3000 for the FastTrack Attendance App!"}
 
 # Auto-create tables
 Base.metadata.create_all(bind=engine)
