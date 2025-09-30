@@ -21,20 +21,6 @@ def get_db():
         db.close()
 
 # -------------------------
-# Helper: calculate total work duration (HH:MM)
-# -------------------------
-def calculate_total_work(log):
-    if not log or not log.check_in or not log.check_out:
-        return "-"
-    try:
-        delta = log.check_out - log.check_in
-        total_minutes = int(delta.total_seconds() // 60)
-        hours, minutes = divmod(total_minutes, 60)
-        return f"{hours:02d}:{minutes:02d}"  # e.g. "08:30"
-    except Exception:
-        return "-"
-
-# -------------------------
 # HR Logs (month by month, all users × all days, with optional employee filter)
 # -------------------------
 @router.get("/")
@@ -50,12 +36,10 @@ def get_hr_logs(
 
     # Fetch all active users
     users = db.query(User).all()
-
-    # If specific employee requested, filter
     if employee_id:
         users = [u for u in users if f"IFNT{str(u.id).zfill(3)}" == employee_id]
 
-    # Fetch holidays for the month
+    # Holidays
     holidays = {
         h.date: h.holiday_name
         for h in db.query(Holiday)
@@ -63,7 +47,7 @@ def get_hr_logs(
         .all()
     }
 
-    # Fetch all attendance logs for this month
+    # Attendance logs
     attendance_logs = (
         db.query(Attendance)
         .filter(Attendance.date >= start_date, Attendance.date <= end_date)
@@ -71,7 +55,7 @@ def get_hr_logs(
     )
     attendance_map = {(log.user_id, log.date.date()): log for log in attendance_logs}
 
-    # Fetch all approved leaves
+    # Approved leaves
     leaves = (
         db.query(WorkApplication)
         .filter(
@@ -92,24 +76,22 @@ def get_hr_logs(
                 leave_map[(emp_id, d)] = leave.reason
 
     formatted_logs = []
-    monthly_summary = {}  # per-employee summary
+    monthly_summary = {}
 
-    # Generate logs for every user × every day
     for user in users:
         emp_id = f"IFNT{str(user.id).zfill(3)}"
         total_minutes_for_user = 0
 
         for day in range(1, monthrange(year, month)[1] + 1):
             current_date = date(year, month, day)
-
             log = attendance_map.get((user.id, current_date))
             holiday_name = holidays.get(current_date)
             leave_reason = leave_map.get((emp_id, current_date))
 
-            # Determine status
-            weekday = current_date.weekday()  # 0=Mon ... 6=Sun
+            # --- Status ---
+            weekday = current_date.weekday()
             if current_date > today:
-                status = "-"  # future dates should not be Absent
+                status = "-"
             elif leave_reason:
                 status = "On Leave"
             elif holiday_name and log and log.check_in:
@@ -124,18 +106,40 @@ def get_hr_logs(
                 else:
                     status = "Present"
             else:
-                if weekday in (5, 6) or holiday_name:
-                    status = "-"
-                else:
-                    status = "Absent"
+                status = "-" if weekday in (5, 6) or holiday_name else "Absent"
 
-            # Calculate total work duration
-            total_work_str = calculate_total_work(log)
+            # --- Work Time Calculations ---
+            total_work_str = "-"
+            break_time_str = "-"
+            actual_work_str = "-"
 
-            # Add to monthly total (only if valid and not future)
-            if total_work_str != "-" and current_date <= today:
-                h, m = map(int, total_work_str.split(":"))
-                total_minutes_for_user += h * 60 + m
+            if log and log.check_in and log.check_out:
+                try:
+                    # total time = checkout - checkin
+                    total_delta = log.check_out - log.check_in
+                    total_minutes = int(total_delta.total_seconds() // 60)
+                    th, tm = divmod(total_minutes, 60)
+                    total_work_str = f"{th:02d}:{tm:02d}"
+
+                    # break time
+                    if log.break_start and log.break_end:
+                        break_delta = log.break_end - log.break_start
+                        break_minutes = int(break_delta.total_seconds() // 60)
+                        bh, bm = divmod(break_minutes, 60)
+                        break_time_str = f"{bh:02d}:{bm:02d}"
+                    else:
+                        break_minutes = 0
+
+                    # actual work = total - break
+                    aw_minutes = max(total_minutes - break_minutes, 0)
+                    ah, am = divmod(aw_minutes, 60)
+                    actual_work_str = f"{ah:02d}:{am:02d}"
+
+                    # accumulate monthly summary
+                    if current_date <= today:
+                        total_minutes_for_user += aw_minutes
+                except Exception:
+                    pass
 
             formatted_logs.append({
                 "id": log.id if log else None,
@@ -146,17 +150,15 @@ def get_hr_logs(
                 "status": status,
                 "check_in": log.check_in.strftime("%H:%M") if log and log.check_in else "-",
                 "check_out": log.check_out.strftime("%H:%M") if log and log.check_out else "-",
-                "total_work": total_work_str,
+                "break_time": break_time_str,   # calculated live
+                "total_work": total_work_str,   # calculated live
+                "actual_work": actual_work_str, # calculated live
             })
 
-        # Store monthly summary for this employee
+        # --- Monthly Summary ---
         h, m = divmod(total_minutes_for_user, 60)
         monthly_summary[emp_id] = f"{h}h {m}m"
 
-    # Sort newest first
     formatted_logs.sort(key=lambda x: x["date"], reverse=True)
 
-    return {
-        "logs": formatted_logs,
-        "monthly_summary": monthly_summary,
-    }
+    return {"logs": formatted_logs, "monthly_summary": monthly_summary}

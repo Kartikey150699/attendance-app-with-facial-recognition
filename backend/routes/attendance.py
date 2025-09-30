@@ -80,20 +80,39 @@ def refresh_embeddings():
 # Helper: calculate total work
 # -------------------------
 def calculate_total_work(record: Attendance):
-    """Recalculate total working hours (excluding break) and update the record."""
+    """Recalculate total work, break time, and actual work, then update record."""
     if record.check_in and record.check_out:
         try:
+            # Total work (raw: check_out - check_in)
             total = record.check_out - record.check_in
+            total_minutes = int(total.total_seconds() // 60)
+            th, tm = divmod(total_minutes, 60)
+            record.total_work = f"{th:02d}:{tm:02d}"
+
+            # Break time
+            break_minutes = 0
             if record.break_start and record.break_end:
-                total -= (record.break_end - record.break_start)
-            total_minutes = total.total_seconds() // 60
-            hours, minutes = divmod(total_minutes, 60)
-            record.total_work = f"{int(hours)}h {int(minutes)}m"
+                break_delta = record.break_end - record.break_start
+                break_minutes = int(break_delta.total_seconds() // 60)
+                bh, bm = divmod(break_minutes, 60)
+                record.break_time = f"{bh:02d}:{bm:02d}"
+            else:
+                record.break_time = "-"
+
+            # Actual work = total - break
+            aw_minutes = max(total_minutes - break_minutes, 0)
+            ah, am = divmod(aw_minutes, 60)
+            record.actual_work = f"{ah:02d}:{am:02d}"
+
         except Exception as e:
-            print("⚠️ Error calculating total work:", e)
+            print("⚠️ Error calculating work:", e)
             record.total_work = "-"
+            record.break_time = "-"
+            record.actual_work = "-"
     else:
         record.total_work = "-"
+        record.break_time = "-"
+        record.actual_work = "-"
 
 # -------------------------
 # Detect faces using Neural Networks (MTCNN + ArcFace, fallback OpenCV Haar for masks)
@@ -412,29 +431,34 @@ async def get_user_attendance(
 
     # Apply filters if month/year are provided
     if year:
-        query = query.filter(Attendance.date >= date(year, 1, 1),
-                             Attendance.date <= date(year, 12, 31))
+        query = query.filter(
+            Attendance.date >= date(year, 1, 1),
+            Attendance.date <= date(year, 12, 31)
+        )
     if month and year:
         last_day = monthrange(year, month)[1]
-        query = query.filter(Attendance.date >= date(year, month, 1),
-                             Attendance.date <= date(year, month, last_day))
+        query = query.filter(
+            Attendance.date >= date(year, month, 1),
+            Attendance.date <= date(year, month, last_day)
+        )
 
     logs = query.order_by(Attendance.date.desc()).all()
 
     results = [
         {
-            "date": log.date,
-            "check_in": log.check_in,
-            "check_out": log.check_out,
-            "break_start": log.break_start,
-            "break_end": log.break_end,
-            "total_work": log.total_work,
-            "user_name_snapshot": log.user_name_snapshot
+            "date": log.date.strftime("%Y-%m-%d"),
+            "check_in": log.check_in.strftime("%Y-%m-%dT%H:%M:%S") if log.check_in else None,
+            "check_out": log.check_out.strftime("%Y-%m-%dT%H:%M:%S") if log.check_out else None,
+            "break_start": log.break_start.strftime("%Y-%m-%dT%H:%M:%S") if log.break_start else None,
+            "break_end": log.break_end.strftime("%Y-%m-%dT%H:%M:%S") if log.break_end else None,
+            "break_time": log.break_time if log.break_time else "-",
+            "total_work": log.total_work if log.total_work else "-",
+            "actual_work": log.actual_work if log.actual_work else "-",
+            "user_name_snapshot": log.user_name_snapshot or "-"
         }
         for log in logs
     ]
     return results
-
 # -------------------------
 # Get Attendance for Current User (self view, with status like HR Logs)
 # -------------------------

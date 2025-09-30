@@ -16,7 +16,6 @@ function LogsReports() {
   // Logs & Shifts
   const [logs, setLogs] = useState([]);
   const [shifts, setShifts] = useState([]);
-  const [monthlyTotals, setMonthlyTotals] = useState({});
 
   // Individual user view
   const [selectedUser, setSelectedUser] = useState(null);
@@ -60,7 +59,6 @@ useEffect(() => {
 
       // Extract logs + monthly_summary properly
       setLogs(logsData.logs || []);
-      setMonthlyTotals(logsData.monthly_summary || {});
       setShifts(shiftsData);
     } catch (err) {
       console.error("Error fetching logs/shifts:", err);
@@ -86,16 +84,13 @@ const fetchUserAttendance = useCallback(async (empId) => {
     if (Array.isArray(data)) {
       // Old backend style (only logs array)
       setUserAttendance(data);
-      setMonthlyTotals({});
     } else {
       // New backend style (logs + monthly_summary object)
       setUserAttendance(data.logs ?? []);
-      setMonthlyTotals(data.monthly_summary ?? {});
     }
   } catch (err) {
     console.error("Error fetching user attendance:", err.message);
     setUserAttendance([]);
-    setMonthlyTotals({});
   }
 }, [selectedYear, selectedMonth]); 
 
@@ -298,196 +293,194 @@ const parseWorkToMinutes = (work) => {
         <th className="p-2 border">Planned End</th>
         <th className="p-2 border">Check In</th>
         <th className="p-2 border">Check Out</th>
-        <th className="p-2 border">Break</th>
-        <th className="p-2 border">Actual Work</th>
+        <th className="p-2 border">Break (Hr)</th>
+        <th className="p-2 border">Actual Work (Hr)</th>
         <th className="p-2 border">Late</th>
         <th className="p-2 border">Early Leave</th>
-        <th className="p-2 border">Overtime</th>
+        <th className="p-2 border">Overtime (Hr)</th>
         <th className="p-2 border">Status</th>
       </tr>
     </thead>
 
-<tbody>
-  {userAttendance.map((log, i) => {
-    const [plannedStart, plannedEnd] = getDecidedShift(
-      log.employee_id,
-      log.date
-    ).split(" - ");
+    <tbody>
+      {userAttendance.map((log, i) => {
+        const [plannedStart, plannedEnd] = getDecidedShift(
+          log.employee_id,
+          log.date
+        ).split(" - ");
 
-    // --- Late ---
-    let late = "-";
-    if (
-      log.check_in &&
-      log.check_in !== "-" &&
-      plannedStart &&
-      plannedStart !== "-"
-    ) {
-      late = log.check_in > plannedStart ? "Yes" : "No";
-    }
+        // --- Late ---
+        let late = "-";
+        if (
+          log.check_in &&
+          log.check_in !== "-" &&
+          plannedStart &&
+          plannedStart !== "-"
+        ) {
+          late = log.check_in > plannedStart ? "Yes" : "No";
+        }
 
-    // --- Early Leave ---
-    let earlyLeave = "-";
-    if (
-      log.check_out &&
-      log.check_out !== "-" &&
-      plannedEnd &&
-      plannedEnd !== "-"
-    ) {
-      earlyLeave = log.check_out < plannedEnd ? "Yes" : "No";
-    }
+        // --- Early Leave ---
+        let earlyLeave = "-";
+        if (
+          log.check_out &&
+          log.check_out !== "-" &&
+          plannedEnd &&
+          plannedEnd !== "-"
+        ) {
+          earlyLeave = log.check_out < plannedEnd ? "Yes" : "No";
+        }
 
-    // --- Overtime ---
-    let overtime = "-";
-    if (log.total_work && log.total_work !== "-") {
-      const mins = parseWorkToMinutes(log.total_work);
-      const overtimeMins = mins > 480 ? mins - 480 : 0;
-      overtime =
-        overtimeMins > 0
-          ? `${Math.floor(overtimeMins / 60)}h ${overtimeMins % 60}m`
-          : "-";
-    }
+        // --- Overtime ---
+        let overtime = "-";
+        if (log.actual_work && log.actual_work !== "-") {
+          const mins = parseWorkToMinutes(log.actual_work);
+          const overtimeMins = mins > 480 ? mins - 480 : 0;
+          overtime =
+            overtimeMins > 0
+              ? `${Math.floor(overtimeMins / 60)}h ${overtimeMins % 60}m`
+              : "-";
+        }
 
-    // --- Weekend Highlight ---
-    const day = new Date(log.date).getDay(); // 0=Sunday, 6=Saturday
-    const weekendClass =
-      day === 6 ? "bg-red-50" : day === 0 ? "bg-pink-50" : "";
+        // --- Weekend Highlight ---
+        const day = new Date(log.date).getDay(); // 0=Sunday, 6=Saturday
+        const weekendClass =
+          day === 6 ? "bg-red-50" : day === 0 ? "bg-pink-50" : "";
 
-    return (
-      <tr key={i} className={`text-center ${weekendClass}`}>
-        <td className="p-2 border">{formatDate(log.date)}</td>
-        <td className="p-2 border">{plannedStart || "-"}</td>
-        <td className="p-2 border">{plannedEnd || "-"}</td>
-        <td className="p-2 border">{log.check_in || "-"}</td>
-        <td className="p-2 border">{log.check_out || "-"}</td>
-        <td className="p-2 border">{log.break_time || "-"}</td>
-        <td className="p-2 border">{log.total_work || "-"}</td>
-        <td className="p-2 border">{late}</td>
-        <td className="p-2 border">{earlyLeave}</td>
-        <td className="p-2 border">{overtime}</td>
-        <td
-          className={`p-2 border font-bold ${
-            log.status === "Present"
-              ? "text-green-600"
-              : log.status === "Absent"
-              ? "text-red-600"
-              : log.status === "On Leave"
-              ? "text-yellow-600"
-              : log.status === "Worked on Holiday"
-              ? "text-blue-600"
-              : log.status?.includes("Sunday")
-              ? "text-purple-600"
-              : log.status?.includes("Saturday")
-              ? "text-pink-600"
-              : "text-gray-600"
-          }`}
-        >
-          {log.status}
-        </td>
-      </tr>
-    );
-  })}
-</tbody>
+        return (
+          <tr key={i} className={`text-center ${weekendClass}`}>
+            <td className="p-2 border">{formatDate(log.date)}</td>
+            <td className="p-2 border">{plannedStart || "-"}</td>
+            <td className="p-2 border">{plannedEnd || "-"}</td>
+            <td className="p-2 border">{log.check_in || "-"}</td>
+            <td className="p-2 border">{log.check_out || "-"}</td>
+            <td className="p-2 border">{log.break_time || "-"}</td>
+            <td className="p-2 border">{log.actual_work || "-"}</td>
+            <td className="p-2 border">{late}</td>
+            <td className="p-2 border">{earlyLeave}</td>
+            <td className="p-2 border">{overtime}</td>
+            <td
+              className={`p-2 border font-bold ${
+                log.status === "Present"
+                  ? "text-green-600"
+                  : log.status === "Absent"
+                  ? "text-red-600"
+                  : log.status === "On Leave"
+                  ? "text-yellow-600"
+                  : log.status === "Worked on Holiday"
+                  ? "text-blue-600"
+                  : log.status?.includes("Sunday")
+                  ? "text-purple-600"
+                  : log.status?.includes("Saturday")
+                  ? "text-pink-600"
+                  : "text-gray-600"
+              }`}
+            >
+              {log.status}
+            </td>
+          </tr>
+        );
+      })}
+    </tbody>
 
     {/* -------- Summary Row -------- */}
     <tfoot>
-  <tr className="bg-indigo-200 font-bold text-center">
-    <td className="p-2 border">Summary</td>
-    <td className="p-2 border">-</td>
-    <td className="p-2 border">-</td>
+      <tr className="bg-indigo-200 font-bold text-center">
+        <td className="p-2 border">Summary</td>
+        <td className="p-2 border">-</td>
+        <td className="p-2 border">-</td>
 
-    {/* Worked Days */}
-    <td className="p-2 border">
-      {
-        userAttendance.filter(
-          (l) =>
-            l.status === "Present" ||
-            l.status === "Present on Saturday" ||
-            l.status === "Present on Sunday" ||
-            l.status === "Worked on Holiday"
-        ).length
-      } Worked
-    </td>
+        {/* Worked Days */}
+        <td className="p-2 border">
+          {
+            userAttendance.filter(
+              (l) =>
+                l.status === "Present" ||
+                l.status === "Present on Saturday" ||
+                l.status === "Present on Sunday" ||
+                l.status === "Worked on Holiday"
+            ).length
+          } Worked
+        </td>
 
-    {/* Absent Days */}
-    <td className="p-2 border">
-      {userAttendance.filter((l) => l.status === "Absent").length} Absent
-    </td>
+        {/* Absent Days */}
+        <td className="p-2 border">
+          {userAttendance.filter((l) => l.status === "Absent").length} Absent
+        </td>
 
-    <td className="p-2 border">-</td>
+        <td className="p-2 border">-</td>
 
-    {/* Total Hours */}
-    <td className="p-2 border">
-      {monthlyTotals[selectedUser?.employee_id] || "-"}
-    </td>
+        {/* Total Actual Hours */}
+        <td className="p-2 border">
+          {(() => {
+            const totalMins = userAttendance.reduce((acc, l) => {
+              if (!l.actual_work || l.actual_work === "-") return acc;
+              return acc + parseWorkToMinutes(l.actual_work);
+            }, 0);
+            const h = Math.floor(totalMins / 60);
+            const m = totalMins % 60;
+            return totalMins > 0 ? `${h}h ${m}m` : "-";
+          })()}
+        </td>
 
-    {/* Late Count */}
-    <td className="p-2 border">
-      {
-        userAttendance.filter((l) => {
-          const [plannedStart] = getDecidedShift(l.employee_id, l.date).split(" - ");
-          return (
-            (l.status === "Present" ||
-              l.status === "Present on Saturday" ||
-              l.status === "Present on Sunday" ||
-              l.status === "Worked on Holiday") &&
-            l.check_in &&
-            plannedStart &&
-            plannedStart !== "-" &&
-            l.check_in > plannedStart
-          );
-        }).length
-      } Late
-    </td>
+        {/* Late Count */}
+        <td className="p-2 border">
+          {
+            userAttendance.filter((l) => {
+              const [plannedStart] = getDecidedShift(l.employee_id, l.date).split(" - ");
+              return (
+                (l.status === "Present" ||
+                  l.status === "Present on Saturday" ||
+                  l.status === "Present on Sunday" ||
+                  l.status === "Worked on Holiday") &&
+                l.check_in &&
+                plannedStart &&
+                plannedStart !== "-" &&
+                l.check_in > plannedStart
+              );
+            }).length
+          } Late
+        </td>
 
-    {/* Early Leave Count */}
-    <td className="p-2 border">
-      {
-        userAttendance.filter((l) => {
-          const [, plannedEnd] = getDecidedShift(l.employee_id, l.date).split(" - ");
-          return (
-            (l.status === "Present" ||
-              l.status === "Present on Saturday" ||
-              l.status === "Present on Sunday" ||
-              l.status === "Worked on Holiday") &&
-            l.check_out &&
-            plannedEnd &&
-            plannedEnd !== "-" &&
-            l.check_out < plannedEnd
-          );
-        }).length
-      } Early
-    </td>
+        {/* Early Leave Count */}
+        <td className="p-2 border">
+          {
+            userAttendance.filter((l) => {
+              const [, plannedEnd] = getDecidedShift(l.employee_id, l.date).split(" - ");
+              return (
+                (l.status === "Present" ||
+                  l.status === "Present on Saturday" ||
+                  l.status === "Present on Sunday" ||
+                  l.status === "Worked on Holiday") &&
+                l.check_out &&
+                plannedEnd &&
+                plannedEnd !== "-" &&
+                l.check_out < plannedEnd
+              );
+            }).length
+          } Early
+        </td>
 
-    {/* Overtime total */}
-    <td className="p-2 border">
-      {(() => {
-        const overtimeMins = userAttendance.reduce((acc, l) => {
-          if (
-            !l.total_work ||
-            l.total_work === "-" ||
-            !(
-              l.status === "Present" ||
-              l.status === "Present on Saturday" ||
-              l.status === "Present on Sunday" ||
-              l.status === "Worked on Holiday"
-            )
-          ) return acc;
+        {/* Overtime total */}
+        <td className="p-2 border">
+          {(() => {
+            const overtimeMins = userAttendance.reduce((acc, l) => {
+              if (!l.actual_work || l.actual_work === "-") return acc;
+              const mins = parseWorkToMinutes(l.actual_work);
+              return acc + (mins > 480 ? mins - 480 : 0);
+            }, 0);
+            const h = Math.floor(overtimeMins / 60);
+            const m = overtimeMins % 60;
+            return overtimeMins > 0 ? `${h}h ${m}m` : "-";
+          })()}
+        </td>
 
-          const mins = parseWorkToMinutes(l.total_work);
-          return acc + (mins > 480 ? mins - 480 : 0); // >8h
-        }, 0);
-        const h = Math.floor(overtimeMins / 60);
-        const m = overtimeMins % 60;
-        return overtimeMins > 0 ? `${h}h ${m}m` : "-";
-      })()}
-    </td>
-
-    {/* Leave Count */}
-    <td className="p-2 border">
-      {userAttendance.filter((l) => l.status === "On Leave").length} Leave
-    </td>
-  </tr>
-</tfoot>
+        {/* Leave Count */}
+        <td className="p-2 border">
+          {userAttendance.filter((l) => l.status === "On Leave").length} Leave
+        </td>
+      </tr>
+    </tfoot>
   </table>
 </div>
         </div>
@@ -635,50 +628,53 @@ const parseWorkToMinutes = (work) => {
                 </tr>
               </thead>
               <tbody>
-                {currentRows.length > 0 ? (
-                  currentRows.map((log, i) => (
-                    <tr key={i} className="text-center border-b">
-                      <td className="p-4">{formatDate(log.date)}</td>
-                      <td className="p-4">{log.employee_id}</td>
-                      <td
-                        className="p-4 text-indigo-600 font-bold cursor-pointer hover:underline"
-                        onClick={() => {
-                          setSelectedUser(log);
-                          fetchUserAttendance(log.employee_id);
-                        }}
-                      >
-                        {log.name}
-                      </td>
-                      <td className="p-4">{log.department || "-"}</td>
-                      <td className="p-4">{getDecidedShift(log.employee_id, log.date)}</td>
-                      <td className="p-4">{log.check_in || "-"}</td>
-                      <td className="p-4">{log.check_out || "-"}</td>
-                      <td className="p-4">{log.total_work}</td>
-                      <td
-                        className={`p-4 font-bold ${
-                          log.status === "Present"
-                            ? "text-green-600"
-                            : log.status === "Absent"
-                            ? "text-red-600"
-                            : log.status === "On Leave"
-                            ? "text-yellow-600"
-                            : log.status === "Worked on Holiday"
-                            ? "text-blue-600"
-                            : "text-gray-600"
-                        }`}
-                      >
-                        {log.status}
-                      </td>
-                    </tr>
-                  ))
-                ) : (
-                  <tr>
-                    <td colSpan="9" className="p-6 text-gray-500 text-center">
-                      No logs available.
-                    </td>
-                  </tr>
-                )}
-              </tbody>
+  {currentRows.length > 0 ? (
+    currentRows.map((log, i) => (
+      <tr key={i} className="text-center border-b">
+        <td className="p-4">{formatDate(log.date)}</td>
+        <td className="p-4">{log.employee_id}</td>
+        <td
+          className="p-4 text-indigo-600 font-bold cursor-pointer hover:underline"
+          onClick={() => {
+            setSelectedUser(log);
+            fetchUserAttendance(log.employee_id);
+          }}
+        >
+          {log.name}
+        </td>
+        <td className="p-4">{log.department || "-"}</td>
+        <td className="p-4">{getDecidedShift(log.employee_id, log.date)}</td>
+        <td className="p-4">{log.check_in || "-"}</td>
+        <td className="p-4">{log.check_out || "-"}</td>
+
+        {/* Use actual_work instead of total_work */}
+        <td className="p-4">{log.actual_work || "-"}</td>
+
+        <td
+          className={`p-4 font-bold ${
+            log.status === "Present"
+              ? "text-green-600"
+              : log.status === "Absent"
+              ? "text-red-600"
+              : log.status === "On Leave"
+              ? "text-yellow-600"
+              : log.status === "Worked on Holiday"
+              ? "text-blue-600"
+              : "text-gray-600"
+          }`}
+        >
+          {log.status}
+        </td>
+      </tr>
+    ))
+  ) : (
+    <tr>
+      <td colSpan="9" className="p-6 text-gray-500 text-center">
+        No logs available.
+      </td>
+    </tr>
+  )}
+</tbody>
             </table>
 
             {/* Pagination */}
