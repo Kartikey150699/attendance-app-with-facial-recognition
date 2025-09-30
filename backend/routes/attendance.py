@@ -65,7 +65,7 @@ def load_embeddings(db: Session):
         except Exception as e:
             print(f"⚠️ Failed to load embeddings for {user.name}: {e}")
     embedding_cache = cache
-    print(f"✅ Loaded {len(embedding_cache)} users into embedding cache.")
+    print(f"Loaded {len(embedding_cache)} users into embedding cache.")
 
 # initialize cache at startup
 with SessionLocal() as db:
@@ -503,6 +503,7 @@ async def get_my_attendance(
 
     # Build results day by day
     results = []
+    today = date.today()
     for day in range(1, monthrange(year, month)[1] + 1):
         current_date = date(year, month, day)
         log = attendance_map.get(current_date)
@@ -511,7 +512,9 @@ async def get_my_attendance(
 
         # Decide status
         weekday = current_date.weekday()  # 0=Mon ... 6=Sun
-        if leave_reason:
+        if current_date > today:
+            status = "-" 
+        elif leave_reason:
             status = "On Leave"
         elif holiday_name and log and log.check_in:
             status = "Worked on Holiday"

@@ -53,22 +53,25 @@ const fetchAttendance = async (user, month = selectedMonth, year = selectedYear)
       `http://127.0.0.1:8000/hr_logs?year=${year}&month=${month}&employee_id=${employeeId}`
     );
     const data = await res.json();
+
     if (!res.ok) {
       setPopupMessage(data.detail || "❌ Failed to fetch attendance.");
       setPopupMode("message");
       setShowPopup(true);
     } else {
       setSelectedUser(user);
-      setAttendanceData(data);
+      setAttendanceData(data.logs || []);
+      // If you also want totals later, you can store separately:
+      // setMonthlyTotals(data.monthly_summary || {});
       setShowAttendanceView(true);
     }
   } catch (err) {
+    console.error("❌ Fetch error:", err);
     setPopupMessage("❌ Could not connect to the server.");
     setPopupMode("message");
     setShowPopup(true);
   }
 };
-
   // Handle update user
   const handleUpdateUser = async () => {
   if (!currentName || (!newName && !newDepartment)) {
@@ -393,13 +396,13 @@ const getStatusClass = (status) => {
           <td className="p-2 border flex gap-2 justify-center">
             <button
               onClick={() => {
-  setSelectedUser(u);
-  setCurrentName(u.name);
-  setNewName("");            // always blank
-  setNewDepartment("");      // always blank
-  setPopupMode("edit");
-  setShowPopup(true);
-}}
+                setSelectedUser(u);
+                setCurrentName(u.name);
+                setNewName("");            // always blank
+                setNewDepartment("");      // always blank
+                setPopupMode("edit");
+                setShowPopup(true);
+              }}
               className="px-3 py-1 bg-yellow-500 text-white rounded-lg shadow hover:bg-yellow-600 flex items-center gap-1"
             >
               <PencilSquareIcon className="h-4 w-4" /> Edit
