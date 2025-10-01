@@ -188,7 +188,7 @@ useEffect(() => {
   };
 
   return (
-    <div className="flex flex-col min-h-screen bg-gradient-to-tr from-gray-100 via-indigo-100 to-blue-200">
+    <div className="flex flex-col min-h-screen bg-gradient-to-tr from-blue-300 via-indigo-200 to-cyan-300">
       {/* Header */}
       <div className="w-full flex items-center justify-center px-10 py-4 bg-indigo-300 shadow-md relative">
         <div className="absolute left-10 text-blue-800 text-xl font-bold">
@@ -205,7 +205,8 @@ useEffect(() => {
         <div className="absolute right-10">
           <button
             onClick={() => navigate("/admin-login")}
-            className="w-350 px-6 py-3 bg-red-500 hover:bg-red-600 hover:scale-105 active:scale-95 transition-transform duration-200 text-white font-bold rounded-lg shadow flex items-center justify-center gap-2"
+            className="w-350 px-6 py-3 bg-red-500 hover:bg-red-600 hover:scale-105 active:scale-95 transition-transform 
+            duration-200 text-white font-bold rounded-lg shadow flex items-center justify-center gap-2"
           >
             <KeyIcon className="h-5 w-5" />
             Admin Login
@@ -219,58 +220,73 @@ useEffect(() => {
           <div className="grid grid-cols-2 gap-x-0 gap-y-10 w-full px-32 -mt-10 justify-items-center">
             {/* Check In */}
             <button
-              onClick={() => {
-                setAction("checkin");
-                setShowCamera(true);
-              }}
-              className="w-[70%] h-48 bg-green-500 hover:bg-green-600 hover:scale-105 active:scale-95 
-                       transition-transform duration-200 text-white text-4xl font-semibold 
-                       rounded-xl shadow-lg flex flex-col items-center justify-center"
-            >
-              <CheckCircleIcon className="h-16 w-16 mb-4" />
-              <span>Check In</span>
-            </button>
+  onClick={() => {
+    setAction("checkin");
+    setShowCamera(true);
+  }}
+  className="relative w-[70%] h-48 bg-green-500 hover:bg-green-600 hover:scale-105 active:scale-95 
+             transition-transform duration-200 text-white text-4xl font-semibold 
+             rounded-xl shadow-lg flex flex-col items-center justify-center overflow-hidden"
+>
+  {/* subtle diagonal stripes */}
+  <span className="absolute inset-0 bg-[repeating-linear-gradient(45deg,rgba(255,255,255,0.08)_0,rgba(255,255,255,0.08)_2px,transparent_2px,transparent_6px)]"></span>
 
-            {/* Check Out */}
-            <button
-              onClick={() => {
-                setAction("checkout");
-                setShowCamera(true);
-              }}
-              className="w-[70%] h-48 bg-red-500 hover:bg-red-600 hover:scale-105 active:scale-95 
-                       transition-transform duration-200 text-white text-4xl font-semibold 
-                       rounded-xl shadow-lg flex flex-col items-center justify-center"
-            >
-              <ClockIcon className="h-16 w-16 mb-4" />
-              <span>Check Out</span>
-            </button>
+  {/* actual content stays on top */}
+  <span className="relative flex flex-col items-center justify-center">
+    <CheckCircleIcon className="h-16 w-16 mb-4" />
+    <span>Check In</span>
+  </span>
+</button>
 
-            {/* Break */}
-            <button
-              onClick={() => {
-                setAction("break");
-                setShowCamera(true);
-              }}
-              className="w-[70%] h-48 bg-yellow-400 hover:bg-yellow-500 hover:scale-105 active:scale-95 
-                       transition-transform duration-200 text-white text-4xl font-semibold 
-                       rounded-xl shadow-lg flex flex-col items-center justify-center"
-            >
-              <PauseCircleIcon className="h-16 w-16 mb-4" />
-              <span>Break</span>
-            </button>
+{/* Check Out */}
+<button
+  onClick={() => {
+    setAction("checkout");
+    setShowCamera(true);
+  }}
+  className="relative w-[70%] h-48 bg-red-500 hover:bg-red-600 hover:scale-105 active:scale-95 
+             transition-transform duration-200 text-white text-4xl font-semibold 
+             rounded-xl shadow-lg flex flex-col items-center justify-center overflow-hidden"
+>
+  <span className="absolute inset-0 bg-[repeating-linear-gradient(45deg,rgba(255,255,255,0.08)_0,rgba(255,255,255,0.08)_2px,transparent_2px,transparent_6px)]"></span>
+  <span className="relative flex flex-col items-center justify-center">
+    <ClockIcon className="h-16 w-16 mb-4" />
+    <span>Check Out</span>
+  </span>
+</button>
 
-            {/* Work Application */}
-            <button
-              onClick={() => {
-                navigate("/work-application-login");
-              }}
-              className="w-[70%] h-48 bg-purple-500 hover:bg-purple-600 hover:scale-105 active:scale-95 
-                       transition-transform duration-200 text-white text-4xl font-semibold 
-                       rounded-xl shadow-lg flex flex-col items-center justify-center"
-            >
-              <ClipboardDocumentListIcon className="h-16 w-16 mb-4" />
-              <span>Work Application</span>
-            </button>
+{/* Break */}
+<button
+  onClick={() => {
+    setAction("break");
+    setShowCamera(true);
+  }}
+  className="relative w-[70%] h-48 bg-yellow-400 hover:bg-yellow-500 hover:scale-105 active:scale-95 
+             transition-transform duration-200 text-white text-4xl font-semibold 
+             rounded-xl shadow-lg flex flex-col items-center justify-center overflow-hidden"
+>
+  <span className="absolute inset-0 bg-[repeating-linear-gradient(45deg,rgba(255,255,255,0.15)_0,rgba(255,255,255,0.15)_2px,transparent_2px,transparent_6px)]"></span>
+  <span className="relative flex flex-col items-center justify-center">
+    <PauseCircleIcon className="h-16 w-16 mb-4" />
+    <span>Break</span>
+  </span>
+</button>
+
+{/* Work Application */}
+<button
+  onClick={() => {
+    navigate("/work-application-login");
+  }}
+  className="relative w-[70%] h-48 bg-purple-500 hover:bg-purple-600 hover:scale-105 active:scale-95 
+             transition-transform duration-200 text-white text-4xl font-semibold 
+             rounded-xl shadow-lg flex flex-col items-center justify-center overflow-hidden"
+>
+  <span className="absolute inset-0 bg-[repeating-linear-gradient(45deg,rgba(255,255,255,0.1)_0,rgba(255,255,255,0.1)_2px,transparent_2px,transparent_6px)]"></span>
+  <span className="relative flex flex-col items-center justify-center">
+    <ClipboardDocumentListIcon className="h-16 w-16 mb-4" />
+    <span>Work Application</span>
+  </span>
+</button>
           </div>
         ) : (
           <div className="flex flex-col items-center w-full gap-12 -mt-8">
