@@ -202,8 +202,8 @@ def get_hr_logs(
         h, m = divmod(total_minutes_for_user, 60)
         monthly_summary[emp_id] = f"{h}h {m}m"
 
-    formatted_logs.sort(key=lambda x: x["date"], reverse=True)
-    expanded_logs.sort(key=lambda x: x["date"], reverse=True)
+    formatted_logs.sort(key=lambda x: x["date"])
+    expanded_logs.sort(key=lambda x: x["date"])
 
     return {
         "logs": formatted_logs,           # current month only

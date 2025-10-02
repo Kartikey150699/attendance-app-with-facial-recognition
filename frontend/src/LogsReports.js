@@ -67,7 +67,7 @@ useEffect(() => {
 
       // Wait for fade-out to finish before swapping data
       setTimeout(() => {
-        setLogs(logsData.logs || []);
+        setLogs(logsData.expanded_logs || logsData.logs || []);
         setShifts(shiftsData);
 
         // Trigger fade-in after data loads
@@ -158,32 +158,46 @@ useEffect(() => {
 
   // Filter + sort
   const filteredLogs = logs
-    .filter((log) => {
-      const logDate = new Date(log.date);
-      if (selectedDate) {
-        if (log.date !== selectedDate) return false;
-      }
-      if (quickFilter === "week") {
-        const startOfWeek = new Date(today);
-        startOfWeek.setDate(today.getDate() - today.getDay());
-        const endOfWeek = new Date(today);
-        if (logDate < startOfWeek || logDate > endOfWeek) return false;
-      }
-      if (quickFilter === "month") {
-        const startOfMonth = new Date(today.getFullYear(), today.getMonth(), 1);
-        const endOfMonth = new Date(today);
-        if (logDate < startOfMonth || logDate > endOfMonth) return false;
-      }
-      return true;
-    })
-    .filter((log) =>
-      Object.values(log).join(" ").toLowerCase().includes(search.toLowerCase())
-    )
-    .sort((a, b) => {
-      if (!sortConfig.key || !sortConfig.direction) return 0;
-      const dir = sortConfig.direction === "ascending" ? 1 : -1;
-      return a[sortConfig.key] > b[sortConfig.key] ? dir : -dir;
-    });
+  .filter((log) => {
+    const logDate = new Date(log.date);
+
+    // --- Fix: Date filter ---
+    if (selectedDate) {
+      const logDateStr = new Date(log.date).toISOString().split("T")[0];
+      if (logDateStr !== selectedDate) return false;
+    }
+
+    // --- Week filter ---
+    if (quickFilter === "week") {
+      const startOfWeek = new Date(today);
+      startOfWeek.setDate(today.getDate() - today.getDay());
+      startOfWeek.setHours(0, 0, 0, 0);
+
+      const endOfWeek = new Date(startOfWeek);
+      endOfWeek.setDate(startOfWeek.getDate() + 6);
+      endOfWeek.setHours(23, 59, 59, 999);
+
+      if (logDate < startOfWeek || logDate > endOfWeek) return false;
+    }
+
+    // --- Month filter ---
+    if (quickFilter === "month") {
+      const startOfMonth = new Date(today.getFullYear(), today.getMonth(), 1);
+      const endOfMonth = new Date(today.getFullYear(), today.getMonth() + 1, 0);
+
+      if (logDate < startOfMonth || logDate > endOfMonth) return false;
+    }
+
+    return true;
+  })
+  .filter((log) =>
+    Object.values(log).join(" ").toLowerCase().includes(search.toLowerCase())
+  )
+  .sort((a, b) => {
+    if (!sortConfig.key || !sortConfig.direction) return 0;
+    const dir = sortConfig.direction === "ascending" ? 1 : -1;
+    return a[sortConfig.key] > b[sortConfig.key] ? dir : -dir;
+  });
 
   // Pagination
   const totalPages = Math.ceil(filteredLogs.length / rowsPerPage);
@@ -328,7 +342,7 @@ function groupByWeeks(logs) {
 {/* ------------------- Attendance + Summary Table ------------------- */}
 <div className="bg-white rounded-lg shadow p-6 mb-10">
   <table className="min-w-full border-collapse text-sm">
-    <thead className="bg-gray-200 text-gray-700">
+    <thead className="bg-gray-200 text-gray-700 sticky top-0 z-10">
       <tr>
         <th className="p-2 border">Date</th>
         <th className="p-2 border">Planned Start</th>
@@ -781,37 +795,6 @@ function groupByWeeks(logs) {
         className="px-4 py-2 border rounded-md shadow-sm text-base focus:ring-2 focus:ring-indigo-400"
       />
     </div>
-
-    {/* Month Selector */}
-<select
-  value={selectedMonth}
-  onChange={(e) => setSelectedMonth(Number(e.target.value))}
-  className="px-3 py-2 border rounded-md text-base"
->
-  {[
-    "January", "February", "March", "April", "May", "June",
-    "July", "August", "September", "October", "November", "December"
-  ].map((m, idx) => (
-    <option key={idx + 1} value={idx + 1}>
-      {m}
-    </option>
-  ))}
-</select>
-
-{/* Year Selector */}
-<select
-  value={selectedYear}
-  onChange={(e) => setSelectedYear(Number(e.target.value))}
-  className="px-3 py-2 border rounded-md text-base"
->
-  {Array.from({ length: 7 }, (_, i) => today.getFullYear() - 3 + i).map(
-    (year) => (
-      <option key={year} value={year}>
-        {year}
-      </option>
-    )
-  )}
-</select>
 
     {/* Date Filter */}
     <input
