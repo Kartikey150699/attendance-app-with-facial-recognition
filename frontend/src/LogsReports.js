@@ -14,6 +14,8 @@ import HeaderDateTime from "./HeaderDateTime";
 function LogsReports() {
   const navigate = useNavigate();
 
+  const [animating, setAnimating] = useState("");
+
   const [expandedAttendance, setExpandedAttendance] = useState([]);
   // Logs & Shifts
   const [logs, setLogs] = useState([]);
@@ -43,6 +45,9 @@ function LogsReports() {
 // -----------------------------
 useEffect(() => {
   const fetchData = async () => {
+    // Start fade-out animation
+    setAnimating("fade-out");
+
     try {
       const [logsRes, shiftsRes] = await Promise.all([
         fetch(
@@ -53,22 +58,29 @@ useEffect(() => {
         ),
       ]);
 
-      if (!logsRes.ok || !shiftsRes.ok)
+      if (!logsRes.ok || !shiftsRes.ok) {
         throw new Error("Failed to fetch data");
+      }
 
       const logsData = await logsRes.json();
       const shiftsData = await shiftsRes.json();
 
-      // Extract logs + monthly_summary properly
-      setLogs(logsData.logs || []);
-      setShifts(shiftsData);
+      // Wait for fade-out to finish before swapping data
+      setTimeout(() => {
+        setLogs(logsData.logs || []);
+        setShifts(shiftsData);
+
+        // Trigger fade-in after data loads
+        setAnimating("fade-in");
+      }, 300); // match fade-out duration
     } catch (err) {
       console.error("Error fetching logs/shifts:", err);
+      setAnimating(""); // reset animation if error
     }
   };
-  fetchData();
-}, [selectedYear, selectedMonth]); // Re-run whenever dropdown changes
 
+  fetchData();
+}, [selectedYear, selectedMonth]);
 // -----------------------------
 // Fetch user attendance (Individual View)
 // -----------------------------
@@ -332,7 +344,7 @@ function groupByWeeks(logs) {
       </tr>
     </thead>
 
-<tbody>
+<tbody className={animating}>
   {Object.entries(
     groupByWeeks(
       [...expandedAttendance].sort((a, b) => new Date(a.date) - new Date(b.date))
@@ -341,7 +353,7 @@ function groupByWeeks(logs) {
     <Fragment key={wi}>
       {/* Daily rows → show only current month */}
       {weekLogs
-        .filter(log => new Date(log.date).getMonth() + 1 === selectedMonth)
+        .filter((log) => new Date(log.date).getMonth() + 1 === selectedMonth)
         .map((log, i) => {
           const [plannedStart, plannedEnd] = getDecidedShift(
             log.employee_id,
@@ -383,7 +395,7 @@ function groupByWeeks(logs) {
               <td className="p-2 border">{log.break_time || "-"}</td>
               <td className="p-2 border">{log.actual_work || "-"}</td>
 
-              {/* Use backend-provided late */}
+              {/* Backend-provided late */}
               <td
                 key={`late-${log.late}-${i}`}
                 className="p-2 border text-yellow-700"
@@ -396,7 +408,7 @@ function groupByWeeks(logs) {
                 {log.late || "-"}
               </td>
 
-              {/* Use backend-provided early_leave */}
+              {/* Backend-provided early_leave */}
               <td
                 key={`early-${log.early_leave}-${i}`}
                 className="p-2 border text-orange-700"
@@ -418,7 +430,7 @@ function groupByWeeks(logs) {
                 {overtime}
               </td>
 
-              {/* Status */}
+              {/* Status with shimmer for holidays */}
               <td
                 className={`p-2 border font-bold ${
                   log.status === "Present"
@@ -428,11 +440,11 @@ function groupByWeeks(logs) {
                     : log.status === "On Leave"
                     ? "text-yellow-600"
                     : log.status === "Worked on Holiday"
-                    ? "text-blue-600"
+                    ? "holiday-shimmer text-blue-600"
                     : log.status?.includes("Sunday")
-                    ? "text-purple-600"
+                    ? "sunday-shimmer text-purple-600"
                     : log.status?.includes("Saturday")
-                    ? "text-pink-600"
+                    ? "saturday-shimmer text-pink-600"
                     : "text-gray-600"
                 }`}
               >
@@ -465,7 +477,7 @@ function groupByWeeks(logs) {
             {/* Worked Days */}
             <td className="p-2 border text-green-700">
               {
-                weekLogs.filter(l =>
+                weekLogs.filter((l) =>
                   ["Present", "Present on Saturday", "Present on Sunday", "Worked on Holiday"].includes(l.status)
                 ).length
               } Worked
@@ -473,7 +485,7 @@ function groupByWeeks(logs) {
 
             {/* Absent Days */}
             <td className="p-2 border text-red-600">
-              {weekLogs.filter(l => l.status === "Absent").length} Absent
+              {weekLogs.filter((l) => l.status === "Absent").length} Absent
             </td>
 
             <td className="p-2 border">-</td>
@@ -493,12 +505,12 @@ function groupByWeeks(logs) {
 
             {/* Late */}
             <td className="p-2 border text-yellow-700">
-              {weekLogs.filter(l => l.late === "Yes").length} Late
+              {weekLogs.filter((l) => l.late === "Yes").length} Late
             </td>
 
             {/* Early Leave */}
             <td className="p-2 border text-orange-700">
-              {weekLogs.filter(l => l.early_leave === "Yes").length} Early
+              {weekLogs.filter((l) => l.early_leave === "Yes").length} Early
             </td>
 
             {/* Overtime */}
@@ -517,7 +529,7 @@ function groupByWeeks(logs) {
 
             {/* Leave Count */}
             <td className="p-2 border text-yellow-600">
-              {weekLogs.filter(l => l.status === "On Leave").length} Leave
+              {weekLogs.filter((l) => l.status === "On Leave").length} Leave
             </td>
           </tr>
         );
@@ -528,7 +540,7 @@ function groupByWeeks(logs) {
 
     {/* -------- Summary Row -------- */}
     <tfoot>
-      <tr className="bg-indigo-200 font-bold text-center">
+      <tr className="monthly-summary bg-indigo-200 font-bold text-center">
         <td className="p-2 border">Monthly Summary</td>
         <td className="p-2 border">-</td>
         <td className="p-2 border">-</td>
@@ -663,6 +675,83 @@ function groupByWeeks(logs) {
 .late-anim, .early-anim {
   animation: wiggle 0.4s ease-in-out 1;
 }
+  @keyframes shimmer {
+    0% { background-position: -200px 0; }
+    100% { background-position: 200px 0; }
+  }
+  .holiday-shimmer {
+    background: linear-gradient(
+      to right,
+      #bfdbfe 0%,
+      #93c5fd 50%,
+      #bfdbfe 100%
+    );
+    background-size: 400px 100%;
+    animation: shimmer 2s linear infinite;
+    color: #1e3a8a; /* Indigo text to contrast shimmer */
+    font-weight: bold;
+  }
+
+  @keyframes summaryGlow {
+    0%, 100% { box-shadow: 0 0 6px rgba(79, 70, 229, 0.5); }
+    50% { box-shadow: 0 0 12px rgba(79, 70, 229, 0.9); }
+  }
+  .monthly-summary {
+    animation: summaryGlow 3s infinite;
+  }
+
+  @keyframes fadeOut {
+    to { opacity: 0; transform: translateY(-10px); }
+  }
+  .fade-out {
+    animation: fadeOut 0.3s forwards;
+  }
+    @keyframes fadeOut {
+    to { opacity: 0; transform: translateY(-10px); }
+  }
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .fade-out {
+    animation: fadeOut 0.3s forwards;
+  }
+  .fade-in {
+    animation: fadeIn 0.4s ease-out;
+  }
+
+@keyframes shimmer {
+  0% { background-position: -200px 0; }
+  100% { background-position: 200px 0; }
+}
+
+.saturday-shimmer {
+  background: linear-gradient(
+    to right,
+    #fbcfe8 0%,   /* light pink */
+    #f472b6 50%,  /* brighter pink */
+    #fbcfe8 100%
+  );
+  background-size: 400px 100%;
+  animation: shimmer 2s linear infinite;
+  color: #9d174d; /* Deep pink text */
+  font-weight: bold;
+}
+
+.sunday-shimmer {
+  background: linear-gradient(
+    to right,
+    #ddd6fe 0%,   /* light purple */
+    #a78bfa 50%,  /* brighter purple */
+    #ddd6fe 100%
+  );
+  background-size: 400px 100%;
+  animation: shimmer 2s linear infinite;
+  color: #4c1d95; /* Deep purple text */
+  font-weight: bold;
+}
+
 `}
 </style>
 </div>
