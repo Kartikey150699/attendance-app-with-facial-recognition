@@ -23,7 +23,7 @@ function Footer() {
 
       {/* Centered Copyright */}
       <div className="absolute left-1/2 transform -translate-x-1/2 text-center whitespace-nowrap">
-        © 2025 FaceTrack. All rights reserved - Kartikey Koli - IFNET
+        © 2025 FaceTrack. All rights reserved - IFNET
       </div>
 
       {/* Right side link */}

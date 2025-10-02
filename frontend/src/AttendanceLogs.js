@@ -53,30 +53,55 @@ function AttendanceLogs() {
       );
       const data = await res.json();
 
-      // Recalculate total work before saving
-      const normalized = data.map((log) => {
-        if (!log.total_work) {
-          if (log.check_in && log.check_out) {
-            const start = new Date(log.check_in);
-            const end = new Date(log.check_out);
-            let total = (end - start) / (1000 * 60);
+      /// Helper to calculate overtime from total_work
+const calculateOvertime = (totalWork) => {
+  if (!totalWork || totalWork === "-") return "-";
 
-            if (log.break_start && log.break_end) {
-              const bs = new Date(log.break_start);
-              const be = new Date(log.break_end);
-              total -= (be - bs) / (1000 * 60);
-            }
+  const parts = totalWork.split(" ");
+  let mins = 0;
+  parts.forEach((p) => {
+    if (p.includes("h")) mins += parseInt(p) * 60;
+    if (p.includes("m")) mins += parseInt(p);
+  });
 
-            const hours = Math.floor(total / 60);
-            const minutes = Math.floor(total % 60);
-            log.total_work = `${hours}h ${minutes}m`;
-          } else {
-            log.total_work = "-";
-          }
-        }
-        return log;
-      });
+  const overtimeMins = mins > 480 ? mins - 480 : 0; // 8h threshold
+  if (overtimeMins <= 0) return "-";
 
+  const h = Math.floor(overtimeMins / 60);
+  const m = overtimeMins % 60;
+  return `${h}h ${m}m`;
+};
+
+// Recalculate total work + overtime before saving
+const normalized = data.map((log) => {
+  let totalWork = log.total_work;
+
+  if (!totalWork) {
+    if (log.check_in && log.check_out) {
+      const start = new Date(log.check_in);
+      const end = new Date(log.check_out);
+      let total = (end - start) / (1000 * 60);
+
+      if (log.break_start && log.break_end) {
+        const bs = new Date(log.break_start);
+        const be = new Date(log.break_end);
+        total -= (be - bs) / (1000 * 60);
+      }
+
+      const hours = Math.floor(total / 60);
+      const minutes = Math.floor(total % 60);
+      totalWork = `${hours}h ${minutes}m`;
+    } else {
+      totalWork = "-";
+    }
+  }
+
+  return {
+    ...log,
+    total_work: totalWork,
+    overtime: calculateOvertime(totalWork), // add overtime field
+  };
+});
       setLogs(normalized);
       setFilteredLogs(normalized);
     } catch (err) {
@@ -87,33 +112,46 @@ function AttendanceLogs() {
 }, [year, month]);
 
   // Filters + search
-  useEffect(() => {
-    let updated = [...logs];
-    const today = new Date();
+useEffect(() => {
+  let updated = [...logs];
 
-    if (!showDeleted) {
-      updated = updated.filter((log) => log.employee_id !== "DELETED");
-    }
+  if (!showDeleted) {
+    updated = updated.filter((log) => log.employee_id !== "DELETED");
+  }
 
-    if (searchTerm.trim() !== "") {
-      updated = updated.filter(
-        (log) =>
-          (log.employee_id ? log.employee_id.toLowerCase() : "").includes(
-            searchTerm.toLowerCase()
-          ) ||
-          (log.user_name_snapshot
-            ? log.user_name_snapshot.toLowerCase()
-            : ""
-          ).includes(searchTerm.toLowerCase())
-      );
-    }
+  if (searchTerm.trim() !== "") {
+    updated = updated.filter(
+      (log) =>
+        (log.employee_id ? log.employee_id.toLowerCase() : "").includes(
+          searchTerm.toLowerCase()
+        ) ||
+        (log.user_name_snapshot
+          ? log.user_name_snapshot.toLowerCase()
+          : ""
+        ).includes(searchTerm.toLowerCase())
+    );
+  }
 
+  // Always restrict to selected month (from dropdown)
+  const startOfMonth = new Date(year, month - 1, 1);
+  const endOfMonth = new Date(year, month, 0);
+  updated = updated.filter((log) => {
+    const logDate = new Date(log.date);
+    return logDate >= startOfMonth && logDate <= endOfMonth;
+  });
+
+  // Apply "today/week/month" filters ONLY if current month is selected
+  const realToday = new Date();
+  const isCurrentMonth =
+    year === realToday.getFullYear() && month === realToday.getMonth() + 1;
+
+  if (isCurrentMonth) {
     if (filterType === "today") {
-      const todayStr = today.toISOString().split("T")[0];
+      const todayStr = realToday.toISOString().split("T")[0];
       updated = updated.filter((log) => log.date === todayStr);
     } else if (filterType === "week") {
-      const startOfWeek = new Date(today);
-      startOfWeek.setDate(today.getDate() - today.getDay());
+      const startOfWeek = new Date(realToday);
+      startOfWeek.setDate(realToday.getDate() - realToday.getDay());
       const endOfWeek = new Date(startOfWeek);
       endOfWeek.setDate(startOfWeek.getDate() + 6);
 
@@ -121,31 +159,33 @@ function AttendanceLogs() {
         const logDate = new Date(log.date);
         return logDate >= startOfWeek && logDate <= endOfWeek;
       });
+    } else if (filterType === "month") {
+      // "This Month" means: current month only (already restricted above)
     }
+  }
 
-    // Sorting logic
-if (sortConfig.key) {
-  updated.sort((a, b) => {
-    let aVal = a[sortConfig.key] || "";
-    let bVal = b[sortConfig.key] || "";
+  // Sorting logic
+  if (sortConfig.key) {
+    updated.sort((a, b) => {
+      let aVal = a[sortConfig.key] || "";
+      let bVal = b[sortConfig.key] || "";
 
-    if (sortConfig.key === "date") {
-      aVal = new Date(aVal);
-      bVal = new Date(bVal);
-    } else {
-      aVal = aVal.toString().toLowerCase();
-      bVal = bVal.toString().toLowerCase();
-    }
+      if (sortConfig.key === "date") {
+        aVal = new Date(aVal);
+        bVal = new Date(bVal);
+      } else {
+        aVal = aVal.toString().toLowerCase();
+        bVal = bVal.toString().toLowerCase();
+      }
 
-    if (aVal < bVal) return sortConfig.direction === "asc" ? -1 : 1;
-    if (aVal > bVal) return sortConfig.direction === "asc" ? 1 : -1;
-    return 0;
-  });
-}
+      if (aVal < bVal) return sortConfig.direction === "asc" ? -1 : 1;
+      if (aVal > bVal) return sortConfig.direction === "asc" ? 1 : -1;
+      return 0;
+    });
+  }
 
-    setFilteredLogs(updated);
-  }, [searchTerm, filterType, logs, showDeleted, sortConfig]);
-
+  setFilteredLogs(updated);
+}, [searchTerm, filterType, logs, showDeleted, sortConfig, year, month]);
 
 
   // Reset filters
@@ -199,11 +239,10 @@ const handleNextMonth = () => {
     setIsModalOpen(true);
   };
 
-  // Save edit
 const saveEdit = async () => {
   if (!editLog) return;
 
-  const adminName = localStorage.getItem("currentAdmin"); // logged-in admin name
+  const adminName = localStorage.getItem("currentAdmin");
 
   try {
     const res = await fetch(
@@ -217,7 +256,14 @@ const saveEdit = async () => {
 
     if (res.ok) {
       const result = await res.json();
-      const updatedLog = { ...editLog, ...result.log };
+
+      // Recalculate overtime instantly
+      const updatedLog = { 
+        ...editLog, 
+        ...result.log,
+        overtime: calculateOvertime(result.log.total_work) // add overtime
+      };
+
       setLogs((prev) =>
         prev.map((l) => (l.id === editLog.id ? updatedLog : l))
       );
@@ -313,7 +359,26 @@ const getArrow = (key) => {
   return sortConfig.direction === "asc" ? "▲" : "▼";
 };
 
-  return (
+const calculateOvertime = (totalWork) => {
+  if (!totalWork || totalWork === "-") return "-";
+
+  // Parse "xh ym" format into minutes
+  const parts = totalWork.split(" ");
+  let mins = 0;
+  parts.forEach((p) => {
+    if (p.includes("h")) mins += parseInt(p) * 60;
+    if (p.includes("m")) mins += parseInt(p);
+  });
+
+  const overtimeMins = mins > 480 ? mins - 480 : 0; // 8 hours = 480 mins
+  if (overtimeMins <= 0) return "-";
+
+  const h = Math.floor(overtimeMins / 60);
+  const m = overtimeMins % 60;
+  return `${h}h ${m}m`;
+};
+
+return (
     <div className="flex flex-col min-h-screen bg-gradient-to-tr from-gray-100 via-indigo-100 to-blue-200">
       {/* Header */}
       <div className="w-full flex items-center justify-center px-10 py-4 bg-indigo-300 shadow-md relative">
@@ -469,68 +534,83 @@ const getArrow = (key) => {
     >
       Employee {getArrow("user_name_snapshot")}
     </th>
+    <th
+      className="p-4 cursor-pointer select-none"
+      onClick={() => requestSort("department")}
+    >
+      Department {getArrow("department")}
+    </th>
     <th className="p-4">Check In</th>
     <th className="p-4">Break Start</th>
     <th className="p-4">Break End</th>
     <th className="p-4">Check Out</th>
     <th className="p-4">Total Working</th>
+    <th
+      className="p-4 cursor-pointer select-none"
+      onClick={() => requestSort("overtime")}
+    >
+      Overtime {getArrow("overtime")}
+    </th>
     <th className="p-4">Actions</th>
   </tr>
 </thead>
-          <tbody>
-            {filteredLogs.length > 0 ? (
-              filteredLogs.map((log, idx) => (
-                <tr key={idx} className="text-center border-b">
-                  <td
-                    className={`p-4 font-bold ${
-                      log.employee_id === "DELETED"
-                        ? "text-red-600"
-                        : "text-indigo-700"
-                    }`}
-                  >
-                    {log.employee_id}
-                  </td>
-                  <td className="p-4">{log.date}</td>
-                  <td className="p-4">{log.user_name_snapshot}</td>
-                  <td className="p-4">{log.check_in || "-"}</td>
-                  <td className="p-4">{log.break_start || "-"}</td>
-                  <td className="p-4">{log.break_end || "-"}</td>
-                  <td className="p-4">{log.check_out || "-"}</td>
-                  <td className="p-4 font-bold text-green-600">
-                    {log.total_work}
-                  </td>
-                  <td className="p-4 flex gap-2 justify-center">
+<tbody>
+  {filteredLogs.length > 0 ? (
+    filteredLogs.map((log, idx) => (
+      <tr key={idx} className="text-center border-b">
+        <td
+          className={`p-4 font-bold ${
+            log.employee_id === "DELETED"
+              ? "text-red-600"
+              : "text-indigo-700"
+          }`}
+        >
+          {log.employee_id}
+        </td>
+        <td className="p-4">{log.date}</td>
+        <td className="p-4">{log.user_name_snapshot}</td>
+        <td className="p-4">{log.department || "-"}</td> {/* Department */}
+        <td className="p-4">{log.check_in || "-"}</td>
+        <td className="p-4">{log.break_start || "-"}</td>
+        <td className="p-4">{log.break_end || "-"}</td>
+        <td className="p-4">{log.check_out || "-"}</td>
+        <td className="p-4 font-bold text-green-600">
+          {log.total_work}
+        </td>
+        <td className="p-4 font-bold text-blue-600">
+          {log.overtime || "-"} {/* Overtime */}
+        </td>
+        <td className="p-4 flex gap-2 justify-center">
+          {/* Show Edit only if not deleted */}
+          {log.employee_id !== "DELETED" && (
+            <button
+              onClick={() => openEditModal(log)}
+              className="px-3 py-1 bg-yellow-500 hover:bg-yellow-600 text-white rounded-lg shadow flex items-center gap-1"
+            >
+              <PencilSquareIcon className="h-4 w-4" />
+              Edit
+            </button>
+          )}
 
-  {/* Show Edit only if not deleted */}
-  {log.employee_id !== "DELETED" && (
-    <button
-      onClick={() => openEditModal(log)}
-      className="px-3 py-1 bg-yellow-500 hover:bg-yellow-600 text-white rounded-lg shadow flex items-center gap-1"
-    >
-      <PencilSquareIcon className="h-4 w-4" />
-      Edit
-    </button>
+          {/* History should always be visible even for deleted users */}
+          <button
+            onClick={() => openAuditTrail(log)}
+            className="px-3 py-1 bg-blue-500 hover:bg-blue-600 text-white rounded-lg shadow flex items-center gap-1"
+          >
+            <ClockIcon className="h-4 w-4" />
+            History
+          </button>
+        </td>
+      </tr>
+    ))
+  ) : (
+    <tr>
+      <td colSpan="11" className="p-6 text-gray-500">
+        No logs found
+      </td>
+    </tr>
   )}
-
-  {/* History should always be visible even for deleted users */}
-  <button
-    onClick={() => openAuditTrail(log)}
-    className="px-3 py-1 bg-blue-500 hover:bg-blue-600 text-white rounded-lg shadow flex items-center gap-1"
-  >
-    <ClockIcon className="h-4 w-4" />
-    History
-  </button>
-</td>
-                </tr>
-              ))
-            ) : (
-              <tr>
-                <td colSpan="9" className="p-6 text-gray-500">
-                  No logs found
-                </td>
-              </tr>
-            )}
-          </tbody>
+</tbody>
         </table>
       </div>
 

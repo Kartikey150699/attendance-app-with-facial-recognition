@@ -13,8 +13,11 @@ import pytz
 import pandas as pd
 import io
 from fastapi.responses import StreamingResponse
-from reportlab.platypus import SimpleDocTemplate, Table, TableStyle
+from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph, Spacer, Image
 from reportlab.lib import colors
+from reportlab.lib.pagesizes import A4, landscape
+from reportlab.lib.units import inch
+from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 
 router = APIRouter(prefix="/logs", tags=["Logs"])
 
@@ -80,23 +83,41 @@ def get_attendance_logs(
         if user:
             employee_id = f"IFNT{str(user.id).zfill(3)}"
             user_name = log.user_name_snapshot
+            department = user.department if hasattr(user, "department") else "-"
         else:
             employee_id = "DELETED"
             user_name = log.user_name_snapshot or "Deleted User"
+            department = "-"
 
         def fmt(dt: datetime):
             return dt.strftime("%H:%M") if dt else None
+
+        # Calculate overtime (if > 8h = 480 mins)
+        overtime = "-"
+        if log.total_work and log.total_work != "-":
+            try:
+                parts = log.total_work.replace("h", "").replace("m", "").split()
+                h, m = map(int, parts)
+                total_minutes = h * 60 + m
+                overtime_minutes = max(0, total_minutes - 480)
+                if overtime_minutes > 0:
+                    oh, om = divmod(overtime_minutes, 60)
+                    overtime = f"{int(oh)}h {int(om)}m"
+            except Exception:
+                overtime = "-"
 
         formatted_logs.append({
             "id": log.id,
             "employee_id": employee_id,
             "date": log.date.strftime("%Y-%m-%d"),
             "user_name_snapshot": user_name,
+            "department": department,
             "check_in": fmt(log.check_in),
             "break_start": fmt(log.break_start),
             "break_end": fmt(log.break_end),
             "check_out": fmt(log.check_out),
             "total_work": log.total_work or "-",
+            "overtime": overtime,
         })
 
     return formatted_logs
@@ -229,11 +250,13 @@ def export_logs(
         "Employee ID",
         "Date",
         "Employee",
+        "Department",
         "Check In",
         "Break Start",
         "Break End",
         "Check Out",
-        "Total Working"
+        "Total Working",
+        "Overtime"
     ]
 
     rows = []
@@ -242,11 +265,13 @@ def export_logs(
             log.get("employee_id", "-"),
             log.get("date", "-"),
             log.get("user_name_snapshot", "-"),
+            log.get("department", "-"),
             log.get("check_in", "-") or "-",
             log.get("break_start", "-") or "-",
             log.get("break_end", "-") or "-",
             log.get("check_out", "-") or "-",
             log.get("total_work", "-"),
+            log.get("overtime", "-"),
         ])
 
     df = pd.DataFrame(rows, columns=headers)
@@ -270,14 +295,6 @@ def export_logs(
         )
 
     elif format == "pdf":
-        from reportlab.platypus import (
-            SimpleDocTemplate, Table, TableStyle,
-            Paragraph, Spacer, Image
-        )
-        from reportlab.lib.pagesizes import A4
-        from reportlab.lib.units import inch
-        from reportlab.lib.styles import getSampleStyleSheet
-
         pdf_stream = io.BytesIO()
 
         def add_page_number(canvas, doc):
@@ -286,7 +303,8 @@ def export_logs(
             canvas.setFont("Helvetica", 9)
             canvas.drawRightString(A4[0] - inch, 0.5 * inch, text)
 
-        doc = SimpleDocTemplate(pdf_stream, pagesize=A4)
+        # Use landscape A4
+        doc = SimpleDocTemplate(pdf_stream, pagesize=landscape(A4))
 
         styles = getSampleStyleSheet()
         normal = styles["Normal"]
@@ -309,17 +327,25 @@ def export_logs(
             ('ALIGN', (2,0), (2,0), 'RIGHT'),
         ]))
 
-        data = [headers] + rows
-        table = Table(data, repeatRows=1)
+        # Wrap text inside cells
+        wrap_style = ParagraphStyle("wrap", parent=styles["Normal"], fontSize=9, alignment=1)
+        data = [headers] + [[Paragraph(str(cell), wrap_style) for cell in row] for row in rows]
+
+        # Auto-fit columns to page width
+        page_width = landscape(A4)[0] - 2*40
+        col_widths = [page_width / len(headers)] * len(headers)
+
+        table = Table(data, colWidths=col_widths, repeatRows=1)
 
         table.setStyle(TableStyle([
             ('BACKGROUND', (0,0), (-1,0), colors.lightblue),
             ('TEXTCOLOR', (0,0), (-1,0), colors.black),
             ('ALIGN', (0,0), (-1,-1), 'CENTER'),
             ('FONTNAME', (0,0), (-1,0), 'Helvetica-Bold'),
-            ('FONTSIZE', (0,0), (-1,0), 12),
-            ('FONTSIZE', (0,1), (-1,-1), 10),
+            ('FONTSIZE', (0,0), (-1,0), 11),
+            ('FONTSIZE', (0,1), (-1,-1), 9),
             ('GRID', (0,0), (-1,-1), 0.5, colors.black),
+            ('VALIGN', (0,0), (-1,-1), 'MIDDLE'),
             ('ROWBACKGROUNDS', (0,1), (-1,-1), [colors.white, colors.lightgrey]),
         ]))
 
