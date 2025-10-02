@@ -1,4 +1,5 @@
 import { useState, useEffect, useMemo, useCallback } from "react";
+import React, { Fragment } from "react"; 
 import { useNavigate } from "react-router-dom";
 import {
   ArrowUturnLeftIcon,
@@ -13,6 +14,7 @@ import HeaderDateTime from "./HeaderDateTime";
 function LogsReports() {
   const navigate = useNavigate();
 
+  const [expandedAttendance, setExpandedAttendance] = useState([]);
   // Logs & Shifts
   const [logs, setLogs] = useState([]);
   const [shifts, setShifts] = useState([]);
@@ -87,6 +89,7 @@ const fetchUserAttendance = useCallback(async (empId) => {
     } else {
       // New backend style (logs + monthly_summary object)
       setUserAttendance(data.logs ?? []);
+      setExpandedAttendance(data.expanded_logs ?? []); 
     }
   } catch (err) {
     console.error("Error fetching user attendance:", err.message);
@@ -201,6 +204,33 @@ const parseWorkToMinutes = (work) => {
   return 0;
 };
 
+function getWeekStart(date) {
+  const d = new Date(date);
+  let day = d.getDay(); // 0=Sun, 1=Mon...6=Sat
+
+  // remap: make Monday=0, Sunday=6
+  day = (day + 6) % 7;
+
+  // shift back to Monday
+  d.setDate(d.getDate() - day);
+  d.setHours(0, 0, 0, 0);
+
+  // Use local date instead of UTC to avoid off-by-one day
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(
+    d.getDate()
+  ).padStart(2, "0")}`;
+}
+
+function groupByWeeks(logs) {
+  const weeks = {};
+  logs.forEach((l) => {
+    const weekKey = getWeekStart(l.date); // start of week (Monday)
+    if (!weeks[weekKey]) weeks[weekKey] = [];
+    weeks[weekKey].push(l);
+  });
+  return weeks;
+}
+
 
   return (
     <div className="flex flex-col min-h-screen bg-gradient-to-tr from-gray-100 via-indigo-100 to-blue-200">
@@ -302,91 +332,204 @@ const parseWorkToMinutes = (work) => {
       </tr>
     </thead>
 
-    <tbody>
-      {userAttendance.map((log, i) => {
-        const [plannedStart, plannedEnd] = getDecidedShift(
-          log.employee_id,
-          log.date
-        ).split(" - ");
+<tbody>
+  {Object.entries(
+    groupByWeeks(
+      [...expandedAttendance].sort((a, b) => new Date(a.date) - new Date(b.date))
+    )
+  ).map(([weekStart, weekLogs], wi) => (
+    <Fragment key={wi}>
+      {/* Daily rows → show only current month */}
+      {weekLogs
+        .filter(log => new Date(log.date).getMonth() + 1 === selectedMonth)
+        .map((log, i) => {
+          const [plannedStart, plannedEnd] = getDecidedShift(
+            log.employee_id,
+            log.date
+          ).split(" - ");
 
-        // --- Late ---
-        let late = "-";
-        if (
-          log.check_in &&
-          log.check_in !== "-" &&
-          plannedStart &&
-          plannedStart !== "-"
-        ) {
-          late = log.check_in > plannedStart ? "Yes" : "No";
-        }
+          // --- Overtime (still frontend-calculated) ---
+          let overtime = "-";
+          if (log.actual_work && log.actual_work !== "-") {
+            const mins = parseWorkToMinutes(log.actual_work);
+            const overtimeMins = mins > 480 ? mins - 480 : 0;
+            overtime =
+              overtimeMins > 0
+                ? `${Math.floor(overtimeMins / 60)}h ${overtimeMins % 60}m`
+                : "-";
+          }
 
-        // --- Early Leave ---
-        let earlyLeave = "-";
-        if (
-          log.check_out &&
-          log.check_out !== "-" &&
-          plannedEnd &&
-          plannedEnd !== "-"
-        ) {
-          earlyLeave = log.check_out < plannedEnd ? "Yes" : "No";
-        }
+          // Weekend highlight (Sat & Sun)
+          const day = new Date(log.date).getDay(); // 0=Sun, 6=Sat
+          const weekendClass =
+            day === 6 ? "bg-red-50" : day === 0 ? "bg-pink-50" : "";
 
-        // --- Overtime ---
-        let overtime = "-";
-        if (log.actual_work && log.actual_work !== "-") {
-          const mins = parseWorkToMinutes(log.actual_work);
-          const overtimeMins = mins > 480 ? mins - 480 : 0;
-          overtime =
-            overtimeMins > 0
-              ? `${Math.floor(overtimeMins / 60)}h ${overtimeMins % 60}m`
-              : "-";
-        }
+          // Today highlight
+          const isToday =
+            new Date(log.date).toDateString() === new Date().toDateString();
 
-        // --- Weekend Highlight ---
-        const day = new Date(log.date).getDay(); // 0=Sunday, 6=Saturday
-        const weekendClass =
-          day === 6 ? "bg-red-50" : day === 0 ? "bg-pink-50" : "";
-
-        return (
-          <tr key={i} className={`text-center ${weekendClass}`}>
-            <td className="p-2 border">{formatDate(log.date)}</td>
-            <td className="p-2 border">{plannedStart || "-"}</td>
-            <td className="p-2 border">{plannedEnd || "-"}</td>
-            <td className="p-2 border">{log.check_in || "-"}</td>
-            <td className="p-2 border">{log.check_out || "-"}</td>
-            <td className="p-2 border">{log.break_time || "-"}</td>
-            <td className="p-2 border">{log.actual_work || "-"}</td>
-            <td className="p-2 border">{late}</td>
-            <td className="p-2 border">{earlyLeave}</td>
-            <td className="p-2 border">{overtime}</td>
-            <td
-              className={`p-2 border font-bold ${
-                log.status === "Present"
-                  ? "text-green-600"
-                  : log.status === "Absent"
-                  ? "text-red-600"
-                  : log.status === "On Leave"
-                  ? "text-yellow-600"
-                  : log.status === "Worked on Holiday"
-                  ? "text-blue-600"
-                  : log.status?.includes("Sunday")
-                  ? "text-purple-600"
-                  : log.status?.includes("Saturday")
-                  ? "text-pink-600"
-                  : "text-gray-600"
+          return (
+            <tr
+              key={i}
+              className={`text-center ${weekendClass} ${
+                isToday ? "today-glow" : ""
               }`}
             >
-              {log.status}
+              <td className="p-2 border">{formatDate(log.date)}</td>
+              <td className="p-2 border">{plannedStart || "-"}</td>
+              <td className="p-2 border">{plannedEnd || "-"}</td>
+              <td className="p-2 border">{log.check_in || "-"}</td>
+              <td className="p-2 border">{log.check_out || "-"}</td>
+              <td className="p-2 border">{log.break_time || "-"}</td>
+              <td className="p-2 border">{log.actual_work || "-"}</td>
+
+              {/* Use backend-provided late */}
+              <td
+                key={`late-${log.late}-${i}`}
+                className="p-2 border text-yellow-700"
+                style={
+                  log.late === "Yes"
+                    ? { animation: "wiggle 0.4s ease-in-out" }
+                    : {}
+                }
+              >
+                {log.late || "-"}
+              </td>
+
+              {/* Use backend-provided early_leave */}
+              <td
+                key={`early-${log.early_leave}-${i}`}
+                className="p-2 border text-orange-700"
+                style={
+                  log.early_leave === "Yes"
+                    ? { animation: "wiggle 0.4s ease-in-out" }
+                    : {}
+                }
+              >
+                {log.early_leave || "-"}
+              </td>
+
+              {/* Overtime (frontend calculated) */}
+              <td
+                className={`p-2 border text-blue-700 ${
+                  overtime !== "-" ? "overtime-glow" : ""
+                }`}
+              >
+                {overtime}
+              </td>
+
+              {/* Status */}
+              <td
+                className={`p-2 border font-bold ${
+                  log.status === "Present"
+                    ? "text-green-600"
+                    : log.status === "Absent"
+                    ? "text-red-600"
+                    : log.status === "On Leave"
+                    ? "text-yellow-600"
+                    : log.status === "Worked on Holiday"
+                    ? "text-blue-600"
+                    : log.status?.includes("Sunday")
+                    ? "text-purple-600"
+                    : log.status?.includes("Saturday")
+                    ? "text-pink-600"
+                    : "text-gray-600"
+                }`}
+              >
+                {log.status}
+              </td>
+            </tr>
+          );
+        })}
+
+      {/* Weekly Summary Row → only if last log is Sunday */}
+      {(() => {
+        const lastLog = weekLogs[weekLogs.length - 1];
+        const lastDay = new Date(lastLog.date).getDay(); // JS: 0=Sunday
+        if (lastDay !== 0) return null;
+
+        const weekEnd = new Date(weekStart);
+        weekEnd.setDate(weekEnd.getDate() + 6);
+
+        // show summary only if Sunday belongs to selected month
+        if (weekEnd.getMonth() + 1 !== selectedMonth) return null;
+
+        return (
+          <tr className="weekly-summary bg-yellow-200 font-bold text-center">
+            <td className="p-2 border">
+              Weekly Summary ({formatDate(weekStart)} - {formatDate(weekEnd)})
+            </td>
+            <td className="p-2 border">-</td>
+            <td className="p-2 border">-</td>
+
+            {/* Worked Days */}
+            <td className="p-2 border text-green-700">
+              {
+                weekLogs.filter(l =>
+                  ["Present", "Present on Saturday", "Present on Sunday", "Worked on Holiday"].includes(l.status)
+                ).length
+              } Worked
+            </td>
+
+            {/* Absent Days */}
+            <td className="p-2 border text-red-600">
+              {weekLogs.filter(l => l.status === "Absent").length} Absent
+            </td>
+
+            <td className="p-2 border">-</td>
+
+            {/* Total Actual Hours */}
+            <td className="p-2 border">
+              {(() => {
+                const totalMins = weekLogs.reduce((acc, l) => {
+                  if (!l.actual_work || l.actual_work === "-") return acc;
+                  return acc + parseWorkToMinutes(l.actual_work);
+                }, 0);
+                const h = Math.floor(totalMins / 60);
+                const m = totalMins % 60;
+                return totalMins > 0 ? `${h}h ${m}m` : "-";
+              })()}
+            </td>
+
+            {/* Late */}
+            <td className="p-2 border text-yellow-700">
+              {weekLogs.filter(l => l.late === "Yes").length} Late
+            </td>
+
+            {/* Early Leave */}
+            <td className="p-2 border text-orange-700">
+              {weekLogs.filter(l => l.early_leave === "Yes").length} Early
+            </td>
+
+            {/* Overtime */}
+            <td className="p-2 border text-blue-700">
+              {(() => {
+                const overtimeMins = weekLogs.reduce((acc, l) => {
+                  if (!l.actual_work || l.actual_work === "-") return acc;
+                  const mins = parseWorkToMinutes(l.actual_work);
+                  return acc + (mins > 480 ? mins - 480 : 0);
+                }, 0);
+                const h = Math.floor(overtimeMins / 60);
+                const m = overtimeMins % 60;
+                return overtimeMins > 0 ? `${h}h ${m}m` : "-";
+              })()}
+            </td>
+
+            {/* Leave Count */}
+            <td className="p-2 border text-yellow-600">
+              {weekLogs.filter(l => l.status === "On Leave").length} Leave
             </td>
           </tr>
         );
-      })}
-    </tbody>
+      })()}
+    </Fragment>
+  ))}
+</tbody>
 
     {/* -------- Summary Row -------- */}
     <tfoot>
       <tr className="bg-indigo-200 font-bold text-center">
-        <td className="p-2 border">Summary</td>
+        <td className="p-2 border">Monthly Summary</td>
         <td className="p-2 border">-</td>
         <td className="p-2 border">-</td>
 
@@ -482,6 +625,46 @@ const parseWorkToMinutes = (work) => {
       </tr>
     </tfoot>
   </table>
+  <style>
+{`
+  @keyframes pulseGlow {
+  0%, 100% {
+    background-color: #dcfce7; /* light green */
+    box-shadow: 0 0 8px rgba(34, 197, 94, 0.7); /* green glow */
+  }
+  50% {
+    background-color: #bbf7d0; /* brighter green */
+    box-shadow: 0 0 16px rgba(34, 197, 94, 0.9);
+  }
+}
+.today-glow {
+  animation: pulseGlow 2s infinite;
+}
+
+@keyframes overtimePulse {
+  0%, 100% { background-color: #eff6ff; }
+  50% { background-color: #dbeafe; }
+}
+.overtime-glow {
+  animation: overtimePulse 2s infinite;
+}
+  @keyframes slideIn {
+  from { transform: translateX(-50%); opacity: 0; }
+  to { transform: translateX(0); opacity: 1; }
+}
+.weekly-summary {
+  animation: slideIn 0.6s ease-out;
+}
+  @keyframes wiggle {
+  0%, 100% { transform: rotate(0deg); }
+  25% { transform: rotate(-2deg); }
+  75% { transform: rotate(2deg); }
+}
+.late-anim, .early-anim {
+  animation: wiggle 0.4s ease-in-out 1;
+}
+`}
+</style>
 </div>
         </div>
       ) : (

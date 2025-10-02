@@ -131,7 +131,7 @@ function PrivacyPolicy() {
         {/* Copyright */}
         <footer className="mt-6 text-sm text-gray-500 flex items-center justify-center relative">
           <div className="absolute left-0">
-            Last updated: 14 Sept 2024
+            Last updated: 29 Sept 2024
           </div>
           <div>
             © 2025 FaceTrack. All rights reserved - Kartikey Koli - IFNET
