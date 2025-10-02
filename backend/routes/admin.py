@@ -2,6 +2,7 @@ from fastapi import APIRouter, Form, Depends
 from sqlalchemy.orm import Session
 from utils.db import SessionLocal
 from models.Admin import Admin
+from utils.security import get_password_hash, verify_password
 
 router = APIRouter(prefix="/admin", tags=["Admin"])
 
@@ -25,8 +26,10 @@ def create_admin(
     if db.query(Admin).filter(Admin.username == username).first():
         return {"error": f"Admin '{username}' already exists"}
 
-    # Save new admin
-    admin = Admin(username=username, password=password)
+    # Hash password before saving
+    hashed_password = get_password_hash(password)
+
+    admin = Admin(username=username, password=hashed_password)
     db.add(admin)
     db.commit()
     db.refresh(admin)
@@ -42,10 +45,10 @@ def admin_login(
 ):
     admin = db.query(Admin).filter(Admin.username == username).first()
 
-    if not admin or str(admin.password).strip() != str(password).strip():
+    # Verify password with hashing
+    if not admin or not verify_password(password, admin.password):
         return {"error": "Invalid username or password. Try again!"}
 
-    # Return admin info so frontend can store
     return {
         "message": f"Welcome {admin.username}!",
         "admin": {
@@ -68,14 +71,16 @@ def change_password(
     if not admin:
         return {"error": "Admin not found"}
 
-    if str(admin.password).strip() != str(old_password).strip():
+    # Verify old password
+    if not verify_password(old_password, admin.password):
         return {"error": "Old password does not match, try again!"}
 
-    if str(old_password).strip() == str(new_password).strip():
+    # Prevent same old/new password
+    if verify_password(new_password, admin.password):
         return {"error": "Old password and new password cannot be the same!"}
 
-    # Update password
-    admin.password = new_password
+    # Hash new password before saving
+    admin.password = get_password_hash(new_password)
     db.commit()
     db.refresh(admin)
     return {"message": f"Password updated successfully for '{username}'!"}
@@ -88,16 +93,13 @@ def delete_admin(
     current_admin: str = Form(...),  # Must be passed from frontend
     db: Session = Depends(get_db)
 ):
-    # Prevent deleting yourself
     if username == current_admin:
         return {"error": "You cannot delete yourself. Contact another admin."}
 
-    # Check if target admin exists
     admin = db.query(Admin).filter(Admin.username == username).first()
     if not admin:
         return {"error": f"Admin '{username}' does not exist"}
 
-    # Delete admin row
     db.delete(admin)
     db.commit()
     return {"message": f"Admin '{username}' deleted successfully!"}
