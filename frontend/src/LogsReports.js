@@ -14,6 +14,8 @@ import HeaderDateTime from "./HeaderDateTime";
 function LogsReports() {
   const navigate = useNavigate();
 
+ const [expandedRow, setExpandedRow] = useState(null);
+
   const [animating, setAnimating] = useState("");
 
   const [expandedAttendance, setExpandedAttendance] = useState([]);
@@ -257,6 +259,10 @@ function groupByWeeks(logs) {
   return weeks;
 }
 
+const toggleRow = (i) => {
+  setExpandedRow(expandedRow === i ? null : i);
+};
+
 
   return (
     <div className="flex flex-col min-h-screen bg-gradient-to-tr from-gray-100 via-indigo-100 to-blue-200">
@@ -396,11 +402,12 @@ function groupByWeeks(logs) {
 
           return (
             <tr
-              key={i}
-              className={`text-center ${weekendClass} ${
-                isToday ? "today-glow" : ""
-              }`}
-            >
+  key={i}
+  className={`text-center cursor-pointer hover:bg-indigo-50 transition ${weekendClass} ${
+    isToday ? "today-glow" : ""
+  }`}
+  onClick={() => toggleRow(i)}
+>
               <td className="p-2 border">{formatDate(log.date)}</td>
               <td className="p-2 border">{plannedStart || "-"}</td>
               <td className="p-2 border">{plannedEnd || "-"}</td>
@@ -662,6 +669,10 @@ function groupByWeeks(logs) {
     background-color: #bbf7d0; /* brighter green */
     box-shadow: 0 0 16px rgba(34, 197, 94, 0.9);
   }
+}
+  tr:hover {
+  background-color: #a3afd2ff;
+  transition: background-color 0.3s ease;
 }
 .today-glow {
   animation: pulseGlow 2s infinite;
