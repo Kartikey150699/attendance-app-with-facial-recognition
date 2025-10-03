@@ -94,18 +94,21 @@ function ShiftsManagement() {
       };
     }
 
-    // Default for weekends = "-"
-    if (d.getDay() === 0 || d.getDay() === 6) {
-      return { date: formatDate(d), start: "-", end: "-", hours: 0 };
-    }
+    // If shift exists → use DB values
+if (shift) {
+  return {
+    date: shift.date,
+    start: shift.start_time === "-" ? "-" : shift.start_time.slice(0, 5),
+    end: shift.end_time === "-" ? "-" : shift.end_time.slice(0, 5),
+    hours:
+      shift.start_time === "-" || shift.end_time === "-"
+        ? 0
+        : getShiftHours(shift.start_time, shift.end_time),
+  };
+}
 
-    // Default for weekdays = 10:00–19:00
-    return {
-      date: formatDate(d),
-      start: "10:00",
-      end: "19:00",
-      hours: getShiftHours("10:00", "19:00"),
-    };
+// If no shift in DB → always show "-"
+return { date: formatDate(d), start: "-", end: "-", hours: 0 };
   }),
 }));
 
@@ -219,13 +222,27 @@ const filteredMonthlySummary = filterBySearch(monthlySummary);
         </div>
       </div>
 
-      {/* Title */}
-      <div className="flex justify-center py-6">
-        <h2 className="text-4xl font-bold text-indigo-700 mb-2 flex items-center gap-3">
-          <Cog6ToothIcon className="h-8 w-8 text-indigo-700" />
-          Shifts Management
-        </h2>
-      </div>
+      {/* Title + Tabs */}
+<div className="flex flex-col items-center py-6">
+  <h2 className="text-4xl font-bold text-indigo-700 mb-4 flex items-center gap-3">
+    <Cog6ToothIcon className="h-8 w-8 text-indigo-700" />
+    Shifts Management
+  </h2>
+
+  <div className="flex gap-4">
+  <button
+  onClick={() => navigate("/groups-management")}
+  className="px-6 py-2 rounded-lg font-semibold 
+             bg-gradient-to-r from-indigo-400 to-indigo-600 
+             text-white shadow-md 
+             hover:from-indigo-500 hover:to-indigo-700 
+             hover:scale-105 active:scale-95 
+             transition-transform duration-200"
+>
+  Groups
+</button>
+</div>
+</div>
 
       {/* Filters + Search + Today (only weekly) */}
       <div className="max-w-6xl mx-auto px-6 mb-4">
@@ -528,9 +545,10 @@ const filteredMonthlySummary = filterBySearch(monthlySummary);
         </div>
       </div>
     </div>
+    
   </div>
+  
 )}
-
       <Footer />
     </div>
   );

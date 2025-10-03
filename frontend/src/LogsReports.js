@@ -129,16 +129,18 @@ useEffect(() => {
     });
   };
 
-  const getDecidedShift = (empId, date) => {
-    const shift = shifts.find((s) => s.employee_id === empId && s.date === date);
-    if (shift) {
-      if (shift.start_time === "-" || shift.end_time === "-") return "-";
-      return `${shift.start_time.slice(0, 5)} - ${shift.end_time.slice(0, 5)}`;
-    }
-    const d = new Date(date);
-    if (d.getDay() === 0 || d.getDay() === 6) return "-";
-    return "10:00 - 19:00";
-  };
+const getDecidedShift = (empId, date) => {
+  const shift = shifts.find(
+    (s) => s.employee_id === empId && s.date === date
+  );
+
+  if (shift) {
+    if (shift.start_time === "-" || shift.end_time === "-") return "-";
+    return `${shift.start_time.slice(0, 5)} - ${shift.end_time.slice(0, 5)}`;
+  }
+
+  return "-";
+};
 
   // Sorting
   const requestSort = (key) => {

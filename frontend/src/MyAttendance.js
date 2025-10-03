@@ -102,17 +102,20 @@ useEffect(() => {
     return days;
   };
 
-  // Helper: get decided shift
-  const getDecidedShift = (empId, dateStr) => {
-    const shift = shifts.find((s) => s.employee_id === empId && s.date === dateStr);
-    if (shift) {
-      if (shift.start_time === "-" || shift.end_time === "-") return "-";
-      return `${shift.start_time.slice(0, 5)} - ${shift.end_time.slice(0, 5)}`;
-    }
-    const d = new Date(dateStr);
-    if (d.getDay() === 0 || d.getDay() === 6) return "-"; 
-    return "10:00 - 19:00"; 
-  };
+// Helper: get decided shift
+const getDecidedShift = (empId, dateStr) => {
+  const shift = shifts.find(
+    (s) => s.employee_id === empId && s.date === dateStr
+  );
+
+  if (shift) {
+    if (shift.start_time === "-" || shift.end_time === "-") return "-";
+    return `${shift.start_time.slice(0, 5)} - ${shift.end_time.slice(0, 5)}`;
+  }
+
+  //If no shift exists in DB → return "-"
+  return "-";
+};
 
   return (
     <div className="flex flex-col min-h-screen bg-gradient-to-tr from-gray-100 via-indigo-100 to-blue-200">

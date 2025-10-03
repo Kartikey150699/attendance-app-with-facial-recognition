@@ -28,6 +28,7 @@ import CalendarView from "./CalendarView";
 import AboutUs from "./AboutUs";
 import MyApprovals from "./MyApprovals";
 import ShiftsManagement from "./ShiftsManagement";
+import GroupsManagement from "./GroupsManagement";
 
 function AnimatedRoutes() {
   const location = useLocation();
@@ -260,6 +261,16 @@ function AnimatedRoutes() {
           element={
             <motion.div initial={{ opacity: 0, y: 50 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -50 }} transition={{ duration: 0.4 }}>
               <ShiftsManagement />
+            </motion.div>
+          }
+        />
+
+        {/* Groups Management */}
+        <Route
+          path="/groups-management"
+          element={
+            <motion.div initial={{ opacity: 0, y: 50 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -50 }} transition={{ duration: 0.4 }}>
+              <GroupsManagement />
             </motion.div>
           }
         />

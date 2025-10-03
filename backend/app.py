@@ -12,7 +12,8 @@ from routes import (
     hr_logs,
     paid_holidays,
     approvers,
-    shifts   
+    shifts,
+    shift_group   # 👈 NEW
 )
 from utils.db import Base, engine
 from models import (
@@ -23,14 +24,14 @@ from models import (
     Holiday,
     PaidHoliday,
     Approver,
-    Shift   
+    Shift
 )
 
 # FastAPI App
 app = FastAPI(
-    title="FaceTrack Attendance API",
-    description="Backend for FaceTrack: Face Recognition Attendance System",
-    version="1.0.0"
+    title="FaceTrack Attendance + Shift Groups API",  # 👈 Updated title
+    description="Backend for FaceTrack: Face Recognition Attendance System with Shift Group Management",
+    version="1.1.0"
 )
 
 # CORS setup (for React frontend)
@@ -57,12 +58,15 @@ app.include_router(holiday.router)
 app.include_router(hr_logs.router)
 app.include_router(paid_holidays.router)
 app.include_router(approvers.router)
-app.include_router(shifts.router)  
+app.include_router(shifts.router)
+app.include_router(shift_group.router) 
 
 # Root endpoint
 @app.get("/")
 def home():
-    return {"message": "✅ FaceTrack Backend is running 🚀 - Please visit http://localhost:3000 for the FastTrack Attendance App!"}
+    return {
+        "message": "✅ FaceTrack Backend is running 🚀 - Visit http://localhost:3000 for the FaceTrack App."
+    }
 
 # Auto-create tables
 Base.metadata.create_all(bind=engine)
