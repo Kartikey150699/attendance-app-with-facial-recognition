@@ -32,6 +32,11 @@ def get_db():
 JST = timezone(timedelta(hours=9))
 
 # -------------------------
+# Auto-Training Toggle Flag
+# -------------------------
+AUTO_TRAIN_ENABLED = False  # default OFF
+
+# -------------------------
 # Cosine similarity (vectorized version will be used inside)
 # -------------------------
 def cosine_similarity(vec1, vec2):
@@ -307,6 +312,60 @@ async def preview_faces(file: UploadFile = None):
     print(f"Recognition completed in {duration:.3f} seconds | Faces detected: {len(faces)}")
 
     return {"results": results}
+
+# -------------------------
+# Toggle Auto-Train API
+# -------------------------
+@router.post("/toggle-auto-train")
+async def toggle_auto_train():
+    global AUTO_TRAIN_ENABLED
+    AUTO_TRAIN_ENABLED = not AUTO_TRAIN_ENABLED
+    print(f"Auto-Train toggled → {'ON' if AUTO_TRAIN_ENABLED else 'OFF'}")
+    return {"auto_train_enabled": AUTO_TRAIN_ENABLED}
+
+# -------------------------
+# Get Auto-Train Status API
+# -------------------------
+@router.get("/auto-train-status")
+async def get_auto_train_status():
+    print(f"Auto-Train status checked → {'ON' if AUTO_TRAIN_ENABLED else 'OFF'}")
+    return {"auto_train_enabled": AUTO_TRAIN_ENABLED}
+
+# -------------------------
+# Auto-update embeddings (Face Aging Consistency)
+# -------------------------
+def maybe_update_user_embedding(db: Session, user_id: int, new_embedding, similarity: float, threshold: float = 0.90):
+    """
+    If similarity is very high, add this embedding to keep user profile updated.
+    """
+    if similarity < threshold:
+        return  # only update when system is very confident
+
+    user = db.query(User).filter(User.id == user_id, User.is_active == True).first()
+    if not user:
+        return
+
+    try:
+        stored_embeddings = json.loads(user.embedding)
+        if isinstance(stored_embeddings[0], (int, float)):
+            stored_embeddings = [stored_embeddings]
+
+        # Compare with last embedding, avoid duplicates
+        last_emb = np.array(stored_embeddings[-1], dtype=float)
+        new_emb = np.array(new_embedding, dtype=float)
+        sim = cosine_similarity(last_emb, new_emb)
+
+        if sim < 0.98:  # only add if slightly different
+            stored_embeddings.append(new_embedding)
+            user.embedding = json.dumps(stored_embeddings)
+            db.commit()
+            db.refresh(user)
+            refresh_embeddings()
+            print(f"Embedding updated for {user.name} (total: {len(stored_embeddings)})")
+    except Exception as e:
+        print(f"⚠️ Could not update embedding for {user_id}: {e}")
+
+
 # -------------------------
 # Mark Attendance API
 # -------------------------
@@ -334,6 +393,7 @@ async def mark_attendance(
     action = action.lower().strip()
     threshold = 0.65
     fallback_threshold = 0.60
+    aging_update_threshold = 0.80
 
     for face in faces:
         embedding = face.get("embedding")
@@ -375,6 +435,19 @@ async def mark_attendance(
 
             matched = any(cosine_similarity(embedding, stored_emb) >= threshold for stored_emb in stored_embeddings)
             status = "logged_in" if matched else "face_mismatch"
+
+            # safeguard - update embedding ONLY if AutoTrain ON and strong confirmed match
+            if AUTO_TRAIN_ENABLED and status == "logged_in":
+                best_score = max(cosine_similarity(embedding, stored_emb) for stored_emb in stored_embeddings)
+                if best_score >= aging_update_threshold:
+                    stored_embeddings.append(embedding)
+                    # keep only last 20 embeddings
+                    if len(stored_embeddings) > 20:
+                        stored_embeddings = stored_embeddings[-20:]
+                    user.embedding = json.dumps(stored_embeddings)
+                    db.commit()
+                    refresh_embeddings()
+                    print(f"Embedding updated for {user.name} due to aging consistency")
 
             results.append({
                 "name": user.name,
@@ -457,6 +530,21 @@ async def mark_attendance(
             db.commit()
             db.refresh(record)
 
+            # safeguard - update embeddings ONLY if AutoTrain ON and strong confirmed match
+            user = db.query(User).filter(User.id == best_match["id"]).first()
+            if AUTO_TRAIN_ENABLED and user and best_score >= aging_update_threshold:
+                stored_embeddings = json.loads(user.embedding)
+                if isinstance(stored_embeddings[0], (int, float)):
+                    stored_embeddings = [stored_embeddings]
+
+                stored_embeddings.append(embedding)
+                if len(stored_embeddings) > 20:
+                    stored_embeddings = stored_embeddings[-20:]
+                user.embedding = json.dumps(stored_embeddings)
+                db.commit()
+                refresh_embeddings()
+                print(f"Embedding updated for {user.name} (ID: {user.id}) | score={best_score:.2f}")
+
             results.append({
                 "name": best_match["name"],
                 "employee_id": f"IFNT{best_match['id']:03d}",
@@ -466,6 +554,7 @@ async def mark_attendance(
             })
 
         elif status == "maybe":
+            # safeguard: no update allowed for "maybe"
             results.append({
                 "name": best_match["name"],
                 "employee_id": f"IFNT{best_match['id']:03d}",
@@ -481,7 +570,6 @@ async def mark_attendance(
             })
 
     return {"results": results}
-
 
 # -------------------------
 # Get Full Attendance Logs for a User (with optional month/year filter)
@@ -525,6 +613,7 @@ async def get_user_attendance(
         for log in logs
     ]
     return results
+
 # -------------------------
 # Get Attendance for Current User (self view)
 # -------------------------
