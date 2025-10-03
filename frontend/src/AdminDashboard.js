@@ -20,6 +20,20 @@ function AdminDashboard() {
   const [pendingCount, setPendingCount] = useState(0);
   const navigate = useNavigate();
 
+  const [autoTrainEnabled, setAutoTrainEnabled] = useState(false);
+
+const toggleAutoTrain = async () => {
+  try {
+    const res = await fetch("http://localhost:8000/attendance/toggle-auto-train", {
+      method: "POST",
+    });
+    const data = await res.json();
+    setAutoTrainEnabled(data.auto_train_enabled); 
+  } catch (err) {
+    console.error("Failed to toggle auto-train", err);
+  }
+};
+
 useEffect(() => {
   const admin = localStorage.getItem("currentAdmin");
   if (admin) {
@@ -52,6 +66,20 @@ useEffect(() => {
     navigate("/admin-login");
     window.location.reload();
   };
+
+    // Get AutoTrain status from backend when page loads
+  useEffect(() => {
+    async function fetchStatus() {
+      try {
+        const res = await fetch("http://localhost:8000/attendance/auto-train-status");
+        const data = await res.json();
+        setAutoTrainEnabled(data.auto_train_enabled);
+      } catch (err) {
+        console.error("Error fetching auto-train status:", err);
+      }
+    }
+    fetchStatus();
+  }, []);
 
   return (
     <div className="flex flex-col min-h-screen bg-gradient-to-tr from-gray-100 via-indigo-100 to-blue-200">
@@ -180,6 +208,28 @@ useEffect(() => {
             Shifts Management
           </button>
         </div>
+
+        {/* Floating Auto-Train Toggle */}
+<div className="fixed bottom-20 right-6 flex items-center gap-2">
+  {/* Label */}
+  <span className="text-base font-semibold text-gray-800">
+    {autoTrainEnabled ? "AutoTrain Model (ON)" : "AutoTrain Model (OFF)"}
+  </span>
+
+  {/* Switch */}
+  <button
+    onClick={toggleAutoTrain}
+    className={`relative inline-flex h-6 w-12 items-center rounded-full transition-colors ${
+      autoTrainEnabled ? "bg-green-500" : "bg-gray-400"
+    }`}
+  >
+    <span
+      className={`inline-block h-5 w-5 transform rounded-full bg-white transition-transform ${
+        autoTrainEnabled ? "translate-x-6" : "translate-x-1"
+      }`}
+    />
+  </button>
+</div>
       </div>
 
       <Footer />

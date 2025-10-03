@@ -215,7 +215,7 @@ def load_embeddings(db: Session):
     user_names = names
     all_embeddings = np.vstack(np_list) if np_list else None
 
-    print(f"✅ Loaded {len(user_ids)} embeddings for {len(users)} users into cache.")
+    print(f"Loaded {len(user_ids)} embeddings for {len(users)} users into cache.")
 
 def refresh_embeddings():
     """Call this after adding/removing/updating users to refresh the cache."""
@@ -320,7 +320,8 @@ async def preview_faces(file: UploadFile = None):
 async def toggle_auto_train():
     global AUTO_TRAIN_ENABLED
     AUTO_TRAIN_ENABLED = not AUTO_TRAIN_ENABLED
-    print(f"Auto-Train toggled → {'ON' if AUTO_TRAIN_ENABLED else 'OFF'}")
+    status = "ON" if AUTO_TRAIN_ENABLED else "OFF"
+    print(f"[AUTO-TRAIN] Toggled → {status}")
     return {"auto_train_enabled": AUTO_TRAIN_ENABLED}
 
 # -------------------------
@@ -328,7 +329,8 @@ async def toggle_auto_train():
 # -------------------------
 @router.get("/auto-train-status")
 async def get_auto_train_status():
-    print(f"Auto-Train status checked → {'ON' if AUTO_TRAIN_ENABLED else 'OFF'}")
+    status = "ON" if AUTO_TRAIN_ENABLED else "OFF"
+    print(f"[AUTO-TRAIN] Status checked → {status}")
     return {"auto_train_enabled": AUTO_TRAIN_ENABLED}
 
 # -------------------------
