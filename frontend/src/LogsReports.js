@@ -536,34 +536,33 @@ const toggleRow = (i) => {
 
             {/* Overtime */}
             <td className="p-2 border text-blue-700 w-48">
-  {(() => {
-    // --- Daily Overtime (sum of per-day >8h) ---
-    const dailyOvertimeMins = weekLogs.reduce((acc, l) => {
-      if (!l.actual_work || l.actual_work === "-") return acc;
-      const mins = parseWorkToMinutes(l.actual_work);
-      return acc + (mins > 480 ? mins - 480 : 0);
-    }, 0);
-    const dailyH = Math.floor(dailyOvertimeMins / 60);
-    const dailyM = dailyOvertimeMins % 60;
+              {(() => {
+                // --- Daily Overtime (sum of per-day >8h) ---
+                const dailyOvertimeMins = weekLogs.reduce((acc, l) => {
+                  if (!l.actual_work || l.actual_work === "-") return acc;
+                  const mins = parseWorkToMinutes(l.actual_work);
+                    return acc + (mins > 480 ? mins - 480 : 0);
+                  }, 0);
+                  const dailyH = Math.floor(dailyOvertimeMins / 60);
+                  const dailyM = dailyOvertimeMins % 60;
 
-    // --- Weekly Overtime (if total > 40h = 2400 mins) ---
-    const totalWeekMins = weekLogs.reduce((acc, l) => {
-      if (!l.actual_work || l.actual_work === "-") return acc;
-      return acc + parseWorkToMinutes(l.actual_work);
-    }, 0);
-    const weeklyOvertimeMins = totalWeekMins > 2400 ? totalWeekMins - 2400 : 0;
-    const weeklyH = Math.floor(weeklyOvertimeMins / 60);
-    const weeklyM = weeklyOvertimeMins % 60;
-
-    return (
-      <>
-        Daily OT: {dailyOvertimeMins > 0 ? `${dailyH}h ${dailyM}m` : "-"}
-        <br />
-        Weekly OT: {weeklyOvertimeMins > 0 ? `${weeklyH}h ${weeklyM}m` : "-"}
-      </>
-    );
-  })()}
-</td>
+                // --- Weekly Overtime (if total > 40h = 2400 mins) ---
+                const totalWeekMins = weekLogs.reduce((acc, l) => {
+                  if (!l.actual_work || l.actual_work === "-") return acc;
+                    return acc + parseWorkToMinutes(l.actual_work);
+                  }, 0);
+                  const weeklyOvertimeMins = totalWeekMins > 2400 ? totalWeekMins - 2400 : 0;
+                const weeklyH = Math.floor(weeklyOvertimeMins / 60);
+                const weeklyM = weeklyOvertimeMins % 60;
+                    return (
+                  <>
+                  Daily OT: {dailyOvertimeMins > 0 ? `${dailyH}h ${dailyM}m` : "-"}
+                <br />
+                  Weekly OT: {weeklyOvertimeMins > 0 ? `${weeklyH}h ${weeklyM}m` : "-"}
+                </>
+                );
+              })()}
+            </td>
 
             {/* Leave Count */}
             <td className="p-2 border text-yellow-600">

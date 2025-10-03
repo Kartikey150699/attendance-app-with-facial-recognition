@@ -12,6 +12,7 @@ import numpy as np
 import cv2
 from datetime import date, datetime, timezone, timedelta
 from calendar import monthrange
+import time 
 
 router = APIRouter(prefix="/attendance", tags=["Attendance"])
 
@@ -38,43 +39,6 @@ def cosine_similarity(vec1, vec2):
     v1, v2 = v1 / np.linalg.norm(v1), v2 / np.linalg.norm(v2)
     return float(np.dot(v1, v2))
 
-# -------------------------
-# Embedding Cache in Memory
-# -------------------------
-embedding_cache = []  # list of dicts (id, name, embeddings, np_embeddings)
-
-def load_embeddings(db: Session):
-    """Load all active user embeddings into memory cache."""
-    global embedding_cache
-    users = db.query(User).filter(User.is_active == True).all()
-    cache = []
-    for user in users:
-        try:
-            stored_embeddings = json.loads(user.embedding)
-            if isinstance(stored_embeddings[0], (int, float)):
-                stored_embeddings = [stored_embeddings]
-            np_embs = np.array(stored_embeddings, dtype=float)
-            # normalize once for fast cosine similarity
-            np_embs = np_embs / np.linalg.norm(np_embs, axis=1, keepdims=True)
-            cache.append({
-                "id": user.id,
-                "name": user.name,
-                "embeddings": stored_embeddings,
-                "np_embeddings": np_embs
-            })
-        except Exception as e:
-            print(f"⚠️ Failed to load embeddings for {user.name}: {e}")
-    embedding_cache = cache
-    print(f"Loaded {len(embedding_cache)} users into embedding cache.")
-
-# initialize cache at startup
-with SessionLocal() as db:
-    load_embeddings(db)
-
-def refresh_embeddings():
-    """Call this after adding/removing/updating users."""
-    with SessionLocal() as db:
-        load_embeddings(db)
 
 # -------------------------
 # Helper: calculate total work
@@ -196,22 +160,90 @@ def detect_faces(tmp_path):
     return faces
 
 # -------------------------
+# Embedding Cache in Memory (Vectorized)
+# -------------------------
+embedding_cache = []   # raw list of users (optional for debugging)
+all_embeddings = None  # big NumPy array [N, D]
+user_ids = []          # parallel list of IDs
+user_names = []        # parallel list of names
+
+def load_embeddings(db: Session):
+    """Load all active user embeddings into memory (vectorized for fast cosine similarity)."""
+    global embedding_cache, all_embeddings, user_ids, user_names
+
+    users = db.query(User).filter(User.is_active == True).all()
+
+    cache = []
+    ids, names, np_list = [], [], []
+
+    for user in users:
+        try:
+            stored_embeddings = json.loads(user.embedding)
+
+            # Ensure always list of embeddings
+            if isinstance(stored_embeddings[0], (int, float)):
+                stored_embeddings = [stored_embeddings]
+
+            np_embs = np.array(stored_embeddings, dtype=float)
+            # normalize each row
+            np_embs = np_embs / np.linalg.norm(np_embs, axis=1, keepdims=True)
+
+            # store user
+            cache.append({
+                "id": user.id,
+                "name": user.name,
+                "embeddings": stored_embeddings,
+                "np_embeddings": np_embs
+            })
+
+            # for vectorized lookup, store each embedding row
+            for row in np_embs:
+                np_list.append(row)
+                ids.append(user.id)
+                names.append(user.name)
+
+        except Exception as e:
+            print(f"⚠️ Failed to load embeddings for {user.name}: {e}")
+
+    embedding_cache = cache
+    user_ids = ids
+    user_names = names
+    all_embeddings = np.vstack(np_list) if np_list else None
+
+    print(f"✅ Loaded {len(user_ids)} embeddings for {len(users)} users into cache.")
+
+def refresh_embeddings():
+    """Call this after adding/removing/updating users to refresh the cache."""
+    with SessionLocal() as db:
+        load_embeddings(db)
+
+# initialize cache at startup
+with SessionLocal() as db:
+    load_embeddings(db)
+
+
+# -------------------------
 # Vectorized Matching Helper
 # -------------------------
 def find_best_match(embedding, threshold, fallback_threshold=0.0):
-    embedding = np.array(embedding, dtype=float)
-    embedding = embedding / np.linalg.norm(embedding)
+    global all_embeddings, user_ids, user_names
+    if all_embeddings is None or len(all_embeddings) == 0:
+        return None, -1, "unknown"
 
-    best_match, best_score = None, -1
-    for user in embedding_cache:
-        sims = np.dot(user["np_embeddings"], embedding)
-        score = float(np.max(sims))
-        if score > best_score:
-            best_match, best_score = user, score
+    # normalize input embedding
+    emb = np.array(embedding, dtype=float)
+    emb = emb / np.linalg.norm(emb)
 
-    if best_match and best_score >= threshold:
+    # cosine similarity against all users (vectorized)
+    sims = np.dot(all_embeddings, emb)  # shape: (num_embeddings,)
+    best_idx = int(np.argmax(sims))
+    best_score = float(sims[best_idx])
+
+    best_match = {"id": user_ids[best_idx], "name": user_names[best_idx]}
+
+    if best_score >= threshold:
         return best_match, best_score, "match"
-    elif best_match and best_score >= fallback_threshold:
+    elif best_score >= fallback_threshold:
         return best_match, best_score, "maybe"
     else:
         return None, best_score, "unknown"
@@ -224,6 +256,8 @@ async def preview_faces(file: UploadFile = None):
     if not file:
         return {"error": "No image uploaded"}
 
+    start_time = time.time()  # ⏱ start timer
+
     contents = await file.read()
     with tempfile.NamedTemporaryFile(delete=False, suffix=".jpg") as tmp:
         tmp.write(contents)
@@ -231,31 +265,48 @@ async def preview_faces(file: UploadFile = None):
 
     faces = detect_faces(tmp_path)
     if not faces:
+        duration = time.time() - start_time
+        print(f"⚡ Recognition completed in {duration:.3f} seconds (no faces found)")
         return {"results": []}
 
     results = []
     threshold = 0.55
+    fallback_threshold = 0.50
 
     for face in faces:
         embedding = face.get("embedding")
         box = face.get("facial_area", {})
-        best_match, best_score, status = find_best_match(embedding, threshold)
+
+        best_match, best_score, status = find_best_match(
+            embedding, threshold, fallback_threshold
+        )
 
         if status == "match":
             results.append({
                 "name": best_match["name"],
+                "employee_id": f"IFNT{best_match['id']:03d}",  
                 "box": [box.get("x"), box.get("y"), box.get("w"), box.get("h")],
                 "status": "preview"
+            })
+        elif status == "maybe":
+            results.append({
+                "name": best_match["name"],
+                "employee_id": f"IFNT{best_match['id']:03d}",
+                "box": [box.get("x"), box.get("y"), box.get("w"), box.get("h")],
+                "status": "maybe_match"
             })
         else:
             results.append({
                 "name": "Unknown",
+                "employee_id": None,
                 "box": [box.get("x"), box.get("y"), box.get("w"), box.get("h")],
                 "status": "unknown"
             })
 
-    return {"results": results}
+    duration = time.time() - start_time  # end timer
+    print(f"Recognition completed in {duration:.3f} seconds | Faces detected: {len(faces)}")
 
+    return {"results": results}
 # -------------------------
 # Mark Attendance API
 # -------------------------
@@ -293,9 +344,12 @@ async def mark_attendance(
         # -------------------------
         if action == "work-application-login":
             if not employee_id:
-                results.append({"name": "Unknown", "employee_id": None,
-                                "box": [box.get("x"), box.get("y"), box.get("w"), box.get("h")],
-                                "status": "employee_id_missing"})
+                results.append({
+                    "name": "Unknown",
+                    "employee_id": None,
+                    "box": [box.get("x"), box.get("y"), box.get("w"), box.get("h")],
+                    "status": "employee_id_missing"
+                })
                 continue
 
             user_id = employee_id.replace("IFNT", "")
@@ -307,9 +361,12 @@ async def mark_attendance(
             user = db.query(User).filter(User.id == user_id, User.is_active == True).first()
 
             if not user:
-                results.append({"name": "Unknown", "employee_id": employee_id,
-                                "box": [box.get("x"), box.get("y"), box.get("w"), box.get("h")],
-                                "status": "invalid_employee_id"})
+                results.append({
+                    "name": "Unknown",
+                    "employee_id": employee_id,
+                    "box": [box.get("x"), box.get("y"), box.get("w"), box.get("h")],
+                    "status": "invalid_employee_id"
+                })
                 continue
 
             stored_embeddings = json.loads(user.embedding)
@@ -339,9 +396,11 @@ async def mark_attendance(
             ).first()
 
             if not record:
-                record = Attendance(user_id=best_match["id"],
-                                    user_name_snapshot=best_match["name"],
-                                    date=today)
+                record = Attendance(
+                    user_id=best_match["id"],
+                    user_name_snapshot=best_match["name"],
+                    date=today
+                )
                 db.add(record)
 
             now_jst = datetime.now(JST)
@@ -378,7 +437,7 @@ async def mark_attendance(
                 else:
                     record.break_end = now_jst
                     status = "break_ended"
-                    calculate_total_work(record) 
+                    calculate_total_work(record)
 
             elif action == "checkout":
                 if not record.check_in:
@@ -390,7 +449,7 @@ async def mark_attendance(
                 else:
                     record.check_out = now_jst
                     status = "checked_out"
-                    calculate_total_work(record) 
+                    calculate_total_work(record)
 
             else:
                 status = "invalid_action"
@@ -400,19 +459,26 @@ async def mark_attendance(
 
             results.append({
                 "name": best_match["name"],
+                "employee_id": f"IFNT{best_match['id']:03d}",
                 "box": [box.get("x"), box.get("y"), box.get("w"), box.get("h")],
                 "status": status,
                 "total_work": record.total_work
             })
 
         elif status == "maybe":
-            results.append({"name": best_match["name"],
-                            "box": [box.get("x"), box.get("y"), box.get("w"), box.get("h")],
-                            "status": "maybe_match"})
+            results.append({
+                "name": best_match["name"],
+                "employee_id": f"IFNT{best_match['id']:03d}",
+                "box": [box.get("x"), box.get("y"), box.get("w"), box.get("h")],
+                "status": "maybe_match"
+            })
         else:
-            results.append({"name": "Unknown",
-                            "box": [box.get("x"), box.get("y"), box.get("w"), box.get("h")],
-                            "status": "unknown"})
+            results.append({
+                "name": "Unknown",
+                "employee_id": None,
+                "box": [box.get("x"), box.get("y"), box.get("w"), box.get("h")],
+                "status": "unknown"
+            })
 
     return {"results": results}
 
@@ -460,7 +526,7 @@ async def get_user_attendance(
     ]
     return results
 # -------------------------
-# Get Attendance for Current User (self view, with status like HR Logs)
+# Get Attendance for Current User (self view)
 # -------------------------
 @router.get("/my-attendance")
 async def get_my_attendance(
