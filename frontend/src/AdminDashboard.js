@@ -19,29 +19,29 @@ function AdminDashboard() {
   const [currentAdmin, setCurrentAdmin] = useState(null);
   const [pendingCount, setPendingCount] = useState(0);
   const navigate = useNavigate();
-
+  const [showAutoTrainInfo, setShowAutoTrainInfo] = useState(false);
   const [autoTrainEnabled, setAutoTrainEnabled] = useState(false);
 
-const toggleAutoTrain = async () => {
-  try {
-    const res = await fetch("http://localhost:8000/attendance/toggle-auto-train", {
-      method: "POST",
-    });
-    const data = await res.json();
-    setAutoTrainEnabled(data.auto_train_enabled); 
-  } catch (err) {
-    console.error("Failed to toggle auto-train", err);
-  }
-};
+  const toggleAutoTrain = async () => {
+    try {
+      const res = await fetch("http://localhost:8000/attendance/toggle-auto-train", {
+        method: "POST",
+      });
+      const data = await res.json();
+      setAutoTrainEnabled(data.auto_train_enabled);
+    } catch (err) {
+      console.error("Failed to toggle auto-train", err);
+    }
+  };
 
-useEffect(() => {
-  const admin = localStorage.getItem("currentAdmin");
-  if (admin) {
-    setCurrentAdmin(admin);
-  } else {
-    navigate("/admin-login");
-  }
-}, [navigate]);
+  useEffect(() => {
+    const admin = localStorage.getItem("currentAdmin");
+    if (admin) {
+      setCurrentAdmin(admin);
+    } else {
+      navigate("/admin-login");
+    }
+  }, [navigate]);
 
   // Fetch pending requests count
   useEffect(() => {
@@ -67,7 +67,7 @@ useEffect(() => {
     window.location.reload();
   };
 
-    // Get AutoTrain status from backend when page loads
+  // Get AutoTrain status from backend when page loads
   useEffect(() => {
     async function fetchStatus() {
       try {
@@ -209,27 +209,65 @@ useEffect(() => {
           </button>
         </div>
 
-        {/* Floating Auto-Train Toggle */}
-<div className="fixed bottom-20 right-6 flex items-center gap-2">
-  {/* Label */}
-  <span className="text-base font-semibold text-gray-800">
-    {autoTrainEnabled ? "AutoTrain Model (ON)" : "AutoTrain Model (OFF)"}
-  </span>
+        {/* Auto-Train Controls (Single Row) */}
+        <div className="fixed bottom-20 right-6 flex flex-row items-center gap-4 bg-white p-3 rounded-lg shadow-lg">
+          {/* Label */}
+          <span className="text-base font-semibold text-gray-800">
+            {autoTrainEnabled ? "AutoTrain Model (ON)" : "AutoTrain Model (OFF)"}
+          </span>
 
-  {/* Switch */}
-  <button
-    onClick={toggleAutoTrain}
-    className={`relative inline-flex h-6 w-12 items-center rounded-full transition-colors ${
-      autoTrainEnabled ? "bg-green-500" : "bg-gray-400"
-    }`}
-  >
-    <span
-      className={`inline-block h-5 w-5 transform rounded-full bg-white transition-transform ${
-        autoTrainEnabled ? "translate-x-6" : "translate-x-1"
-      }`}
-    />
-  </button>
-</div>
+          {/* Switch */}
+          <button
+            onClick={toggleAutoTrain}
+            className={`relative inline-flex h-6 w-12 items-center rounded-full transition-colors ${
+              autoTrainEnabled ? "bg-green-500" : "bg-gray-400"
+            }`}
+          >
+            <span
+              className={`inline-block h-5 w-5 transform rounded-full bg-white transition-transform ${
+                autoTrainEnabled ? "translate-x-6" : "translate-x-1"
+              }`}
+            />
+          </button>
+
+          {/* Info Button */}
+          <button
+            onClick={() => setShowAutoTrainInfo(true)}
+            className="px-3 py-1 bg-indigo-500 hover:bg-indigo-600 text-white text-sm font-semibold rounded-md shadow"
+          >
+            What is Auto-Train?
+          </button>
+        </div>
+
+        {/* Info Modal (Japanese) */}
+        {showAutoTrainInfo && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+            <div className="bg-white rounded-lg shadow-lg p-6 w-[500px]">
+              <h2 className="text-2xl font-bold text-indigo-700 mb-4">
+                Auto-Trainモデル（顔の経年変化対応）
+              </h2>
+              <p className="mb-3">
+                Auto-Train機能は、ユーザーの顔が加齢、髪型、眼鏡などで変化しても、
+                システムが自動的に適応し、手動での更新を行わずに精度を維持する仕組みです。
+              </p>
+              <ul className="list-disc list-inside space-y-1 mb-4 text-gray-700">
+                <li>最新の埋め込みデータ20件のみを保持。</li>
+                <li>類似度が0.90以上の場合のみ保存。</li>
+                <li>「曖昧な一致」は保存しない。</li>
+                <li>管理者がAuto-TrainをON/OFFで制御可能。</li>
+              </ul>
+              <p className="font-semibold text-green-700 mb-4">
+                利点：長期的な精度維持、管理者の作業負担軽減、手動ミス防止。
+              </p>
+              <button
+                onClick={() => setShowAutoTrainInfo(false)}
+                className="px-6 py-2 bg-red-500 hover:bg-red-600 text-white font-bold rounded-lg shadow"
+              >
+                閉じる
+              </button>
+            </div>
+          </div>
+        )}
       </div>
 
       <Footer />
