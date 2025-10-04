@@ -11,6 +11,25 @@ import {
 import Footer from "./Footer";
 import HeaderDateTime from "./HeaderDateTime";
 
+// This will be available everywhere in the file, no ESLint error, no duplicate
+const parseLocalDate = (input) => {
+  if (!input) return null;
+
+  if (input instanceof Date) return input;
+
+  if (typeof input === "string" && /^\d{4}-\d{2}-\d{2}/.test(input)) {
+    const [y, m, d] = input.split("T")[0].split("-").map(Number);
+    return new Date(y, m - 1, d, 12, 0, 0); // noon avoids timezone shift
+  }
+
+  try {
+    const d = new Date(input);
+    return new Date(d.getFullYear(), d.getMonth(), d.getDate(), 12, 0, 0);
+  } catch {
+    return new Date();
+  }
+};
+
 function LogsReports() {
   const navigate = useNavigate();
 
@@ -117,21 +136,30 @@ useEffect(() => {
   }
 }, [selectedUser, fetchUserAttendance]); // clean dependencies
 
-  // Helpers
-  const formatDate = (dateStr) => {
-    if (!dateStr) return "-";
-    const d = new Date(dateStr);
-    return d.toLocaleDateString("en-US", {
-      year: "numeric",
-      month: "short",
-      day: "numeric",
-      weekday: "short",
-    });
-  };
 
-const getDecidedShift = (empId, date) => {
+// Local display of date without timezone shift
+const formatDate = (dateStr) => {
+  if (!dateStr) return "-";
+
+  const d = parseLocalDate(dateStr);
+
+  return d.toLocaleDateString("en-US", {
+    weekday: "short",
+    year: "numeric",
+    month: "short",
+    day: "numeric",
+  });
+};
+
+// Local-safe shift lookup
+const getDecidedShift = (empId, dateStr) => {
+  const d = parseLocalDate(dateStr);
+  const normalized = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(
+    d.getDate()
+  ).padStart(2, "0")}`;
+
   const shift = shifts.find(
-    (s) => s.employee_id === empId && s.date === date
+    (s) => s.employee_id === empId && s.date === normalized
   );
 
   if (shift) {
@@ -163,11 +191,11 @@ const getDecidedShift = (empId, date) => {
   // Filter + sort
   const filteredLogs = logs
   .filter((log) => {
-    const logDate = new Date(log.date);
+    const logDate = parseLocalDate(log.date);
 
     // --- Fix: Date filter ---
     if (selectedDate) {
-      const logDateStr = new Date(log.date).toISOString().split("T")[0];
+      const logDateStr = parseLocalDate(log.date).toISOString().split("T")[0];
       if (logDateStr !== selectedDate) return false;
     }
 
@@ -235,7 +263,7 @@ const parseWorkToMinutes = (work) => {
 };
 
 function getWeekStart(date) {
-  const d = new Date(date);
+  const d = parseLocalDate(date);
   let day = d.getDay(); // 0=Sun, 1=Mon...6=Sat
 
   // remap: make Monday=0, Sunday=6
@@ -369,13 +397,13 @@ const toggleRow = (i) => {
 <tbody className={animating}>
   {Object.entries(
     groupByWeeks(
-      [...expandedAttendance].sort((a, b) => new Date(a.date) - new Date(b.date))
+      [...expandedAttendance].sort((a, b) => parseLocalDate(a.date) - parseLocalDate(b.date))
     )
   ).map(([weekStart, weekLogs], wi) => (
     <Fragment key={wi}>
       {/* Daily rows → show only current month */}
       {weekLogs
-        .filter((log) => new Date(log.date).getMonth() + 1 === selectedMonth)
+        .filter((log) => parseLocalDate(log.date).getMonth() + 1 === selectedMonth)
         .map((log, i) => {
           const [plannedStart, plannedEnd] = getDecidedShift(
             log.employee_id,
@@ -394,13 +422,13 @@ const toggleRow = (i) => {
           }
 
           // Weekend highlight (Sat & Sun)
-          const day = new Date(log.date).getDay(); // 0=Sun, 6=Sat
+          const day = parseLocalDate(log.date).getDay(); // 0=Sun, 6=Sat
           const weekendClass =
             day === 6 ? "bg-red-50" : day === 0 ? "bg-pink-50" : "";
 
           // Today highlight
           const isToday =
-            new Date(log.date).toDateString() === new Date().toDateString();
+            parseLocalDate(log.date).toDateString() === new Date().toDateString();
 
           return (
             <tr
@@ -418,31 +446,55 @@ const toggleRow = (i) => {
               <td className="p-2 border">{log.break_time || "-"}</td>
               <td className="p-2 border">{log.actual_work || "-"}</td>
 
-              {/* Backend-provided late */}
-              <td
-                key={`late-${log.late}-${i}`}
-                className="p-2 border text-yellow-700"
-                style={
-                  log.late === "Yes"
-                    ? { animation: "wiggle 0.4s ease-in-out" }
-                    : {}
-                }
-              >
-                {log.late || "-"}
-              </td>
+              {/* Calculated Late */}
+<td
+  key={`late-${i}`}
+  className="p-2 border text-yellow-700"
+>
+  {(() => {
+    const [plannedStart] = getDecidedShift(log.employee_id, log.date).split(" - ");
 
-              {/* Backend-provided early_leave */}
-              <td
-                key={`early-${log.early_leave}-${i}`}
-                className="p-2 border text-orange-700"
-                style={
-                  log.early_leave === "Yes"
-                    ? { animation: "wiggle 0.4s ease-in-out" }
-                    : {}
-                }
-              >
-                {log.early_leave || "-"}
-              </td>
+    // If no planned shift or no check-in
+    if (!plannedStart || plannedStart === "-" || !log.check_in) return "-";
+
+    const [ph, pm] = plannedStart.split(":").map(Number);
+    const [ah, am] = log.check_in.split(":").map(Number);
+
+    const plannedMins = ph * 60 + pm;
+    const actualMins = ah * 60 + am;
+
+    if (actualMins > plannedMins)
+      return (
+        <span style={{ animation: "wiggle 0.4s ease-in-out" }}>Yes</span>
+      );
+    return "No";
+  })()}
+</td>
+
+{/* Calculated Early Leave */}
+<td
+  key={`early-${i}`}
+  className="p-2 border text-orange-700"
+>
+  {(() => {
+    const [, plannedEnd] = getDecidedShift(log.employee_id, log.date).split(" - ");
+
+    // If no planned shift or no check-out
+    if (!plannedEnd || plannedEnd === "-" || !log.check_out) return "-";
+
+    const [ph, pm] = plannedEnd.split(":").map(Number);
+    const [ah, am] = log.check_out.split(":").map(Number);
+
+    const plannedMins = ph * 60 + pm;
+    const actualMins = ah * 60 + am;
+
+    if (actualMins < plannedMins)
+      return (
+        <span style={{ animation: "wiggle 0.4s ease-in-out" }}>Yes</span>
+      );
+    return "No";
+  })()}
+</td>
 
               {/* Overtime (frontend calculated) */}
               <td
@@ -480,10 +532,10 @@ const toggleRow = (i) => {
       {/* Weekly Summary Row → only if last log is Sunday */}
       {(() => {
         const lastLog = weekLogs[weekLogs.length - 1];
-        const lastDay = new Date(lastLog.date).getDay(); // JS: 0=Sunday
+        const lastDay = parseLocalDate(lastLog.date).getDay(); // JS: 0=Sunday
         if (lastDay !== 0) return null;
 
-        const weekEnd = new Date(weekStart);
+        const weekEnd = parseLocalDate(weekStart);
         weekEnd.setDate(weekEnd.getDate() + 6);
 
         // show summary only if Sunday belongs to selected month
@@ -527,14 +579,44 @@ const toggleRow = (i) => {
             </td>
 
             {/* Late */}
-            <td className="p-2 border text-yellow-700">
-              {weekLogs.filter((l) => l.late === "Yes").length} Late
-            </td>
+<td className="p-2 border text-yellow-700">
+  {
+    weekLogs.filter((l) => {
+      const [plannedStart] = getDecidedShift(l.employee_id, l.date).split(" - ");
+      if (!plannedStart || plannedStart === "-" || !l.check_in) return false;
 
-            {/* Early Leave */}
-            <td className="p-2 border text-orange-700">
-              {weekLogs.filter((l) => l.early_leave === "Yes").length} Early
-            </td>
+      const [ph, pm] = plannedStart.split(":").map(Number);
+      const [ah, am] = l.check_in.split(":").map(Number);
+      const plannedMins = ph * 60 + pm;
+      const actualMins = ah * 60 + am;
+
+      return (
+        ["Present", "Present on Saturday", "Present on Sunday", "Worked on Holiday"].includes(l.status) &&
+        actualMins > plannedMins
+      );
+    }).length
+  } Late
+</td>
+
+{/* Early Leave */}
+<td className="p-2 border text-orange-700">
+  {
+    weekLogs.filter((l) => {
+      const [, plannedEnd] = getDecidedShift(l.employee_id, l.date).split(" - ");
+      if (!plannedEnd || plannedEnd === "-" || !l.check_out) return false;
+
+      const [ph, pm] = plannedEnd.split(":").map(Number);
+      const [ah, am] = l.check_out.split(":").map(Number);
+      const plannedMins = ph * 60 + pm;
+      const actualMins = ah * 60 + am;
+
+      return (
+        ["Present", "Present on Saturday", "Present on Sunday", "Worked on Holiday"].includes(l.status) &&
+        actualMins < plannedMins
+      );
+    }).length
+  } Early
+</td>
 
             {/* Overtime */}
             <td className="p-2 border text-blue-700 w-48">
@@ -617,43 +699,49 @@ const toggleRow = (i) => {
           })()}
         </td>
 
-        {/* Late Count */}
-        <td className="p-2 border">
-          {
-            userAttendance.filter((l) => {
-              const [plannedStart] = getDecidedShift(l.employee_id, l.date).split(" - ");
-              return (
-                (l.status === "Present" ||
-                  l.status === "Present on Saturday" ||
-                  l.status === "Present on Sunday" ||
-                  l.status === "Worked on Holiday") &&
-                l.check_in &&
-                plannedStart &&
-                plannedStart !== "-" &&
-                l.check_in > plannedStart
-              );
-            }).length
-          } Late
-        </td>
+{/* Late Count */}
+<td className="p-2 border">
+  {
+    userAttendance.filter((l) => {
+      const [plannedStart] = getDecidedShift(l.employee_id, l.date).split(" - ");
+      if (!plannedStart || plannedStart === "-" || !l.check_in) return false;
+
+      // Parse time safely
+      const [ph, pm] = plannedStart.split(":").map(Number);
+      const [ah, am] = l.check_in.split(":").map(Number);
+
+      // Compare properly by minutes
+      const plannedMins = ph * 60 + pm;
+      const actualMins = ah * 60 + am;
+
+      return (
+        ["Present", "Present on Saturday", "Present on Sunday", "Worked on Holiday"].includes(l.status) &&
+        actualMins > plannedMins
+      );
+    }).length
+  } Late
+</td>
 
         {/* Early Leave Count */}
-        <td className="p-2 border">
-          {
-            userAttendance.filter((l) => {
-              const [, plannedEnd] = getDecidedShift(l.employee_id, l.date).split(" - ");
-              return (
-                (l.status === "Present" ||
-                  l.status === "Present on Saturday" ||
-                  l.status === "Present on Sunday" ||
-                  l.status === "Worked on Holiday") &&
-                l.check_out &&
-                plannedEnd &&
-                plannedEnd !== "-" &&
-                l.check_out < plannedEnd
-              );
-            }).length
-          } Early
-        </td>
+<td className="p-2 border">
+  {
+    userAttendance.filter((l) => {
+      const [, plannedEnd] = getDecidedShift(l.employee_id, l.date).split(" - ");
+      if (!plannedEnd || plannedEnd === "-" || !l.check_out) return false;
+
+      const [ph, pm] = plannedEnd.split(":").map(Number);
+      const [ah, am] = l.check_out.split(":").map(Number);
+
+      const plannedMins = ph * 60 + pm;
+      const actualMins = ah * 60 + am;
+
+      return (
+        ["Present", "Present on Saturday", "Present on Sunday", "Worked on Holiday"].includes(l.status) &&
+        actualMins < plannedMins
+      );
+    }).length
+  } Early
+</td>
 
         {/* Overtime total */}
         <td className="p-2 border">

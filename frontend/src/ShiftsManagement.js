@@ -53,9 +53,14 @@ function ShiftsManagement() {
     return new Date(d.setDate(diff));
   }
 
-  function formatDate(date) {
-    return date.toISOString().split("T")[0];
-  }
+ function formatDate(date) {
+  if (!(date instanceof Date)) date = new Date(date);
+  // ✅ Local-safe version (no UTC shift)
+  const y = date.getFullYear();
+  const m = String(date.getMonth() + 1).padStart(2, "0");
+  const d = String(date.getDate()).padStart(2, "0");
+  return `${y}-${m}-${d}`;
+}
 
   function getShiftHours(start, end) {
     if (!start || !end) return 0;
@@ -413,7 +418,7 @@ const filteredMonthlySummary = filterBySearch(monthlySummary);
                   // Always open modal — even if it's weekend/default "-"
                   setEditShift({
                     ...emp,
-                    date: s.date,
+                    date: formatDate(s.date),
                     start: s.start === "-" ? "" : s.start,
                     end: s.end === "-" ? "" : s.end,
                   });
