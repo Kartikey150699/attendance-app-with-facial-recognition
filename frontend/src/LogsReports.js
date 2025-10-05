@@ -507,24 +507,59 @@ const toggleRow = (i) => {
 
               {/* Status with shimmer for holidays */}
               <td
-                className={`p-2 border font-bold ${
-                  log.status === "Present"
-                    ? "text-green-600"
-                    : log.status === "Absent"
-                    ? "text-red-600"
-                    : log.status === "On Leave"
-                    ? "text-yellow-600"
-                    : log.status === "Worked on Holiday"
-                    ? "holiday-shimmer text-blue-600"
-                    : log.status?.includes("Sunday")
-                    ? "sunday-shimmer text-purple-600"
-                    : log.status?.includes("Saturday")
-                    ? "saturday-shimmer text-pink-600"
-                    : "text-gray-600"
-                }`}
-              >
-                {log.status}
-              </td>
+  className={`p-2 border font-bold ${
+    log.status === "Present"
+      ? "text-green-600"
+      : log.status === "Absent"
+      ? "text-red-600"
+      : log.status === "On Leave"
+      ? "text-yellow-600"
+      : log.status === "Worked on Holiday"
+      ? "holiday-shimmer text-blue-600"
+      : log.status?.includes("Sunday")
+      ? "sunday-shimmer text-purple-600"
+      : log.status?.includes("Saturday")
+      ? "saturday-shimmer text-pink-600"
+      : "text-gray-600"
+  }`}
+>
+  {(() => {
+    const logDate = parseLocalDate(log.date);
+    const today = new Date();
+
+// --- FUTURE DATES ---
+if (logDate > today) {
+  // Show approved future leave types (like 有給休暇, 欠勤, etc.)
+  if (log.leave_reason && log.leave_reason.trim() !== "-") {
+    return log.leave_reason;
+  }
+
+  // Show upcoming holidays
+  if (log.holiday_name && log.holiday_name.trim() !== "-") {
+    return `Holiday (${log.holiday_name})`;
+  }
+
+  // Otherwise just blank or dash
+  return "-";
+}
+
+    // --- PAST OR TODAY ---
+    if (log.status === "On Leave") {
+      if (log.leave_reason && log.leave_reason.trim() !== "-") {
+        return `On Leave (${log.leave_reason})`;
+      }
+      if (log.hr_notes && log.hr_notes.trim() !== "-") {
+        return `On Leave (${log.hr_notes})`;
+      }
+    }
+
+    if (log.status === "Worked on Holiday" && log.holiday_name) {
+      return `Worked on Holiday (${log.holiday_name})`;
+    }
+
+    return log.status || "-";
+  })()}
+</td>
             </tr>
           );
         })}
@@ -648,10 +683,54 @@ const toggleRow = (i) => {
               })()}
             </td>
 
-            {/* Leave Count */}
-            <td className="p-2 border text-yellow-600">
-              {weekLogs.filter((l) => l.status === "On Leave").length} Leave
-            </td>
+{/* Leave Count (includes approved future leaves) */}
+<td className="p-2 border text-yellow-600">
+  {
+    weekLogs.filter((l) => {
+      const s = (l.status || "").trim();
+      const d = parseLocalDate(l.date);
+
+      // --- Week range restriction ---
+      const startOfWeek = parseLocalDate(weekStart);
+      const endOfWeek = new Date(startOfWeek);
+      endOfWeek.setDate(startOfWeek.getDate() + 6);
+      if (d < startOfWeek || d > endOfWeek) return false;
+
+      // --- Skip if not in current month ---
+      if (d.getMonth() + 1 !== selectedMonth) return false;
+
+      // --- Skip common non-leave statuses ---
+      if (
+        ["Present", "Present on Saturday", "Present on Sunday", "Worked on Holiday", "Absent", "-", ""].includes(s)
+      ) return false;
+
+      // --- Skip holidays ---
+      if (s.includes("Holiday") || s.includes("休日")) return false;
+
+      // --- Recognize official leave types ---
+      const leaveTypes = [
+        "有給休暇（全日)",
+        "有給休暇（半日)",
+        "慶弔休暇",
+        "欠勤",
+        "直行",
+        "直帰",
+        "直行直帰",
+        "出張",
+        "遅刻",
+        "早退",
+        "振替休日",
+        "早出",
+      ];
+
+      // Count future dates only if it's an approved leave type
+      const isLeave = leaveTypes.some((t) => s.includes(t));
+      if (parseLocalDate(l.date) > new Date() && !isLeave) return false;
+
+      return isLeave;
+    }).length
+  } Leave
+</td>
           </tr>
         );
       })()}
@@ -756,11 +835,45 @@ const toggleRow = (i) => {
             return overtimeMins > 0 ? `${h}h ${m}m` : "-";
           })()}
         </td>
+{/* Leave Count (includes all approved leaves in this month, even future) */}
+<td className="p-2 border text-yellow-600">
+  {
+    userAttendance.filter((l) => {
+      const s = (l.status || "").trim();
+      const d = parseLocalDate(l.date);
 
-        {/* Leave Count */}
-        <td className="p-2 border">
-          {userAttendance.filter((l) => l.status === "On Leave").length} Leave
-        </td>
+      // --- Include only dates within selected month ---
+      if (d.getMonth() + 1 !== selectedMonth) return false;
+
+      // --- Skip irrelevant statuses ---
+      if (
+        ["Present", "Present on Saturday", "Present on Sunday", "Worked on Holiday", "Absent", "-", ""].includes(s)
+      ) return false;
+
+      // --- Skip holidays ---
+      if (s.includes("Holiday") || s.includes("休日")) return false;
+
+      // --- Official leave types (same as weekly) ---
+      const leaveTypes = [
+        "有給休暇（全日)",
+        "有給休暇（半日)",
+        "慶弔休暇",
+        "欠勤",
+        "直行",
+        "直帰",
+        "直行直帰",
+        "出張",
+        "遅刻",
+        "早退",
+        "振替休日",
+        "早出",
+      ];
+
+      // Count it as leave only if it matches an official leave type
+      return leaveTypes.some((t) => s.includes(t));
+    }).length
+  } Leave
+</td>
       </tr>
     </tfoot>
   </table>

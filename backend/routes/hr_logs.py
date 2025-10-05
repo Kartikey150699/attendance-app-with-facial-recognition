@@ -20,6 +20,7 @@ def get_db():
     finally:
         db.close()
 
+
 # -------------------------
 # HR Logs (month by month, all users × all days, with optional employee filter)
 # -------------------------
@@ -34,13 +35,10 @@ def get_hr_logs(
 
     # --- Expanded query range: prev month → current → next month ---
     start_date = date(year, month, 1)
-
     prev_month_last_day = start_date - timedelta(days=1)
     prev_month_start = prev_month_last_day.replace(day=1)
-
     next_month = (start_date.replace(day=28) + timedelta(days=4)).replace(day=1)
     next_month_last_day = (next_month.replace(day=28) + timedelta(days=4))
-
     range_start = prev_month_start
     range_end = next_month_last_day
 
@@ -79,15 +77,23 @@ def get_hr_logs(
         )
         .all()
     )
+
+    # Use application_type instead of reason (shows actual leave type like 有給休暇, 欠勤, etc.)
     leave_map = {}
     for leave in leaves:
         emp_id = leave.employee_id
+        leave_type = (
+            getattr(leave, "application_type", None)
+            or getattr(leave, "leave_type", None)
+            or "On Leave"
+        )
+
         for d in (
             range_start + timedelta(days=i)
             for i in range((range_end - range_start).days + 1)
         ):
             if leave.start_date <= d <= leave.end_date:
-                leave_map[(emp_id, d)] = leave.reason
+                leave_map[(emp_id, d)] = leave_type
 
     # ------------------------------------
     # Build logs
@@ -106,26 +112,34 @@ def get_hr_logs(
             log = attendance_map.get((user.id, current_date))
             holiday_name = holidays.get(current_date)
             leave_reason = leave_map.get((emp_id, current_date))
-
-            # --- Status ---
             weekday = current_date.weekday()  # Mon=0, Sun=6
+
+            # --- Status Logic (Fixed) ---
             if current_date > today:
-                status = "-"
-            elif leave_reason:
-                status = "On Leave"
-            elif holiday_name and log and log.check_in:
-                status = "Worked on Holiday"
-            elif holiday_name:
-                status = "Holiday"
-            elif log and log.check_in:
-                if weekday == 5:
-                    status = "Present on Saturday"
-                elif weekday == 6:
-                    status = "Present on Sunday"
+                # FUTURE DATES — show approved leave or holiday
+                if leave_reason:
+                    status = leave_reason
+                elif holiday_name:
+                    status = holiday_name
                 else:
-                    status = "Present"
+                    status = "-"
             else:
-                status = "-" if weekday in (5, 6) or holiday_name else "Absent"
+                # PAST / TODAY
+                if leave_reason:
+                    status = leave_reason
+                elif holiday_name and log and log.check_in:
+                    status = "Worked on Holiday"
+                elif holiday_name:
+                    status = holiday_name
+                elif log and log.check_in:
+                    if weekday == 5:
+                        status = "Present on Saturday"
+                    elif weekday == 6:
+                        status = "Present on Sunday"
+                    else:
+                        status = "Present"
+                else:
+                    status = "-" if weekday in (5, 6) or holiday_name else "Absent"
 
             # --- Work Time Calculations ---
             total_work_str = "-"
@@ -162,7 +176,11 @@ def get_hr_logs(
                     if weekday in (5, 6):  # Sat/Sun -> no shift
                         planned_start = planned_end = "-"
 
-                    if planned_start != "-" and log.check_in.strftime("%H:%M") and log.check_out.strftime("%H:%M"):
+                    if (
+                        planned_start != "-"
+                        and log.check_in.strftime("%H:%M")
+                        and log.check_out.strftime("%H:%M")
+                    ):
                         if log.check_in.strftime("%H:%M") > planned_start:
                             late = "Yes"
                         else:
@@ -176,6 +194,7 @@ def get_hr_logs(
                 except Exception:
                     pass
 
+            # --- Add Row ---
             row = {
                 "id": log.id if log else None,
                 "date": current_date.strftime("%Y-%m-%d"),
@@ -190,6 +209,9 @@ def get_hr_logs(
                 "actual_work": actual_work_str,
                 "late": late,
                 "early_leave": early_leave,
+                # Extra fields (for frontend use)
+                "holiday_name": holiday_name or "-",
+                "leave_reason": leave_reason or "-",
             }
 
             expanded_logs.append(row)
@@ -210,5 +232,5 @@ def get_hr_logs(
         "expanded_logs": expanded_logs,   # full 3 months range
         "monthly_summary": monthly_summary,
         "range_start": range_start.strftime("%Y-%m-%d"),
-        "range_end": range_end.strftime("%Y-%m-%d")
+        "range_end": range_end.strftime("%Y-%m-%d"),
     }
