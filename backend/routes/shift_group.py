@@ -237,3 +237,49 @@ def delete_group(group_id: int, db: Session = Depends(get_db)):
 def list_all_employee_groups(db: Session = Depends(get_db)):
     mappings = db.query(EmployeeGroup).all()
     return [{"employee_id": m.employee_id, "group_id": m.group_id} for m in mappings]
+
+
+# =====================================================
+# Get all groups with their assigned employees
+# =====================================================
+@router.get("/details/full")
+def get_groups_with_employees(db: Session = Depends(get_db)):
+    """
+    Returns every group with its schedule, description, and list of employees.
+    Example:
+    [
+      {
+        "id": 1,
+        "name": "Morning Shift",
+        "description": "Regular 9–6",
+        "schedule": {...},
+        "employees": [
+            {"employee_id": "IFNT001", "name": "John Doe", "department": "HR"},
+            ...
+        ]
+      }
+    ]
+    """
+    groups = db.query(ShiftGroup).all()
+    result = []
+
+    for g in groups:
+        employees = (
+            db.query(User)
+            .join(EmployeeGroup, EmployeeGroup.employee_id == User.employee_id)
+            .filter(EmployeeGroup.group_id == g.id)
+            .all()
+        )
+        result.append({
+            **serialize_group(g),
+            "employees": [
+                {
+                    "employee_id": e.employee_id,
+                    "name": e.name,
+                    "department": e.department
+                }
+                for e in employees
+            ]
+        })
+
+    return result

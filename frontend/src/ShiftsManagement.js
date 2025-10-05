@@ -25,28 +25,33 @@ function ShiftsManagement() {
 
   const [employeeGroups, setEmployeeGroups] = useState([]); // NEW
 
+  const [groupDetails, setGroupDetails] = useState([]); // full group info with employees
+
 useEffect(() => {
   const fetchData = async () => {
     try {
-      const [empRes, shiftRes, groupRes, mappingRes] = await Promise.all([
+      const [empRes, shiftRes, groupRes, mappingRes, groupFullRes] = await Promise.all([
         fetch("http://localhost:8000/users/active"),
         fetch("http://localhost:8000/shifts/"),
         fetch("http://localhost:8000/shift-groups/"),
-        fetch("http://localhost:8000/shift-groups/employee-groups/"), // NEW
+        fetch("http://localhost:8000/shift-groups/employee-groups/"),
+        fetch("http://localhost:8000/shift-groups/details/full"),
       ]);
 
-      if (!empRes.ok || !shiftRes.ok || !groupRes.ok || !mappingRes.ok)
+      if (!empRes.ok || !shiftRes.ok || !groupRes.ok || !mappingRes.ok || !groupFullRes.ok)
         throw new Error("Failed to fetch data");
 
       const empData = await empRes.json();
       const shiftData = await shiftRes.json();
       const groupData = await groupRes.json();
       const mappingData = await mappingRes.json();
+      const groupFullData = await groupFullRes.json();
 
       setEmployees(empData);
       setShifts(shiftData);
       setGroups(groupData);
-      setEmployeeGroups(mappingData); // store group mappings
+      setEmployeeGroups(mappingData);
+      setGroupDetails(groupFullData); // store full group details
     } catch (error) {
       console.error("Error fetching data:", error);
     }
@@ -264,26 +269,65 @@ const saveShift = async () => {
         </div>
       </div>
 
-      {/* Title + Tabs */}
-<div className="flex flex-col items-center py-6">
-  <h2 className="text-4xl font-bold text-indigo-700 mb-4 flex items-center gap-3">
+{/* Title + Groups Button */}
+<div className="relative flex justify-center items-center py-6">
+  <h2 className="text-4xl font-bold text-indigo-700 flex items-center gap-3">
     <Cog6ToothIcon className="h-8 w-8 text-indigo-700" />
     Shifts Management
   </h2>
 
-  <div className="flex gap-4">
+  {/* Groups Button — top-right corner below header */}
   <button
-  onClick={() => navigate("/groups-management")}
-  className="px-6 py-2 rounded-lg font-semibold 
-             bg-gradient-to-r from-indigo-400 to-indigo-600 
-             text-white shadow-md 
-             hover:from-indigo-500 hover:to-indigo-700 
-             hover:scale-105 active:scale-95 
-             transition-transform duration-200"
->
-  Groups
-</button>
+    onClick={() => navigate("/groups-management")}
+    className="absolute right-10 top-10 px-10 py-2 rounded-lg font-semibold 
+               bg-gradient-to-r from-indigo-400 to-indigo-600 
+               text-white shadow-md 
+               hover:from-indigo-500 hover:to-indigo-700 
+               hover:scale-105 active:scale-95 
+               transition-transform duration-200"
+  >
+    Groups
+  </button>
 </div>
+
+{/* Group Overview Row */}
+<div className="flex gap-4 overflow-x-auto px-6 py-2 max-w-6xl mx-auto mb-6 scrollbar-thin scrollbar-thumb-indigo-400">
+  {groups.length === 0 ? (
+    <p className="text-gray-500 text-sm">No groups found.</p>
+  ) : (
+    groups.map((g) => {
+      const schedule = g.schedule || {};
+      const grouped = {};
+      Object.entries(schedule).forEach(([day, times]) => {
+        const key = Array.isArray(times) ? `${times[0]} - ${times[1]}` : "-";
+        if (!grouped[key]) grouped[key] = [];
+        grouped[key].push(day.toUpperCase());
+      });
+
+      return (
+        <div
+          key={g.id}
+          className="min-w-[230px] bg-white shadow-md rounded-lg p-4 border border-gray-200 
+                     hover:shadow-lg hover:scale-[1.02] transition duration-200"
+        >
+          <h5 className="text-lg font-bold text-indigo-700 mb-1">{g.name}</h5>
+          <p className="text-gray-600 text-sm mb-2">
+            {g.description || "No description"}
+          </p>
+          <ul className="text-sm space-y-1">
+            {Object.entries(grouped).map(([time, days]) => (
+              <li key={time}>
+                <span className="font-semibold text-gray-700">
+                  {days.join(", ")}
+                </span>{" "}
+                → {time}
+              </li>
+            ))}
+          </ul>
+        </div>
+      );
+    })
+  )}
 </div>
 
       {/* Filters + Search + Today (only weekly) */}
