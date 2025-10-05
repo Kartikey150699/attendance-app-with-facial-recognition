@@ -40,6 +40,7 @@ function LogsReports() {
   const [expandedAttendance, setExpandedAttendance] = useState([]);
   // Logs & Shifts
   const [logs, setLogs] = useState([]);
+  const [holidays, setHolidays] = useState([]);
   const [shifts, setShifts] = useState([]);
 
   // Individual user view
@@ -66,48 +67,48 @@ function LogsReports() {
 // -----------------------------
 useEffect(() => {
   const fetchData = async () => {
-    // Start fade-out animation
     setAnimating("fade-out");
-
     try {
+      // Only fetch logs and shifts (holidays are already included inside hr_logs)
       const [logsRes, shiftsRes] = await Promise.all([
-        fetch(
-          `http://localhost:8000/hr_logs?year=${selectedYear}&month=${selectedMonth}`
-        ),
-        fetch(
-          `http://localhost:8000/shifts?year=${selectedYear}&month=${selectedMonth}`
-        ),
+        fetch(`http://localhost:8000/hr_logs/?year=${selectedYear}&month=${selectedMonth}`),
+        fetch(`http://localhost:8000/shifts/?year=${selectedYear}&month=${selectedMonth}`),
       ]);
 
-      if (!logsRes.ok || !shiftsRes.ok) {
-        throw new Error("Failed to fetch data");
-      }
-
+      // Parse responses
       const logsData = await logsRes.json();
       const shiftsData = await shiftsRes.json();
 
-      // Wait for fade-out to finish before swapping data
+      // Apply small delay for fade animation
       setTimeout(() => {
+        // Logs (expanded or normal)
         setLogs(logsData.expanded_logs || logsData.logs || []);
-        setShifts(shiftsData);
 
-        // Trigger fade-in after data loads
+        // Shifts
+        setShifts(shiftsData || []);
+
+        // Holidays are now part of hr_logs response — no more 404 error
+        setHolidays(logsData.holidays || []);
+
+        // Animation
         setAnimating("fade-in");
-      }, 300); // match fade-out duration
+      }, 300);
     } catch (err) {
-      console.error("Error fetching logs/shifts:", err);
-      setAnimating(""); // reset animation if error
+      console.error("Error fetching data:", err);
+      setAnimating("");
     }
   };
 
   fetchData();
 }, [selectedYear, selectedMonth]);
+
+
 // -----------------------------
 // Fetch user attendance (Individual View)
 // -----------------------------
 const fetchUserAttendance = useCallback(async (empId) => {
   try {
-    const url = `http://localhost:8000/hr_logs?year=${selectedYear}&month=${selectedMonth}&employee_id=${empId}`;
+    const url = `http://localhost:8000/hr_logs/?year=${selectedYear}&month=${selectedMonth}&employee_id=${empId}`;
     const res = await fetch(url);
 
     if (!res.ok) {
@@ -158,6 +159,24 @@ const getDecidedShift = (empId, dateStr) => {
     d.getDate()
   ).padStart(2, "0")}`;
 
+  // Normalize holiday array
+  const holidayArray = Array.isArray(holidays)
+    ? holidays
+    : holidays?.holidays || [];
+
+  // Safely extract date regardless of field name
+  const isHoliday = holidayArray.some((h) => {
+    const rawDate =
+      h.date || h.holiday_date || h.holiday || h.day || h.holidayDate;
+    if (!rawDate) return false;
+    const formatted = rawDate.split("T")[0];
+    return formatted === normalized;
+  });
+
+  // If this day is a holiday → no planned shift
+  if (isHoliday) return "-";
+
+  // Otherwise normal shift lookup
   const shift = shifts.find(
     (s) => s.employee_id === empId && s.date === normalized
   );

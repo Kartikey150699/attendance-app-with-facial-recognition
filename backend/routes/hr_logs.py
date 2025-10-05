@@ -10,6 +10,7 @@ from calendar import monthrange
 
 router = APIRouter(prefix="/hr_logs", tags=["HR Logs"])
 
+
 # -------------------------
 # DB session dependency
 # -------------------------
@@ -22,7 +23,7 @@ def get_db():
 
 
 # -------------------------
-# HR Logs (month by month, all users × all days, with optional employee filter)
+# HR Logs (month by month)
 # -------------------------
 @router.get("/")
 def get_hr_logs(
@@ -52,12 +53,12 @@ def get_hr_logs(
         users = [u for u in users if f"IFNT{str(u.id).zfill(3)}" == employee_id]
 
     # Holidays (expanded range)
-    holidays = {
-        h.date: h.holiday_name
-        for h in db.query(Holiday)
+    holidays = (
+        db.query(Holiday)
         .filter(Holiday.date >= range_start, Holiday.date <= range_end)
         .all()
-    }
+    )
+    holiday_map = {h.date: h.holiday_name for h in holidays}
 
     # Attendance logs (expanded range)
     attendance_logs = (
@@ -78,7 +79,7 @@ def get_hr_logs(
         .all()
     )
 
-    # Use application_type instead of reason (shows actual leave type like 有給休暇, 欠勤, etc.)
+    # Map each leave day
     leave_map = {}
     for leave in leaves:
         emp_id = leave.employee_id
@@ -98,25 +99,23 @@ def get_hr_logs(
     # ------------------------------------
     # Build logs
     # ------------------------------------
-    formatted_logs = []   # only current month (for table rows)
-    expanded_logs = []    # full range (for weekly summaries)
+    formatted_logs = []
+    expanded_logs = []
     monthly_summary = {}
 
     for user in users:
         emp_id = f"IFNT{str(user.id).zfill(3)}"
         total_minutes_for_user = 0
 
-        # Loop full expanded range
         for i in range((range_end - range_start).days + 1):
             current_date = range_start + timedelta(days=i)
             log = attendance_map.get((user.id, current_date))
-            holiday_name = holidays.get(current_date)
+            holiday_name = holiday_map.get(current_date)
             leave_reason = leave_map.get((emp_id, current_date))
-            weekday = current_date.weekday()  # Mon=0, Sun=6
+            weekday = current_date.weekday()
 
-            # --- Status Logic (Fixed) ---
+            # --- Status Logic ---
             if current_date > today:
-                # FUTURE DATES — show approved leave or holiday
                 if leave_reason:
                     status = leave_reason
                 elif holiday_name:
@@ -124,7 +123,6 @@ def get_hr_logs(
                 else:
                     status = "-"
             else:
-                # PAST / TODAY
                 if leave_reason:
                     status = leave_reason
                 elif holiday_name and log and log.check_in:
@@ -170,10 +168,9 @@ def get_hr_logs(
                     if current_date <= today:
                         total_minutes_for_user += aw_minutes
 
-                    # --- Late / Early Leave Calculation ---
                     planned_start = "10:00"
                     planned_end = "19:00"
-                    if weekday in (5, 6):  # Sat/Sun -> no shift
+                    if weekday in (5, 6):  # Sat/Sun → no planned shift
                         planned_start = planned_end = "-"
 
                     if (
@@ -181,16 +178,8 @@ def get_hr_logs(
                         and log.check_in.strftime("%H:%M")
                         and log.check_out.strftime("%H:%M")
                     ):
-                        if log.check_in.strftime("%H:%M") > planned_start:
-                            late = "Yes"
-                        else:
-                            late = "No"
-
-                        if log.check_out.strftime("%H:%M") < planned_end:
-                            early_leave = "Yes"
-                        else:
-                            early_leave = "No"
-
+                        late = "Yes" if log.check_in.strftime("%H:%M") > planned_start else "No"
+                        early_leave = "Yes" if log.check_out.strftime("%H:%M") < planned_end else "No"
                 except Exception:
                     pass
 
@@ -209,28 +198,32 @@ def get_hr_logs(
                 "actual_work": actual_work_str,
                 "late": late,
                 "early_leave": early_leave,
-                # Extra fields (for frontend use)
+                # extra frontend fields
                 "holiday_name": holiday_name or "-",
                 "leave_reason": leave_reason or "-",
             }
 
             expanded_logs.append(row)
-
-            # Only add to main logs if inside current month
             if month_start <= current_date <= month_end:
                 formatted_logs.append(row)
 
-        # --- Monthly Summary ---
         h, m = divmod(total_minutes_for_user, 60)
         monthly_summary[emp_id] = f"{h}h {m}m"
 
     formatted_logs.sort(key=lambda x: x["date"])
     expanded_logs.sort(key=lambda x: x["date"])
 
+    # Add clean holiday list for frontend
+    holidays_list = [
+        {"date": h.date.strftime("%Y-%m-%d"), "name": h.holiday_name}
+        for h in holidays
+    ]
+
     return {
-        "logs": formatted_logs,           # current month only
-        "expanded_logs": expanded_logs,   # full 3 months range
+        "logs": formatted_logs,
+        "expanded_logs": expanded_logs,
         "monthly_summary": monthly_summary,
+        "holidays": holidays_list, 
         "range_start": range_start.strftime("%Y-%m-%d"),
         "range_end": range_end.strftime("%Y-%m-%d"),
     }

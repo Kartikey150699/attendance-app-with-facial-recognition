@@ -9,9 +9,10 @@ import calendar
 
 router = APIRouter(prefix="/shifts", tags=["Shifts"])
 
-# -------------------------
+
+# =====================================================
 # DB session dependency
-# -------------------------
+# =====================================================
 def get_db():
     db = SessionLocal()
     try:
@@ -20,23 +21,21 @@ def get_db():
         db.close()
 
 
-# -------------------------
-# Request model for assigning a shift
-# -------------------------
+# =====================================================
+# Schema
+# =====================================================
 class ShiftAssignRequest(BaseModel):
     employee_id: str
-    date_: str  # keep as string (avoid UTC conversion)
+    date_: str
     start_time: str
     end_time: str
-    assigned_by: str  # admin/HR who assigned
+    assigned_by: str
 
 
-# -------------------------
-# Helper → serialize shift safely (fix timezone bug)
-# -------------------------
+# =====================================================
+# Helper: Safe serialization
+# =====================================================
 def serialize_shift(shift: Shift):
-    """Convert SQLAlchemy Shift object to dict with safe date format."""
-    # Always format as local YYYY-MM-DD string (no UTC)
     d = shift.date
     if isinstance(d, (datetime, date)):
         d = d.strftime("%Y-%m-%d")
@@ -51,14 +50,15 @@ def serialize_shift(shift: Shift):
     }
 
 
-# -------------------------
-# Get all shifts (weekly/monthly)
-# -------------------------
+# =====================================================
+# Get all shifts (supports filters)
+# =====================================================
 @router.get("/")
 def get_shifts(
-    year: int = Query(None, description="Year (default = current year)"),
-    month: int = Query(None, description="Month number (1-12)"),
-    week: int = Query(None, description="ISO Week number (1-53)"),
+    year: int = Query(None, description="Year (default=current)"),
+    month: int = Query(None, description="Month (1-12)"),
+    week: int = Query(None, description="ISO Week (1-53)"),
+    employee_id: str = Query(None, description="Optional employee filter"),
     db: Session = Depends(get_db),
 ):
     today = date.today()
@@ -67,48 +67,45 @@ def get_shifts(
 
     query = db.query(Shift)
 
+    if employee_id:
+        query = query.filter(Shift.employee_id == employee_id)
+
     if month:
-        # Monthly filter
+        # Monthly range
         start_date = date(year, month, 1)
         end_date = date(year, month, calendar.monthrange(year, month)[1])
-        query = query.filter(Shift.date >= start_date, Shift.date <= end_date)
+        query = query.filter(Shift.date.between(start_date, end_date))
 
     elif week:
-        # Weekly filter (ISO week: Monday=1)
+        # Weekly range
         first_day = date.fromisocalendar(year, week, 1)
         last_day = first_day + timedelta(days=6)
-        query = query.filter(Shift.date >= first_day, Shift.date <= last_day)
+        query = query.filter(Shift.date.between(first_day, last_day))
 
     else:
-        # Default = current week
-        current_week = today.isocalendar()[1]
-        first_day = date.fromisocalendar(year, current_week, 1)
-        last_day = first_day + timedelta(days=6)
-        query = query.filter(Shift.date >= first_day, Shift.date <= last_day)
+        # Default = today ± 60 days (cover current + future group shifts)
+        start_date = today - timedelta(days=7)
+        end_date = today + timedelta(days=60)
+        query = query.filter(Shift.date.between(start_date, end_date))
 
-    shifts = query.all()
+    shifts = query.order_by(Shift.date.asc()).all()
     return [serialize_shift(s) for s in shifts]
 
 
-# -------------------------
-# Assign or update a shift (per employee)
-# -------------------------
+# =====================================================
+# Assign or update a shift
+# =====================================================
 @router.post("/assign")
 def assign_shift(payload: ShiftAssignRequest, db: Session = Depends(get_db)):
-    """Create or update an employee's shift with timezone-safe date handling."""
-
-    # Parse date string into pure local date
     try:
         local_date = datetime.strptime(payload.date_, "%Y-%m-%d").date()
     except ValueError:
-        raise HTTPException(status_code=400, detail="Invalid date format (expected YYYY-MM-DD)")
+        raise HTTPException(status_code=400, detail="Invalid date format (YYYY-MM-DD)")
 
-    # Verify employee
     user = db.query(User).filter(User.employee_id == payload.employee_id).first()
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
 
-    # Check if existing shift exists
     existing_shift = (
         db.query(Shift)
         .filter(Shift.employee_id == payload.employee_id, Shift.date == local_date)
@@ -121,12 +118,8 @@ def assign_shift(payload: ShiftAssignRequest, db: Session = Depends(get_db)):
         existing_shift.assigned_by = payload.assigned_by
         db.commit()
         db.refresh(existing_shift)
-        return {
-            "message": "Shift updated successfully",
-            "data": serialize_shift(existing_shift),
-        }
+        return {"message": "Shift updated successfully", "data": serialize_shift(existing_shift)}
 
-    # New shift
     new_shift = Shift(
         employee_id=payload.employee_id,
         department=user.department,
@@ -138,31 +131,24 @@ def assign_shift(payload: ShiftAssignRequest, db: Session = Depends(get_db)):
     db.add(new_shift)
     db.commit()
     db.refresh(new_shift)
-
     return {"message": "Shift assigned successfully", "data": serialize_shift(new_shift)}
 
 
-# -------------------------
-# Delete a shift by employee & date
-# -------------------------
+# =====================================================
+# Delete shift by employee + date
+# =====================================================
 @router.delete("/delete-by-date")
-def delete_shift_by_date(
-    employee_id: str,
-    date_: str,
-    db: Session = Depends(get_db),
-):
-    """Delete a shift safely by local date string."""
+def delete_shift_by_date(employee_id: str, date_: str, db: Session = Depends(get_db)):
     try:
         local_date = datetime.strptime(date_, "%Y-%m-%d").date()
     except ValueError:
-        raise HTTPException(status_code=400, detail="Invalid date format (expected YYYY-MM-DD)")
+        raise HTTPException(status_code=400, detail="Invalid date format (YYYY-MM-DD)")
 
     shift = (
         db.query(Shift)
         .filter(Shift.employee_id == employee_id, Shift.date == local_date)
         .first()
     )
-
     if not shift:
         raise HTTPException(status_code=404, detail="Shift not found")
 

@@ -47,7 +47,7 @@ function GroupsManagement() {
       return;
     }
     const times = Object.values(newGroup.schedule)[0];
-    if (times[0] === "00:00" || times[1] === "00:00") {
+    if (times[0] === "00:00" && times[1] === "00:00") {
       setModal({
         isOpen: true,
         title: "❌ Error",
@@ -115,33 +115,70 @@ function GroupsManagement() {
     });
   };
 
-  // Save edited group
-  const saveEditGroup = async () => {
+ // ✅ Save edited group
+const saveEditGroup = async () => {
+  // --- Safety check ---
+  if (!editingGroup?.id) {
+    console.error("❌ Missing group ID for update");
+    setModal({
+      isOpen: true,
+      title: "❌ Error",
+      message: "Cannot update — missing group ID.",
+      onConfirm: () => setModal({ isOpen: false }),
+    });
+    return;
+  }
+
+  try {
+    // --- Send PUT request ---
     const res = await fetch(`http://localhost:8000/shift-groups/${editingGroup.id}`, {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(editingGroup),
+      body: JSON.stringify({
+        name: editingGroup.name,
+        description: editingGroup.description,
+        schedule: editingGroup.schedule,
+      }),
     });
 
     const data = await res.json();
+
+    // --- On success ---
     if (res.ok) {
-      setGroups(groups.map((g) => (g.id === editingGroup.id ? data.data : g)));
+      // ✅ Re-fetch all groups (ensures latest data + correct IDs)
+      const refreshedGroups = await fetch("http://localhost:8000/shift-groups/").then((r) =>
+        r.json()
+      );
+      setGroups(refreshedGroups);
       setEditingGroup(null);
+
       setModal({
         isOpen: true,
         title: "✅ Success",
-        message: "Group updated successfully!",
+        message:
+          "Group updated successfully!\n\nShifts for all assigned employees were automatically regenerated.",
         onConfirm: () => setModal({ isOpen: false }),
       });
     } else {
+      // --- On backend validation error ---
       setModal({
         isOpen: true,
         title: "❌ Error",
-        message: data.detail || "Failed to update group",
+        message: data.detail || "Failed to update group.",
         onConfirm: () => setModal({ isOpen: false }),
       });
     }
-  };
+  } catch (err) {
+    // --- On network or unexpected error ---
+    console.error("❌ Update failed:", err);
+    setModal({
+      isOpen: true,
+      title: "❌ Error",
+      message: "Network or server error occurred while updating group.",
+      onConfirm: () => setModal({ isOpen: false }),
+    });
+  }
+};
 
   // Sort order
   const dayOrder = { MON: 1, TUE: 2, WED: 3, THU: 4, FRI: 5, SAT: 6, SUN: 7 };
@@ -324,66 +361,76 @@ function GroupsManagement() {
                       {/* Editable days */}
                       <div className="flex flex-wrap gap-2 mb-2">
                         {["mon", "tue", "wed", "thu", "fri", "sat", "sun"].map((day) => (
-                          <button
-                            key={day}
-                            type="button"
-                            className={`px-4 py-2 rounded-lg font-semibold border ${
-                              editingGroup.schedule[day]
-                                ? "bg-indigo-600 text-white"
-                                : "bg-gray-200"
-                            }`}
-                            onClick={() => {
-                              const schedule = { ...editingGroup.schedule };
-                              if (schedule[day]) {
-                                delete schedule[day];
-                              } else {
-                                schedule[day] = ["00:00", "00:00"];
-                              }
-                              setEditingGroup({ ...editingGroup, schedule });
-                            }}
-                          >
-                            {day.toUpperCase()}
-                          </button>
-                        ))}
+  <button
+    key={day}
+    type="button"
+    className={`px-4 py-2 rounded-lg font-semibold border ${
+      editingGroup.schedule?.[day]
+        ? "bg-indigo-600 text-white"
+        : "bg-gray-200"
+    }`}
+    onClick={() => {
+      const schedule = { ...(editingGroup.schedule || {}) };
+if (schedule[day]) {
+  // remove existing day
+  delete schedule[day];
+} else {
+  // Copy timings from the first existing day
+  const existingDay = Object.keys(schedule)[0];
+  if (existingDay && Array.isArray(schedule[existingDay])) {
+    schedule[day] = [...schedule[existingDay]]; // copy same times
+  } else {
+    schedule[day] = ["09:00", "18:00"]; // default fallback
+  }
+}
+setEditingGroup({ ...editingGroup, schedule });
+    }}
+  >
+    {day.toUpperCase()}
+  </button>
+))}
                       </div>
 
                       {/* Editable timings */}
-                      <div className="flex gap-4 mb-2">
-                        <input
-                          type="time"
-                          value={
-                            Object.keys(editingGroup.schedule).length
-                              ? Object.values(editingGroup.schedule)[0][0]
-                              : "00:00"
-                          }
-                          onChange={(e) => {
-                            const value = e.target.value;
-                            const schedule = { ...editingGroup.schedule };
-                            Object.keys(schedule).forEach((day) => {
-                              schedule[day] = [value, schedule[day][1]];
-                            });
-                            setEditingGroup({ ...editingGroup, schedule });
-                          }}
-                          className="border p-2 rounded"
-                        />
-                        <input
-                          type="time"
-                          value={
-                            Object.keys(editingGroup.schedule).length
-                              ? Object.values(editingGroup.schedule)[0][1]
-                              : "00:00"
-                          }
-                          onChange={(e) => {
-                            const value = e.target.value;
-                            const schedule = { ...editingGroup.schedule };
-                            Object.keys(schedule).forEach((day) => {
-                              schedule[day] = [schedule[day][0], value];
-                            });
-                            setEditingGroup({ ...editingGroup, schedule });
-                          }}
-                          className="border p-2 rounded"
-                        />
-                      </div>
+                     <div className="flex gap-4 mb-2">
+  {/* Start Time */}
+  <input
+    type="time"
+    value={
+      editingGroup.schedule && Object.keys(editingGroup.schedule).length
+        ? Object.values(editingGroup.schedule)[0][0]
+        : "00:00"
+    }
+    onChange={(e) => {
+      const value = e.target.value;
+      const schedule = { ...(editingGroup.schedule || {}) };
+      Object.keys(schedule).forEach((day) => {
+        schedule[day] = [value, schedule[day][1]];
+      });
+      setEditingGroup({ ...editingGroup, schedule });
+    }}
+    className="border p-2 rounded"
+  />
+
+  {/* End Time */}
+  <input
+    type="time"
+    value={
+      editingGroup.schedule && Object.keys(editingGroup.schedule).length
+        ? Object.values(editingGroup.schedule)[0][1]
+        : "00:00"
+    }
+    onChange={(e) => {
+      const value = e.target.value;
+      const schedule = { ...(editingGroup.schedule || {}) };
+      Object.keys(schedule).forEach((day) => {
+        schedule[day] = [schedule[day][0], value];
+      });
+      setEditingGroup({ ...editingGroup, schedule });
+    }}
+    className="border p-2 rounded"
+  />
+</div>
 
                       <div className="flex justify-end gap-2">
                         <button
@@ -424,7 +471,14 @@ function GroupsManagement() {
                       </div>
                       <div className="flex gap-2">
                         <button
-                          onClick={() => setEditingGroup(g)}
+                          onClick={() =>
+  setEditingGroup({
+    id: g.id, // ensure id always exists
+    name: g.name || "",
+    description: g.description || "",
+    schedule: g.schedule || {},
+  })
+}
                           className="px-3 py-1 bg-blue-500 text-white rounded hover:bg-blue-600"
                         >
                           Edit

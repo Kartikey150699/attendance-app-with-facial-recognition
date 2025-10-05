@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   ArrowUturnLeftIcon,
@@ -21,29 +21,39 @@ function ShiftsManagement() {
   const [editShift, setEditShift] = useState(null); // for modal
   const navigate = useNavigate();
 
-  // Fetch employees & shifts
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const [empRes, shiftRes] = await Promise.all([
-          fetch("http://localhost:8000/users/active"),
-          fetch("http://localhost:8000/shifts/"),
-        ]);
+  const [groups, setGroups] = useState([]);
 
-        if (!empRes.ok || !shiftRes.ok) throw new Error("Failed to fetch data");
+  const [employeeGroups, setEmployeeGroups] = useState([]); // NEW
 
-        const empData = await empRes.json();
-        const shiftData = await shiftRes.json();
+useEffect(() => {
+  const fetchData = async () => {
+    try {
+      const [empRes, shiftRes, groupRes, mappingRes] = await Promise.all([
+        fetch("http://localhost:8000/users/active"),
+        fetch("http://localhost:8000/shifts/"),
+        fetch("http://localhost:8000/shift-groups/"),
+        fetch("http://localhost:8000/shift-groups/employee-groups/"), // NEW
+      ]);
 
-        setEmployees(empData);
-        setShifts(shiftData);
-      } catch (error) {
-        console.error("Error fetching shifts/employees:", error);
-      }
-    };
+      if (!empRes.ok || !shiftRes.ok || !groupRes.ok || !mappingRes.ok)
+        throw new Error("Failed to fetch data");
 
-    fetchData();
-  }, []);
+      const empData = await empRes.json();
+      const shiftData = await shiftRes.json();
+      const groupData = await groupRes.json();
+      const mappingData = await mappingRes.json();
+
+      setEmployees(empData);
+      setShifts(shiftData);
+      setGroups(groupData);
+      setEmployeeGroups(mappingData); // store group mappings
+    } catch (error) {
+      console.error("Error fetching data:", error);
+    }
+  };
+
+  fetchData();
+}, []);
 
   // Helpers
   function getStartOfWeek(date) {
@@ -78,44 +88,32 @@ function ShiftsManagement() {
     return d;
   });
 
-  // Weekly Shifts
-  const weeklyShifts = employees.map((emp) => ({
-  ...emp,
-  shifts: weekDates.map((d) => {
-    const shift = shifts.find(
-      (s) => s.employee_id === emp.employee_id && s.date === formatDate(d)
-    );
+// Weekly Shifts (auto-refresh after group or week change)
+const weeklyShifts = useMemo(() => {
+  return employees.map((emp) => ({
+    ...emp,
+    shifts: weekDates.map((d) => {
+      const shift = shifts.find(
+        (s) => s.employee_id === emp.employee_id && s.date === formatDate(d)
+      );
 
-    if (shift) {
-      // Always show saved shift (even on weekends)
-      return {
-        date: shift.date,
-        start: shift.start_time === "-" ? "-" : shift.start_time.slice(0, 5),
-        end: shift.end_time === "-" ? "-" : shift.end_time.slice(0, 5),
-        hours:
-          shift.start_time === "-" || shift.end_time === "-"
-            ? 0
-            : getShiftHours(shift.start_time, shift.end_time),
-      };
-    }
+      if (shift) {
+        return {
+          date: shift.date,
+          start: shift.start_time === "-" ? "-" : shift.start_time.slice(0, 5),
+          end: shift.end_time === "-" ? "-" : shift.end_time.slice(0, 5),
+          hours:
+            shift.start_time === "-" || shift.end_time === "-"
+              ? 0
+              : getShiftHours(shift.start_time, shift.end_time),
+        };
+      }
 
-    // If shift exists → use DB values
-if (shift) {
-  return {
-    date: shift.date,
-    start: shift.start_time === "-" ? "-" : shift.start_time.slice(0, 5),
-    end: shift.end_time === "-" ? "-" : shift.end_time.slice(0, 5),
-    hours:
-      shift.start_time === "-" || shift.end_time === "-"
-        ? 0
-        : getShiftHours(shift.start_time, shift.end_time),
-  };
-}
-
-// If no shift in DB → always show "-"
-return { date: formatDate(d), start: "-", end: "-", hours: 0 };
-  }),
-}));
+      // if no shift found → placeholder
+      return { date: formatDate(d), start: "-", end: "-", hours: 0 };
+    }),
+  }));
+}, [employees, shifts, weekDates]);
 
 // Monthly summary
 const daysInMonth = new Date(currentYear, currentMonth + 1, 0).getDate();
@@ -169,7 +167,46 @@ const filteredMonthlySummary = filterBySearch(monthlySummary);
 
   const today = new Date();
 
-  const saveShift = async () => {
+const assignGroup = async (employeeId, groupId) => {
+  if (!groupId) return;
+  try {
+    const res = await fetch("http://localhost:8000/shift-groups/assign", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        employee_id: employeeId,
+        group_id: parseInt(groupId),
+      }),
+    });
+
+    if (!res.ok) throw new Error("Failed to assign group");
+    const data = await res.json();
+    console.log("Group assigned:", data.message);
+
+    // After assignment, re-fetch both shifts AND employee group mappings
+    const [shiftRes, mappingRes] = await Promise.all([
+      fetch("http://localhost:8000/shifts/"),
+      fetch("http://localhost:8000/shift-groups/employee-groups/"),
+    ]);
+
+    if (!shiftRes.ok || !mappingRes.ok)
+      throw new Error("Failed to reload data");
+
+    const shiftData = await shiftRes.json();
+    const mappingData = await mappingRes.json();
+
+    setShifts(shiftData);
+    setEmployeeGroups(mappingData);
+
+    // ✅ Force React to re-render this week's table by resetting state
+    setCurrentWeekStart((prev) => new Date(prev));
+  } catch (error) {
+    console.error("Error assigning group:", error);
+  }
+};
+
+// Save shift function (keep as-is below)
+const saveShift = async () => {
   try {
     const response = await fetch("http://localhost:8000/shifts/assign", {
       method: "POST",
@@ -187,12 +224,12 @@ const filteredMonthlySummary = filterBySearch(monthlySummary);
 
     await response.json();
 
-    // Re-fetch shifts immediately so table updates
+    // Re-fetch shifts immediately
     const shiftRes = await fetch("http://localhost:8000/shifts/");
     const shiftData = await shiftRes.json();
     setShifts(shiftData);
 
-    setEditShift(null); // close popup
+    setEditShift(null);
   } catch (error) {
     console.error("Error saving shift:", error);
   }
@@ -380,6 +417,7 @@ const filteredMonthlySummary = filterBySearch(monthlySummary);
           <th className="p-4 border border-gray-300">Employee ID</th>
           <th className="p-4 border border-gray-300">Name</th>
           <th className="p-4 border border-gray-300">Department</th>
+          <th className="p-4 border border-gray-300">Group</th>
           {weekDates.map((d, i) => (
             <th
               key={i}
@@ -406,6 +444,27 @@ const filteredMonthlySummary = filterBySearch(monthlySummary);
             <td className="p-4 border border-gray-300">{emp.employee_id}</td>
             <td className="p-4 border border-gray-300">{emp.name}</td>
             <td className="p-4 border border-gray-300">{emp.department}</td>
+            <td className="p-4 border border-gray-300">
+<select
+  className="border rounded px-2 py-1 text-sm"
+  value={
+    employeeGroups.find((eg) => eg.employee_id === emp.employee_id)?.group_id || ""
+  }
+  onChange={async (e) => {
+    await assignGroup(emp.employee_id, e.target.value);
+    // refresh mapping after assignment
+    const updatedMappings = await fetch("http://localhost:8000/shift-groups/employee-groups/").then((r) => r.json());
+    setEmployeeGroups(updatedMappings);
+  }}
+>
+  <option value="">Select Group</option>
+  {groups.map((g) => (
+    <option key={g.id} value={g.id}>
+      {g.name}
+    </option>
+  ))}
+</select>
+</td>
             {emp.shifts.map((s, j) => (
               <td
                 key={j}
