@@ -6,6 +6,7 @@ import {
   ChevronLeftIcon,
   ChevronRightIcon,
   MagnifyingGlassIcon,
+  ClockIcon,
 } from "@heroicons/react/24/solid";
 import Footer from "./Footer";
 import HeaderDateTime from "./HeaderDateTime";
@@ -25,7 +26,11 @@ function ShiftsManagement() {
 
   const [employeeGroups, setEmployeeGroups] = useState([]); // NEW
 
+  // eslint-disable-next-line no-unused-vars
   const [groupDetails, setGroupDetails] = useState([]); // full group info with employees
+
+  const [draggedGroup, setDraggedGroup] = useState(null);
+  const [flashCell, setFlashCell] = useState(null);
 
 useEffect(() => {
   const fetchData = async () => {
@@ -203,7 +208,7 @@ const assignGroup = async (employeeId, groupId) => {
     setShifts(shiftData);
     setEmployeeGroups(mappingData);
 
-    // ✅ Force React to re-render this week's table by resetting state
+    // Force React to re-render this week's table by resetting state
     setCurrentWeekStart((prev) => new Date(prev));
   } catch (error) {
     console.error("Error assigning group:", error);
@@ -291,43 +296,87 @@ const saveShift = async () => {
 </div>
 
 {/* Group Overview Row */}
-<div className="flex gap-4 overflow-x-auto px-6 py-2 max-w-6xl mx-auto mb-6 scrollbar-thin scrollbar-thumb-indigo-400">
-  {groups.length === 0 ? (
-    <p className="text-gray-500 text-sm">No groups found.</p>
-  ) : (
-    groups.map((g) => {
-      const schedule = g.schedule || {};
-      const grouped = {};
-      Object.entries(schedule).forEach(([day, times]) => {
-        const key = Array.isArray(times) ? `${times[0]} - ${times[1]}` : "-";
-        if (!grouped[key]) grouped[key] = [];
-        grouped[key].push(day.toUpperCase());
-      });
+<div className="max-w-7xl mx-auto px-6 mb-8">
+  <div className="flex gap-4 overflow-x-auto pb-3 scrollbar-thin scrollbar-thumb-indigo-500">
+    {groups.length === 0 ? (
+      <p className="text-gray-500 text-sm">No groups found.</p>
+    ) : (
+      groups.map((g, index) => {
+        const schedule = g.schedule || {};
+        const grouped = {};
 
-      return (
-        <div
-          key={g.id}
-          className="min-w-[230px] bg-white shadow-md rounded-lg p-4 border border-gray-200 
-                     hover:shadow-lg hover:scale-[1.02] transition duration-200"
-        >
-          <h5 className="text-lg font-bold text-indigo-700 mb-1">{g.name}</h5>
-          <p className="text-gray-600 text-sm mb-2">
-            {g.description || "No description"}
-          </p>
-          <ul className="text-sm space-y-1">
-            {Object.entries(grouped).map(([time, days]) => (
-              <li key={time}>
-                <span className="font-semibold text-gray-700">
-                  {days.join(", ")}
-                </span>{" "}
-                → {time}
-              </li>
-            ))}
-          </ul>
-        </div>
-      );
-    })
-  )}
+        const weekOrder = ["mon", "tue", "wed", "thu", "fri", "sat", "sun"];
+        const dayNames = {
+          mon: "Mon",
+          tue: "Tue",
+          wed: "Wed",
+          thu: "Thu",
+          fri: "Fri",
+          sat: "Sat",
+          sun: "Sun",
+        };
+
+        weekOrder.forEach((day) => {
+          if (schedule[day]) {
+            const times = schedule[day];
+            const key = Array.isArray(times) ? `${times[0]} - ${times[1]}` : "-";
+            if (!grouped[key]) grouped[key] = [];
+            grouped[key].push(dayNames[day]);
+          }
+        });
+
+        // Catchy gradient palette
+        const gradients = [
+          "from-indigo-500 via-purple-500 to-pink-500",
+          "from-blue-500 via-cyan-400 to-teal-400",
+          "from-amber-500 via-orange-500 to-red-500",
+          "from-green-500 via-emerald-400 to-lime-400",
+          "from-rose-500 via-pink-500 to-fuchsia-500",
+        ];
+        const gradient = gradients[index % gradients.length];
+
+        return (
+          <div
+            key={g.id}
+            draggable
+            onDragStart={() => setDraggedGroup(g)}
+            onDragEnd={() => setDraggedGroup(null)}
+            className={`min-w-[230px] max-w-[250px] h-[100px] rounded-lg cursor-grab active:cursor-grabbing
+                       bg-gradient-to-br ${gradient} text-white shadow-md p-3 flex flex-col justify-between
+                       transition-all duration-300 ease-out
+                       hover:scale-[1.06] hover:shadow-[0_0_15px_rgba(255,255,255,0.5)]
+                       ${draggedGroup?.id === g.id ? "ring-4 ring-white ring-offset-2 ring-offset-indigo-400 scale-[1.08]" : ""}`}
+          >
+            <div>
+              <h5 className="text-base font-bold mb-0.5 tracking-wide drop-shadow-sm">
+                {g.name}
+              </h5>
+
+              <ul className="text-xs space-y-1 font-medium mt-1">
+                {Object.entries(grouped).map(([time, days]) => (
+                  <li key={time} className="drop-shadow-sm">
+                    <div className="flex items-center gap-1">
+                      <ClockIcon className="h-3.5 w-3.5 text-white opacity-90" />
+                      <span className="text-sm font-semibold tracking-tight">{time}</span>
+                    </div>
+                    <div className="text-[11px] text-white/90 ml-5 leading-tight">
+                      {days.join(", ")}
+                    </div>
+                  </li>
+                ))}
+              </ul>
+            </div>
+
+            {g.description && (
+              <div className="text-right text-[10px] text-white/80 italic truncate">
+                {g.description}
+              </div>
+            )}
+          </div>
+        );
+      })
+    )}
+  </div>
 </div>
 
       {/* Filters + Search + Today (only weekly) */}
@@ -454,86 +503,183 @@ const saveShift = async () => {
 
 {/* Weekly table */}
 {viewType === "weekly" && (
-  <div className="max-w-7xl mx-auto px-6 mb-6 flex-grow">
-    <table className="w-full border border-gray-300 border-collapse bg-white shadow rounded-lg overflow-hidden text-base">
-      <thead>
-        <tr className="bg-indigo-500 text-white">
-          <th className="p-4 border border-gray-300">Employee ID</th>
-          <th className="p-4 border border-gray-300">Name</th>
-          <th className="p-4 border border-gray-300">Department</th>
-          <th className="p-4 border border-gray-300">Group</th>
-          {weekDates.map((d, i) => (
-            <th
-              key={i}
-              className={`p-4 border border-gray-300 text-center ${
-                d.getDay() === 0 || d.getDay() === 6 ? "bg-red-600" : ""
-              } ${
-                formatDate(d) === formatDate(today)
-                  ? "bg-yellow-200 text-black font-bold"
-                  : ""
-              }`}
-            >
-              {d.toLocaleDateString("en-US", {
-                weekday: "short",
-                day: "numeric",
-                month: "short",
-              })}
-            </th>
-          ))}
-        </tr>
-      </thead>
-      <tbody>
-        {filteredWeeklyShifts.map((emp, i) => (
-          <tr key={i} className="text-center">
-            <td className="p-4 border border-gray-300">{emp.employee_id}</td>
-            <td className="p-4 border border-gray-300">{emp.name}</td>
-            <td className="p-4 border border-gray-300">{emp.department}</td>
-            <td className="p-4 border border-gray-300">
-<select
-  className="border rounded px-2 py-1 text-sm"
-  value={
-    employeeGroups.find((eg) => eg.employee_id === emp.employee_id)?.group_id || ""
-  }
-  onChange={async (e) => {
-    await assignGroup(emp.employee_id, e.target.value);
-    // refresh mapping after assignment
-    const updatedMappings = await fetch("http://localhost:8000/shift-groups/employee-groups/").then((r) => r.json());
-    setEmployeeGroups(updatedMappings);
-  }}
->
-  <option value="">Select Group</option>
-  {groups.map((g) => (
-    <option key={g.id} value={g.id}>
-      {g.name}
-    </option>
-  ))}
-</select>
-</td>
-            {emp.shifts.map((s, j) => (
-              <td
-                key={j}
-                className={`p-4 border border-gray-300 cursor-pointer hover:bg-indigo-100 transition ${
-                  new Date(s.date).getDay() === 0 || new Date(s.date).getDay() === 6
-                    ? "bg-red-100"
-                    : ""
-                } ${s.date === formatDate(new Date()) ? "bg-yellow-100 font-bold" : ""}`}
-                onClick={() => {
-                  // Always open modal — even if it's weekend/default "-"
-                  setEditShift({
-                    ...emp,
-                    date: formatDate(s.date),
-                    start: s.start === "-" ? "" : s.start,
-                    end: s.end === "-" ? "" : s.end,
-                  });
-                }}
+  <div className="max-w-7xl mx-auto px-6 mb-8 flex-grow">
+    {/* Scrollable container */}
+    <div
+      ref={(el) => {
+        if (!el) return;
+        // Prevent page scroll when inner scroll is possible
+        const handler = (e) => {
+          const target = el.querySelector(".inner-scroll");
+          if (!target) return;
+          const scrollTop = target.scrollTop;
+          const scrollHeight = target.scrollHeight;
+          const height = target.clientHeight;
+          const delta = e.deltaY;
+
+          const atTop = scrollTop === 0;
+          const atBottom = scrollTop + height >= scrollHeight - 1;
+
+          // Only stop propagation if we can scroll inside
+          if (
+            (delta < 0 && !atTop) || // scrolling up, not at top
+            (delta > 0 && !atBottom) // scrolling down, not at bottom
+          ) {
+            e.stopPropagation();
+            e.preventDefault();
+            target.scrollTop += delta;
+          }
+        };
+
+        // attach once
+        el.addEventListener("wheel", handler, { passive: false });
+        return () => el.removeEventListener("wheel", handler);
+      }}
+      className="border border-gray-300 rounded-lg shadow-lg bg-white relative"
+      style={{ height: "430px" }} // ~4 rows visible
+    >
+      <div
+        className="inner-scroll overflow-y-auto overflow-x-auto force-scrollbar"
+        style={{ height: "100%", paddingRight: "10px" }}
+      >
+        <style>{`
+          /* Custom always-visible scrollbar */
+          .force-scrollbar::-webkit-scrollbar {
+            width: 10px;
+          }
+          .force-scrollbar::-webkit-scrollbar-track {
+            background: #e5e7eb;
+            border-radius: 8px;
+          }
+          .force-scrollbar::-webkit-scrollbar-thumb {
+            background-color: #6366f1;
+            border-radius: 8px;
+          }
+          .force-scrollbar::-webkit-scrollbar-thumb:hover {
+            background-color: #4f46e5;
+          }
+          .force-scrollbar {
+            scrollbar-color: #6366f1 #e5e7eb;
+            scrollbar-width: thin;
+          }
+        `}</style>
+
+        <table className="w-full border-collapse text-base">
+          <thead className="sticky top-0 bg-indigo-500 text-white shadow z-10">
+            <tr>
+              <th className="p-4 border border-gray-300">Employee ID</th>
+              <th className="p-4 border border-gray-300">Name</th>
+              <th className="p-4 border border-gray-300">Department</th>
+              <th className="p-4 border border-gray-300">Group</th>
+              {weekDates.map((d, i) => (
+                <th
+                  key={i}
+                  className={`p-4 border border-gray-300 text-center ${
+                    d.getDay() === 0 || d.getDay() === 6 ? "bg-red-600" : ""
+                  } ${
+                    formatDate(d) === formatDate(today)
+                      ? "bg-yellow-200 text-black font-bold"
+                      : ""
+                  }`}
+                >
+                  {d.toLocaleDateString("en-US", {
+                    weekday: "short",
+                    day: "numeric",
+                    month: "short",
+                  })}
+                </th>
+              ))}
+            </tr>
+          </thead>
+
+          <tbody>
+            {filteredWeeklyShifts.map((emp, i) => (
+              <tr
+                key={i}
+                className="text-center even:bg-gray-50 hover:bg-indigo-50 transition-all duration-150"
               >
-                {s.start === "-" ? "-" : `${s.start} - ${s.end}`}
-              </td>
+                <td className="p-4 border border-gray-300">{emp.employee_id}</td>
+                <td className="p-4 border border-gray-300">{emp.name}</td>
+                <td className="p-4 border border-gray-300">{emp.department}</td>
+
+                {/* Group cell with drag & drop */}
+                <td
+                  className={`p-4 border border-gray-300 transition-all duration-300 text-center
+                    ${draggedGroup ? "border-dashed border-2 border-indigo-400 bg-indigo-50" : ""}
+                    ${flashCell === emp.employee_id ? "bg-green-200 animate-pulse" : ""}
+                    hover:bg-indigo-100`}
+                  onDragOver={(e) => e.preventDefault()}
+                  onDrop={async () => {
+                    if (draggedGroup) {
+                      await assignGroup(emp.employee_id, draggedGroup.id);
+                      const updatedMappings = await fetch(
+                        "http://localhost:8000/shift-groups/employee-groups/"
+                      ).then((r) => r.json());
+                      setEmployeeGroups(updatedMappings);
+                      setDraggedGroup(null);
+                      setFlashCell(emp.employee_id);
+                      setTimeout(() => setFlashCell(null), 700);
+                    }
+                  }}
+                >
+                  <select
+                    className={`border rounded px-2 py-1 text-sm w-full transition-all duration-200
+                      ${flashCell === emp.employee_id ? "bg-green-100" : "bg-white"}`}
+                    value={
+                      employeeGroups.find((eg) => eg.employee_id === emp.employee_id)
+                        ?.group_id || ""
+                    }
+                    onChange={async (e) => {
+                      await assignGroup(emp.employee_id, e.target.value);
+                      const updatedMappings = await fetch(
+                        "http://localhost:8000/shift-groups/employee-groups/"
+                      ).then((r) => r.json());
+                      setEmployeeGroups(updatedMappings);
+                      setFlashCell(emp.employee_id);
+                      setTimeout(() => setFlashCell(null), 700);
+                    }}
+                  >
+                    <option value="">Select Group</option>
+                    {groups.map((g) => (
+                      <option key={g.id} value={g.id}>
+                        {g.name}
+                      </option>
+                    ))}
+                  </select>
+                </td>
+
+                {/* Daily shifts */}
+                {emp.shifts.map((s, j) => (
+                  <td
+                    key={j}
+                    className={`p-4 border border-gray-300 cursor-pointer transition ${
+                      new Date(s.date).getDay() === 0 ||
+                      new Date(s.date).getDay() === 6
+                        ? "bg-red-100"
+                        : ""
+                    } ${
+                      s.date === formatDate(new Date())
+                        ? "bg-yellow-100 font-bold"
+                        : ""
+                    } hover:bg-indigo-100`}
+                    onClick={() =>
+                      setEditShift({
+                        ...emp,
+                        date: formatDate(s.date),
+                        start: s.start === "-" ? "" : s.start,
+                        end: s.end === "-" ? "" : s.end,
+                      })
+                    }
+                  >
+                    {s.start === "-" ? "-" : `${s.start} - ${s.end}`}
+                  </td>
+                ))}
+              </tr>
             ))}
-          </tr>
-        ))}
-      </tbody>
-    </table>
+          </tbody>
+        </table>
+      </div>
+    </div>
 
     {/* Weekly navigation */}
     <div className="flex justify-between items-center mt-6">
