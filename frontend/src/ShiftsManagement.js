@@ -32,6 +32,15 @@ function ShiftsManagement() {
   const [draggedGroup, setDraggedGroup] = useState(null);
   const [flashCell, setFlashCell] = useState(null);
 
+  // Excel-style fill down for Group column
+const [isFillingGroup, setIsFillingGroup] = useState(false);
+const [fillStartIndex, setFillStartIndex] = useState(null);
+const [fillHoverIndex, setFillHoverIndex] = useState(null);
+
+const [isFillingShift, setIsFillingShift] = useState(false);
+const [fillShiftOrigin, setFillShiftOrigin] = useState(null); // {empIndex, colIndex, start, end}
+const [fillShiftTargets, setFillShiftTargets] = useState([]); // highlight cells
+
 useEffect(() => {
   const fetchData = async () => {
     try {
@@ -75,7 +84,7 @@ useEffect(() => {
 
  function formatDate(date) {
   if (!(date instanceof Date)) date = new Date(date);
-  // ✅ Local-safe version (no UTC shift)
+  // Local-safe version (no UTC shift)
   const y = date.getFullYear();
   const m = String(date.getMonth() + 1).padStart(2, "0");
   const d = String(date.getDate()).padStart(2, "0");
@@ -107,17 +116,31 @@ const weeklyShifts = useMemo(() => {
         (s) => s.employee_id === emp.employee_id && s.date === formatDate(d)
       );
 
-      if (shift) {
-        return {
-          date: shift.date,
-          start: shift.start_time === "-" ? "-" : shift.start_time.slice(0, 5),
-          end: shift.end_time === "-" ? "-" : shift.end_time.slice(0, 5),
-          hours:
-            shift.start_time === "-" || shift.end_time === "-"
-              ? 0
-              : getShiftHours(shift.start_time, shift.end_time),
-        };
-      }
+if (shift) {
+  // Normalize invalid times like 00:00 → "-"
+  const cleanStart =
+    !shift.start_time ||
+    shift.start_time === "-" ||
+    shift.start_time === "00:00"
+      ? "-"
+      : shift.start_time.slice(0, 5);
+  const cleanEnd =
+    !shift.end_time ||
+    shift.end_time === "-" ||
+    shift.end_time === "00:00"
+      ? "-"
+      : shift.end_time.slice(0, 5);
+
+  return {
+    date: shift.date,
+    start: cleanStart,
+    end: cleanEnd,
+    hours:
+      cleanStart === "-" || cleanEnd === "-"
+        ? 0
+        : getShiftHours(cleanStart, cleanEnd),
+  };
+}
 
       // if no shift found → placeholder
       return { date: formatDate(d), start: "-", end: "-", hours: 0 };
@@ -179,7 +202,9 @@ const filteredMonthlySummary = filterBySearch(monthlySummary);
 
 const assignGroup = async (employeeId, groupId) => {
   if (!groupId) return;
+
   try {
+    // Assign group to employee
     const res = await fetch("http://localhost:8000/shift-groups/assign", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -190,28 +215,85 @@ const assignGroup = async (employeeId, groupId) => {
     });
 
     if (!res.ok) throw new Error("Failed to assign group");
-    const data = await res.json();
-    console.log("Group assigned:", data.message);
+    console.log("✅ Group assigned");
 
-    // After assignment, re-fetch both shifts AND employee group mappings
+    // Delete all existing shifts for this week
+    for (const d of weekDates) {
+      await fetch(
+        `http://localhost:8000/shifts/delete-by-date?employee_id=${employeeId}&date_=${formatDate(d)}`,
+        { method: "DELETE" }
+      ).catch(() => {});
+    }
+
+    // Get group schedule and assign clean shifts
+    const group = groups.find((g) => g.id === parseInt(groupId));
+    const dayKeys = ["sun", "mon", "tue", "wed", "thu", "fri", "sat"];
+
+    for (const d of weekDates) {
+      const dayKey = dayKeys[d.getDay()];
+      const times = group?.schedule?.[dayKey];
+
+      // Clean up time values — no 00:00 allowed
+      let start_time = "-";
+      let end_time = "-";
+
+      if (
+        times &&
+        Array.isArray(times) &&
+        times.length === 2 &&
+        times[0] &&
+        times[1] &&
+        !["00:00", "-", "0:00", "", null, undefined].includes(times[0]) &&
+        !["00:00", "-", "0:00", "", null, undefined].includes(times[1])
+      ) {
+        start_time = times[0];
+        end_time = times[1];
+      }
+
+      await fetch("http://localhost:8000/shifts/assign", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          employee_id: employeeId,
+          date_: formatDate(d),
+          start_time,
+          end_time,
+          assigned_by: localStorage.getItem("currentAdmin") || "System",
+        }),
+      });
+    }
+
+    // Refresh data
     const [shiftRes, mappingRes] = await Promise.all([
       fetch("http://localhost:8000/shifts/"),
       fetch("http://localhost:8000/shift-groups/employee-groups/"),
     ]);
 
-    if (!shiftRes.ok || !mappingRes.ok)
-      throw new Error("Failed to reload data");
-
-    const shiftData = await shiftRes.json();
+    let shiftData = await shiftRes.json();
     const mappingData = await mappingRes.json();
+
+    // Convert ALL 00:00 values to "-" before setting state
+    shiftData = shiftData.map((s) => {
+      if (
+        !s.start_time ||
+        !s.end_time ||
+        s.start_time === "00:00" ||
+        s.end_time === "00:00" ||
+        s.start_time === "0:00" ||
+        s.end_time === "0:00"
+      ) {
+        return { ...s, start_time: "-", end_time: "-" };
+      }
+      return s;
+    });
 
     setShifts(shiftData);
     setEmployeeGroups(mappingData);
 
-    // Force React to re-render this week's table by resetting state
+    // Force React refresh
     setCurrentWeekStart((prev) => new Date(prev));
-  } catch (error) {
-    console.error("Error assigning group:", error);
+  } catch (err) {
+    console.error("❌ Error assigning group:", err);
   }
 };
 
@@ -242,6 +324,42 @@ const saveShift = async () => {
     setEditShift(null);
   } catch (error) {
     console.error("Error saving shift:", error);
+  }
+};
+
+useEffect(() => {
+  const handleMouseUp = () => {
+    if (isFillingGroup) {
+      setIsFillingGroup(false);
+      setFillStartIndex(null);
+      setFillHoverIndex(null);
+    }
+    if (isFillingShift) {
+      setIsFillingShift(false);
+      setFillShiftOrigin(null);
+      setFillShiftTargets([]);
+    }
+  };
+  window.addEventListener("mouseup", handleMouseUp);
+  return () => window.removeEventListener("mouseup", handleMouseUp);
+}, [isFillingGroup, isFillingShift]);
+
+
+const copyShiftToCell = async (employeeId, date_, start_time, end_time) => {
+  try {
+    await fetch("http://localhost:8000/shifts/assign", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        employee_id: employeeId,
+        date_,
+        start_time,
+        end_time,
+        assigned_by: localStorage.getItem("currentAdmin") || "System",
+      }),
+    });
+  } catch (err) {
+    console.error("Error copying shift:", err);
   }
 };
 
@@ -339,7 +457,13 @@ const saveShift = async () => {
           <div
             key={g.id}
             draggable
-            onDragStart={() => setDraggedGroup(g)}
+            onDragStart={() =>
+  setDraggedGroup({
+    id: g.id,
+    name: g.name,
+    schedule: g.schedule || {},
+  })
+}
             onDragEnd={() => setDraggedGroup(null)}
             className={`min-w-[230px] max-w-[250px] h-[100px] rounded-lg cursor-grab active:cursor-grabbing
                        bg-gradient-to-br ${gradient} text-white shadow-md p-3 flex flex-col justify-between
@@ -562,6 +686,11 @@ const saveShift = async () => {
             scrollbar-color: #6366f1 #e5e7eb;
             scrollbar-width: thin;
           }
+            /* Highlight cells while dragging */
+.shift-fill-highlight {
+  background-color: #c7d2fe !important; /* Indigo-200 */
+  box-shadow: inset 0 0 0 2px #4f46e5;
+}
         `}</style>
 
         <table className="w-full border-collapse text-base">
@@ -596,84 +725,206 @@ const saveShift = async () => {
             {filteredWeeklyShifts.map((emp, i) => (
               <tr
                 key={i}
-                className="text-center even:bg-gray-50 hover:bg-indigo-50 transition-all duration-150"
+                className="text-center even:bg-gray-50 transition-all duration-150"
               >
                 <td className="p-4 border border-gray-300">{emp.employee_id}</td>
                 <td className="p-4 border border-gray-300">{emp.name}</td>
                 <td className="p-4 border border-gray-300">{emp.department}</td>
 
-                {/* Group cell with drag & drop */}
-                <td
-                  className={`p-4 border border-gray-300 transition-all duration-300 text-center
-                    ${draggedGroup ? "border-dashed border-2 border-indigo-400 bg-indigo-50" : ""}
-                    ${flashCell === emp.employee_id ? "bg-green-200 animate-pulse" : ""}
-                    hover:bg-indigo-100`}
-                  onDragOver={(e) => e.preventDefault()}
-                  onDrop={async () => {
-                    if (draggedGroup) {
-                      await assignGroup(emp.employee_id, draggedGroup.id);
-                      const updatedMappings = await fetch(
-                        "http://localhost:8000/shift-groups/employee-groups/"
-                      ).then((r) => r.json());
-                      setEmployeeGroups(updatedMappings);
-                      setDraggedGroup(null);
-                      setFlashCell(emp.employee_id);
-                      setTimeout(() => setFlashCell(null), 700);
-                    }
-                  }}
-                >
-                  <select
-                    className={`border rounded px-2 py-1 text-sm w-full transition-all duration-200
-                      ${flashCell === emp.employee_id ? "bg-green-100" : "bg-white"}`}
-                    value={
-                      employeeGroups.find((eg) => eg.employee_id === emp.employee_id)
-                        ?.group_id || ""
-                    }
-                    onChange={async (e) => {
-                      await assignGroup(emp.employee_id, e.target.value);
-                      const updatedMappings = await fetch(
-                        "http://localhost:8000/shift-groups/employee-groups/"
-                      ).then((r) => r.json());
-                      setEmployeeGroups(updatedMappings);
-                      setFlashCell(emp.employee_id);
-                      setTimeout(() => setFlashCell(null), 700);
-                    }}
-                  >
-                    <option value="">Select Group</option>
-                    {groups.map((g) => (
-                      <option key={g.id} value={g.id}>
-                        {g.name}
-                      </option>
-                    ))}
-                  </select>
-                </td>
+{/* Group cell: supports both Excel-style fill down and drag-drop from group box */}
+<td
+  className={`relative p-4 border border-gray-300 text-center select-none transition-all duration-200
+    ${
+      draggedGroup
+        ? "border-dashed border-2 border-indigo-400 bg-indigo-50"
+        : ""
+    }
+    hover:bg-indigo-50 ${
+      isFillingGroup &&
+      i >= Math.min(fillStartIndex ?? -1, fillHoverIndex ?? -1) &&
+      i <= Math.max(fillStartIndex ?? -1, fillHoverIndex ?? -1)
+        ? "bg-indigo-100 ring-2 ring-indigo-400"
+        : ""
+    }`}
+  
+  // Excel fill highlight tracking
+  onMouseEnter={() => {
+    if (isFillingGroup) setFillHoverIndex(i);
+  }}
+  
+  // Drop from group info box
+  onDragOver={(e) => e.preventDefault()}
+  onDrop={async () => {
+    if (draggedGroup) {
+      await assignGroup(emp.employee_id, draggedGroup.id);
+      const updatedMappings = await fetch(
+        "http://localhost:8000/shift-groups/employee-groups/"
+      ).then((r) => r.json());
+      setEmployeeGroups(updatedMappings);
+      setDraggedGroup(null);
+
+      // visual flash
+      setFlashCell(emp.employee_id);
+      setTimeout(() => setFlashCell(null), 700);
+    }
+  }}
+  
+  // Excel fill release logic
+  onMouseUp={async () => {
+    if (isFillingGroup && fillStartIndex !== null) {
+      const start = Math.min(fillStartIndex, fillHoverIndex);
+      const end = Math.max(fillStartIndex, fillHoverIndex);
+
+      // find source employee's group
+      const sourceEmp = filteredWeeklyShifts[fillStartIndex];
+      const sourceGroup = employeeGroups.find(
+        (eg) => eg.employee_id === sourceEmp.employee_id
+      )?.group_id;
+
+      if (sourceGroup) {
+        for (let row = start; row <= end; row++) {
+          const targetEmp = filteredWeeklyShifts[row];
+          await assignGroup(targetEmp.employee_id, sourceGroup);
+        }
+
+        const updatedMappings = await fetch(
+          "http://localhost:8000/shift-groups/employee-groups/"
+        ).then((r) => r.json());
+        setEmployeeGroups(updatedMappings);
+      }
+
+      setIsFillingGroup(false);
+      setFillStartIndex(null);
+      setFillHoverIndex(null);
+    }
+  }}
+>
+  {/* Select dropdown for group */}
+  <select
+    className={`border rounded px-2 py-1 text-sm w-full transition-all duration-200
+      ${flashCell === emp.employee_id ? "bg-green-100" : "bg-white"}`}
+    value={
+      employeeGroups.find((eg) => eg.employee_id === emp.employee_id)
+        ?.group_id || ""
+    }
+    onChange={async (e) => {
+      await assignGroup(emp.employee_id, e.target.value);
+      const updatedMappings = await fetch(
+        "http://localhost:8000/shift-groups/employee-groups/"
+      ).then((r) => r.json());
+      setEmployeeGroups(updatedMappings);
+      setFlashCell(emp.employee_id);
+      setTimeout(() => setFlashCell(null), 700);
+    }}
+  >
+    <option value="">Select Group</option>
+    {groups.map((g) => (
+      <option key={g.id} value={g.id}>
+        {g.name}
+      </option>
+    ))}
+  </select>
+
+  {/* Excel-style bottom-right handle */}
+  <div
+    className="absolute bottom-0 right-0 w-3 h-3 bg-indigo-500 hover:bg-indigo-600 rounded-sm cursor-crosshair"
+    onMouseDown={(e) => {
+      e.preventDefault();
+      setIsFillingGroup(true);
+      setFillStartIndex(i);
+      setFillHoverIndex(i);
+    }}
+  ></div>
+</td>
 
                 {/* Daily shifts */}
-                {emp.shifts.map((s, j) => (
-                  <td
-                    key={j}
-                    className={`p-4 border border-gray-300 cursor-pointer transition ${
-                      new Date(s.date).getDay() === 0 ||
-                      new Date(s.date).getDay() === 6
-                        ? "bg-red-100"
-                        : ""
-                    } ${
-                      s.date === formatDate(new Date())
-                        ? "bg-yellow-100 font-bold"
-                        : ""
-                    } hover:bg-indigo-100`}
-                    onClick={() =>
-                      setEditShift({
-                        ...emp,
-                        date: formatDate(s.date),
-                        start: s.start === "-" ? "" : s.start,
-                        end: s.end === "-" ? "" : s.end,
-                      })
-                    }
-                  >
-                    {s.start === "-" ? "-" : `${s.start} - ${s.end}`}
-                  </td>
-                ))}
+{emp.shifts.map((s, j) => {
+  const cellKey = `${i}-${j}`; // row-col key
+  const isHighlighted = fillShiftTargets.includes(cellKey);
+
+  return (
+    <td
+      key={j}
+      className={`relative p-4 border border-gray-300 text-center select-none transition
+        ${new Date(s.date).getDay() === 0 || new Date(s.date).getDay() === 6 ? "bg-red-100" : ""}
+        ${s.date === formatDate(new Date()) ? "bg-yellow-100 font-bold" : ""}
+        ${isHighlighted ? "shift-fill-highlight" : ""}
+        hover:bg-indigo-50`}
+      
+      onClick={() =>
+        setEditShift({
+          ...emp,
+          date: formatDate(s.date),
+          start: s.start === "-" ? "" : s.start,
+          end: s.end === "-" ? "" : s.end,
+        })
+      }
+
+      onMouseEnter={() => {
+        // while dragging highlight target
+        if (isFillingShift && fillShiftOrigin) {
+          const newTargets = [];
+          const rowMin = Math.min(fillShiftOrigin.empIndex, i);
+          const rowMax = Math.max(fillShiftOrigin.empIndex, i);
+          const colMin = Math.min(fillShiftOrigin.colIndex, j);
+          const colMax = Math.max(fillShiftOrigin.colIndex, j);
+          for (let r = rowMin; r <= rowMax; r++) {
+            for (let c = colMin; c <= colMax; c++) {
+              newTargets.push(`${r}-${c}`);
+            }
+          }
+          setFillShiftTargets(newTargets);
+        }
+      }}
+
+      onMouseUp={async () => {
+        if (isFillingShift && fillShiftOrigin) {
+          for (const key of fillShiftTargets) {
+            const [row, col] = key.split("-").map(Number);
+            const targetEmp = filteredWeeklyShifts[row];
+            const targetDate = formatDate(weekDates[col]);
+            await copyShiftToCell(
+              targetEmp.employee_id,
+              targetDate,
+              fillShiftOrigin.start,
+              fillShiftOrigin.end
+            );
+          }
+
+          // refresh shifts
+          const shiftRes = await fetch("http://localhost:8000/shifts/");
+          const shiftData = await shiftRes.json();
+          setShifts(shiftData);
+
+          // reset
+          setIsFillingShift(false);
+          setFillShiftOrigin(null);
+          setFillShiftTargets([]);
+        }
+      }}
+    >
+      {!s.start || s.start === "00:00" || s.start === "-" ? "-" : `${s.start} - ${s.end}`}
+
+      {/* Fill handle (bottom-right corner) */}
+      {s.start !== "-" && s.end !== "-" && (
+        <div
+          className="absolute bottom-0 right-0 w-3 h-3 bg-indigo-500 hover:bg-indigo-600 rounded-sm cursor-crosshair"
+          onMouseDown={(e) => {
+            e.preventDefault();
+            setIsFillingShift(true);
+            setFillShiftOrigin({
+              empIndex: i,
+              colIndex: j,
+              start: s.start,
+              end: s.end,
+            });
+            setFillShiftTargets([`${i}-${j}`]);
+          }}
+        ></div>
+      )}
+    </td>
+  );
+})}
               </tr>
             ))}
           </tbody>

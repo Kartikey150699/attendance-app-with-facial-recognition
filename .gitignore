@@ -14,3 +14,4 @@ venv/
 # Ignore Node.js dependencies
 frontend/node_modules/
 .gitignoretouch
+*.h5
