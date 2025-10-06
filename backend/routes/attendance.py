@@ -13,6 +13,7 @@ import cv2
 from datetime import date, datetime, timezone, timedelta
 from calendar import monthrange
 import time 
+from sqlalchemy import inspect
 
 router = APIRouter(prefix="/attendance", tags=["Attendance"])
 
@@ -222,9 +223,22 @@ def refresh_embeddings():
     with SessionLocal() as db:
         load_embeddings(db)
 
-# initialize cache at startup
-with SessionLocal() as db:
-    load_embeddings(db)
+# -------------------------
+# Safe embedding initialization
+# -------------------------
+def try_load_embeddings():
+    try:
+        inspector = inspect(SessionLocal().bind)
+        if "users" in inspector.get_table_names():
+            with SessionLocal() as db:
+                load_embeddings(db)
+        else:
+            print("Skipping embedding load — 'users' table not found yet.")
+    except Exception as e:
+        print(f"Embedding load skipped due to DB initialization issue: {e}")
+
+# Call it safely after checking tables
+try_load_embeddings()
 
 
 # -------------------------

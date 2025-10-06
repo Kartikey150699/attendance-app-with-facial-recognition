@@ -1,8 +1,7 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy import inspect
-from sqlalchemy.orm import Session
-from utils.db import Base, engine, SessionLocal
+from utils.db import Base, engine
 
 # absolute imports
 from routes import (
@@ -28,13 +27,6 @@ from models import (
     Approver,
     Shift
 )
-
-# Optional: if you have embedding logic in utils/face_utils or similar
-try:
-    from utils.face_utils import load_embeddings  # adjust path if needed
-except ImportError:
-    load_embeddings = None
-
 
 # =====================================================
 # FastAPI App
@@ -75,7 +67,6 @@ app.include_router(approvers.router)
 app.include_router(shifts.router)
 app.include_router(shift_group.router)
 
-
 # =====================================================
 # Root endpoint
 # =====================================================
@@ -85,11 +76,14 @@ def home():
         "message": "✅ FaceTrack Backend is running 🚀 - Visit http://localhost:3000 for the FaceTrack App."
     }
 
-
 # =====================================================
 # Auto-create Tables (if missing)
 # =====================================================
 def init_database():
+    """
+    Check if all required tables exist.
+    If not, create them — silently and safely.
+    """
     inspector = inspect(engine)
     existing_tables = inspector.get_table_names()
 
@@ -101,10 +95,7 @@ def init_database():
     missing_tables = [t for t in required_tables if t not in existing_tables]
 
     if missing_tables:
-        print(f"Creating missing tables: {missing_tables}")
         Base.metadata.create_all(bind=engine)
-    else:
-        print("All tables already exist.")
 
 # =====================================================
 # Initialize Database and Embeddings
@@ -113,10 +104,14 @@ init_database()
 
 @app.on_event("startup")
 def startup_event():
-    """Run after app startup: refresh embeddings safely."""
+    """
+    Runs once when the app starts.
+    Safely loads all face embeddings from the attendance route cache,
+    only if users exist.
+    """
     try:
         from routes.attendance import refresh_embeddings
         refresh_embeddings()
-        print("Embeddings cache initialized successfully.")
-    except Exception as e:
-        print(f"⚠️ Could not refresh embeddings at startup: {e}")
+    except Exception:
+        # Skip silently if tables or embeddings not ready
+        pass
