@@ -216,7 +216,7 @@ def load_embeddings(db: Session):
     user_names = names
     all_embeddings = np.vstack(np_list) if np_list else None
 
-    print(f"Loaded {len(user_ids)} embeddings for {len(users)} users into cache.")
+    print(f"✅ Loaded {len(user_ids)} embeddings for {len(users)} users into cache.")
 
 def refresh_embeddings():
     """Call this after adding/removing/updating users to refresh the cache."""
@@ -238,12 +238,12 @@ try:
                 load_embeddings(db)
                 print(f"Loaded embeddings for {user_count} users.")
             else:
-                print("(Import) No users found — embedding cache empty.")
+                print("No users found — embedding cache empty.")
     else:
-        print("⚠️ (Import) Skipped embedding load — 'users' table not found.")
+        print("⚠️ Skipped embedding load — 'users' table not found.")
 
 except Exception as e:
-    print(f"⚠️ (Import) Embedding preload skipped: {e}")
+    print(f"⚠️ Embedding preload skipped: {e}")
 
 
 # -------------------------

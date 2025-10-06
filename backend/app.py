@@ -128,11 +128,10 @@ def startup_event():
     try:
         inspector = inspect(engine)
         if "users" not in inspector.get_table_names():
-            print("⚠️ Skipping embedding refresh — 'users' table not found yet.")
             return
 
+        from models.User import User
         from routes.attendance import refresh_embeddings
-        from models import User
 
         with SessionLocal() as db:
             user_count = db.query(User).count()
