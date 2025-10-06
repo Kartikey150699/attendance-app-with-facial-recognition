@@ -101,19 +101,22 @@ def init_database():
     missing_tables = [t for t in required_tables if t not in existing_tables]
 
     if missing_tables:
+        print(f"Creating missing tables: {missing_tables}")
         Base.metadata.create_all(bind=engine)
-
-    # Safe Embedding Load
-    if load_embeddings:
-        db: Session = SessionLocal()
-        try:
-            if db.query(User).count() > 0:
-                load_embeddings()
-        finally:
-            db.close()
-
+    else:
+        print("All tables already exist.")
 
 # =====================================================
-# Run initialization
+# Initialize Database and Embeddings
 # =====================================================
 init_database()
+
+@app.on_event("startup")
+def startup_event():
+    """Run after app startup: refresh embeddings safely."""
+    try:
+        from routes.attendance import refresh_embeddings
+        refresh_embeddings()
+        print("Embeddings cache initialized successfully.")
+    except Exception as e:
+        print(f"⚠️ Could not refresh embeddings at startup: {e}")
