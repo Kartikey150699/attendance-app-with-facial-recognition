@@ -223,22 +223,27 @@ def refresh_embeddings():
     with SessionLocal() as db:
         load_embeddings(db)
 
-# -------------------------
-# Safe embedding initialization
-# -------------------------
-def try_load_embeddings():
-    try:
-        inspector = inspect(SessionLocal().bind)
-        if "users" in inspector.get_table_names():
-            with SessionLocal() as db:
-                load_embeddings(db)
-        else:
-            print("Skipping embedding load — 'users' table not found yet.")
-    except Exception as e:
-        print(f"Embedding load skipped due to DB initialization issue: {e}")
+# =====================================================
+# Safe Embedding Load on Import (macOS + Windows compatible)
+# =====================================================
+try:
+    # Load embeddings once when imported — needed for macOS reload issue
+    from sqlalchemy import inspect
+    inspector = inspect(SessionLocal().bind)
 
-# Call it safely after checking tables
-try_load_embeddings()
+    if "users" in inspector.get_table_names():
+        with SessionLocal() as db:
+            user_count = db.query(User).count()
+            if user_count > 0:
+                load_embeddings(db)
+                print(f"Loaded embeddings for {user_count} users.")
+            else:
+                print("(Import) No users found — embedding cache empty.")
+    else:
+        print("⚠️ (Import) Skipped embedding load — 'users' table not found.")
+
+except Exception as e:
+    print(f"⚠️ (Import) Embedding preload skipped: {e}")
 
 
 # -------------------------

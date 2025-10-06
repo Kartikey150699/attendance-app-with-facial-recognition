@@ -1,9 +1,12 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy import inspect
-from utils.db import Base, engine
+from sqlalchemy.orm import Session
+from utils.db import Base, engine, SessionLocal
 
-# absolute imports
+# =====================================================
+# Route Imports
+# =====================================================
 from routes import (
     users,
     attendance,
@@ -17,6 +20,10 @@ from routes import (
     shifts,
     shift_group
 )
+
+# =====================================================
+# Model Imports
+# =====================================================
 from models import (
     User,
     Attendance,
@@ -84,34 +91,59 @@ def init_database():
     Check if all required tables exist.
     If not, create them — silently and safely.
     """
-    inspector = inspect(engine)
-    existing_tables = inspector.get_table_names()
+    try:
+        inspector = inspect(engine)
+        existing_tables = inspector.get_table_names()
 
-    required_tables = [
-        "users", "attendance", "admin", "work_applications",
-        "holiday", "paid_holidays", "approvers", "shifts", "shift_groups"
-    ]
+        required_tables = [
+            "users", "attendance", "admin", "work_applications",
+            "holiday", "paid_holidays", "approvers", "shifts", "shift_groups"
+        ]
 
-    missing_tables = [t for t in required_tables if t not in existing_tables]
+        missing_tables = [t for t in required_tables if t not in existing_tables]
 
-    if missing_tables:
-        Base.metadata.create_all(bind=engine)
+        if missing_tables:
+            Base.metadata.create_all(bind=engine)
+            print(f"Created missing tables: {', '.join(missing_tables)}")
+        else:
+            print("✅ All required tables exist.")
+    except Exception as e:
+        print(f"⚠️ Database initialization skipped: {e}")
 
 # =====================================================
-# Initialize Database and Embeddings
+# Initialize Database
 # =====================================================
 init_database()
 
+# =====================================================
+# Load Embeddings AFTER tables exist
+# =====================================================
 @app.on_event("startup")
 def startup_event():
     """
-    Runs once when the app starts.
-    Safely loads all face embeddings from the attendance route cache,
-    only if users exist.
+    Run once when the app starts.
+    Ensures all tables exist, then safely refresh embeddings if users exist.
+    Compatible with macOS and Windows.
     """
     try:
+        inspector = inspect(engine)
+        if "users" not in inspector.get_table_names():
+            print("⚠️ Skipping embedding refresh — 'users' table not found yet.")
+            return
+
         from routes.attendance import refresh_embeddings
-        refresh_embeddings()
-    except Exception:
-        # Skip silently if tables or embeddings not ready
-        pass
+        from models import User
+
+        with SessionLocal() as db:
+            user_count = db.query(User).count()
+
+        if user_count == 0:
+            print("No users found — skipping embedding refresh.")
+        else:
+            refresh_embeddings()
+            print(f"✅ Refreshed embeddings successfully for {user_count} users.")
+
+    except Exception as e:
+        print(f"⚠️ Startup embedding refresh skipped: {e}")
+
+    print("✅ System initialization complete — ready for use.")
