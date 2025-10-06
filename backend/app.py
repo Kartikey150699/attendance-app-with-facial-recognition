@@ -1,5 +1,8 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from sqlalchemy import inspect
+from sqlalchemy.orm import Session
+from utils.db import Base, engine, SessionLocal
 
 # absolute imports
 from routes import (
@@ -13,9 +16,8 @@ from routes import (
     paid_holidays,
     approvers,
     shifts,
-    shift_group   # 👈 NEW
+    shift_group
 )
-from utils.db import Base, engine
 from models import (
     User,
     Attendance,
@@ -27,17 +29,27 @@ from models import (
     Shift
 )
 
+# Optional: if you have embedding logic in utils/face_utils or similar
+try:
+    from utils.face_utils import load_embeddings  # adjust path if needed
+except ImportError:
+    load_embeddings = None
+
+
+# =====================================================
 # FastAPI App
+# =====================================================
 app = FastAPI(
-    title="FaceTrack Attendance + Shift Groups API",  # 👈 Updated title
+    title="FaceTrack Attendance + Shift Groups API",
     description="Backend for FaceTrack: Face Recognition Attendance System with Shift Group Management",
     version="1.1.0"
 )
 
-# CORS setup (for React frontend)
+# =====================================================
+# CORS setup
+# =====================================================
 origins = [
     "http://localhost:3000",  # React dev server
-    # Add production domain later if needed
 ]
 
 app.add_middleware(
@@ -48,7 +60,9 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Routers
+# =====================================================
+# Router Registration
+# =====================================================
 app.include_router(users.router)
 app.include_router(attendance.router)
 app.include_router(admin.router)
@@ -59,14 +73,47 @@ app.include_router(hr_logs.router)
 app.include_router(paid_holidays.router)
 app.include_router(approvers.router)
 app.include_router(shifts.router)
-app.include_router(shift_group.router) 
+app.include_router(shift_group.router)
 
+
+# =====================================================
 # Root endpoint
+# =====================================================
 @app.get("/")
 def home():
     return {
         "message": "✅ FaceTrack Backend is running 🚀 - Visit http://localhost:3000 for the FaceTrack App."
     }
 
-# Auto-create tables
-Base.metadata.create_all(bind=engine)
+
+# =====================================================
+# Auto-create Tables (if missing)
+# =====================================================
+def init_database():
+    inspector = inspect(engine)
+    existing_tables = inspector.get_table_names()
+
+    required_tables = [
+        "users", "attendance", "admin", "work_applications",
+        "holiday", "paid_holidays", "approvers", "shifts", "shift_groups"
+    ]
+
+    missing_tables = [t for t in required_tables if t not in existing_tables]
+
+    if missing_tables:
+        Base.metadata.create_all(bind=engine)
+
+    # Safe Embedding Load
+    if load_embeddings:
+        db: Session = SessionLocal()
+        try:
+            if db.query(User).count() > 0:
+                load_embeddings()
+        finally:
+            db.close()
+
+
+# =====================================================
+# Run initialization
+# =====================================================
+init_database()
