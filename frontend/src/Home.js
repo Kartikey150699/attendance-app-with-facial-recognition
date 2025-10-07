@@ -15,6 +15,7 @@ import Webcam from "react-webcam";
 import { useNavigate } from "react-router-dom";
 import Footer from "./Footer";
 import HeaderDateTime from "./HeaderDateTime";
+import { API_BASE } from "./config";
 
 function Home() {
   const [dateTime, setDateTime] = useState(new Date());
@@ -24,6 +25,7 @@ function Home() {
   const [action, setAction] = useState("checkin");
   const [cameras, setCameras] = useState([]);
   const [selectedCamera, setSelectedCamera] = useState(null);
+  
 
   const webcamRef = useRef(null);
   const navigate = useNavigate();
@@ -152,10 +154,10 @@ const handleBackendResponse = useCallback(
       }
 
       try {
-        const response = await fetch(`http://localhost:8000/attendance/${mode}`, {
-          method: "POST",
-          body: formData,
-        });
+const response = await fetch(`${API_BASE}/attendance/${mode}`, {
+  method: "POST",
+  body: formData,
+});
         const data = await response.json();
         handleBackendResponse(data, mode);
       } catch (error) {
