@@ -33,7 +33,6 @@ function Home() {
   const videoWidth = 580;
   const videoHeight = 343;
 
-
   // Live date/time
   useEffect(() => {
     const timer = setInterval(() => setDateTime(new Date()), 1000);
@@ -128,7 +127,7 @@ const handleBackendResponse = useCallback(
         setStatusMessages(msgs);
 
         if (action !== "work-application") {
-          setTimeout(() => setStatusMessages([]), 2000);
+          setTimeout(() => setStatusMessages([]), 1500);
         }
       }
     }
@@ -175,7 +174,7 @@ useEffect(() => {
     captureAndSendFrame("preview");
 
     // Then keep sending every 2 seconds
-    interval = setInterval(() => captureAndSendFrame("preview"), 1500);
+    interval = setInterval(() => captureAndSendFrame("preview"), 2000);
   }
   return () => clearInterval(interval);
 }, [showCamera, action, captureAndSendFrame]);
