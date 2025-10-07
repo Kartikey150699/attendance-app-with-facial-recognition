@@ -336,8 +336,6 @@ async def preview_faces(file: UploadFile = None):
              #   enforce_detection=False
             #)
 
-            analyze_info = []
-
             # Gender
             dominant = analyze_info[0].get("dominant_gender", "unknown")
             gender_probs = analyze_info[0].get("gender", {})
@@ -544,8 +542,6 @@ async def mark_attendance(
             #    actions=["age", "gender"],
              #   enforce_detection=False
             #)
-
-            analyze_info = []
 
             dominant = analyze_info[0].get("dominant_gender", "unknown")
             gender_probs = analyze_info[0].get("gender", {})
