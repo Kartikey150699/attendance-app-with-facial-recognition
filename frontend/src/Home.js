@@ -333,47 +333,30 @@ useEffect(() => {
     }}
   />
 
-  {/* ✅ Face Boxes inside the same container */}
-  {faces.map((face, index) => {
-    const genderLower = face.gender?.toLowerCase() || "";
-    const genderBgClass =
-      genderLower.includes("woman") || genderLower.includes("female")
-        ? "bg-pink-500"
-        : genderLower.includes("man") || genderLower.includes("male")
-        ? "bg-blue-500"
-        : "bg-gray-400";
-
-    return (
-      <div
-        key={index}
-        className={`absolute border-4 ${getBoxColor(face.status)} rounded-lg transition-all duration-200 ease-linear`}
-        style={{
-          top: `${face.box[1]}px`,
-          left: `${videoWidth - face.box[0] - face.box[2]}px`,
-          width: `${face.box[2]}px`,
-          height: `${face.box[3]}px`,
-        }}
-      >
-        {(face.gender || face.age) && (
-          <span
-            className={`absolute -top-8 left-1/2 transform -translate-x-1/2 ${genderBgClass} 
-                        text-white text-sm font-semibold px-3 py-[2px] rounded-md shadow-lg 
-                        whitespace-nowrap border border-white`}
-          >
-            {face.gender}
-            {face.age && face.age !== "N/A" ? `, Age: ${face.age}` : ""}
-          </span>
-        )}
-        <div className="absolute bottom-0 left-0 right-0 flex justify-center">
-          <span className="bg-black text-white px-2 py-1 rounded-b-lg font-bold whitespace-nowrap shadow">
-            {face.status === "spoof"
-              ? "Photo Detected – Not Allowed"
-              : face.name}
-          </span>
-        </div>
+  {/* Face Boxes inside the same container */}
+{faces.map((face, index) => {
+  return (
+    <div
+      key={index}
+      className={`absolute border-4 ${getBoxColor(face.status)} rounded-lg transition-all duration-200 ease-linear`}
+      style={{
+        top: `${face.box[1]}px`,
+        left: `${videoWidth - face.box[0] - face.box[2]}px`,
+        width: `${face.box[2]}px`,
+        height: `${face.box[3]}px`,
+      }}
+    >
+      {/* 🟢 Only show name/status below face box */}
+      <div className="absolute bottom-0 left-0 right-0 flex justify-center">
+        <span className="bg-black text-white px-2 py-1 rounded-b-lg font-bold whitespace-nowrap shadow">
+          {face.status === "spoof"
+            ? "Photo Detected – Not Allowed"
+            : face.name}
+        </span>
       </div>
-    );
-  })}
+    </div>
+  );
+})}
 </div>
                 {/* Buttons under Camera */}
                 <div className="flex gap-4 mt-6 mb-4 justify-center">
