@@ -329,11 +329,11 @@ async def preview_faces(file: UploadFile = None):
 
             # Temporarily disable age and gender analysis for speed
             # Normal DeepFace analyze (no preloaded MODELS)
-#            analyze_info = DeepFace.analyze(
- #               cropped_face,
- #               actions=["gender"],                                 # actions=["age", "gender"],
-  #              enforce_detection=False
- #           )
+            analyze_info = DeepFace.analyze(
+                cropped_face,
+                actions=["age", "gender"],
+                enforce_detection=False
+            )
 
             analyze_info = []
 
@@ -537,11 +537,11 @@ async def mark_attendance(
 
             # Temporarily disable age and gender analysis for speed
             # Normal DeepFace analyze (no preloaded models)
- #           analyze_info = DeepFace.analyze(
- #              cropped_face,
-  #              actions=["gender"],                              # actions=["age", "gender"],
-  #              enforce_detection=False
-  #          )
+            analyze_info = DeepFace.analyze(
+                cropped_face,
+                actions=["age", "gender"],
+                enforce_detection=False
+            )
 
             analyze_info = []
 
