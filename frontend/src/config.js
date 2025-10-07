@@ -1,2 +1,1 @@
-// src/config.js
-export const API_BASE = "https://98369beca82d.ngrok-free.app";
+export const API_BASE = "https://73e2085ed5fc.ngrok-free.app";

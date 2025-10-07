@@ -48,7 +48,10 @@ app = FastAPI(
 # CORS setup
 # =====================================================
 origins = [
-    "http://localhost:3000",  # React dev server
+    "http://localhost:3000",                     # local React dev server
+    "https://www.attendance-vercel.app",         # your deployed Vercel frontend
+    "https://73e2085ed5fc.ngrok-free.app",       # current backend ngrok tunnel
+    "https://*.ngrok-free.app",                  # wildcard (for future ngrok URLs)
 ]
 
 app.add_middleware(
