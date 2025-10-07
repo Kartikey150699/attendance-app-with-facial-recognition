@@ -50,7 +50,7 @@ app = FastAPI(
 
 origins = [
     "http://localhost:3000",
-    "https://attendance-app-with-facial-recognition-6cq7enhdl.vercel.app",
+    "https://attendance-app-with-facial-recognition-bufbjf9kb.vercel.app/",
     "https://attendance-vercel.app",
     "https://73e2085ed5fc.ngrok-free.app",  # current ngrok backend URL
 ]
