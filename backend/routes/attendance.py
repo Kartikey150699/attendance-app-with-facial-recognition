@@ -285,14 +285,14 @@ def find_best_match(embedding, threshold, fallback_threshold=0.0):
         return None, best_score, "unknown"
 
 # -------------------------
-# Preview API
+# Preview API s
 # -------------------------
 @router.post("/preview")
 async def preview_faces(file: UploadFile = None):
     if not file:
         return {"error": "No image uploaded"}
 
-    start_time = time.time()  # ⏱ start timer
+    start_time = time.time()  # start timer
 
     contents = await file.read()
     with tempfile.NamedTemporaryFile(delete=False, suffix=".jpg") as tmp:
@@ -326,6 +326,8 @@ async def preview_faces(file: UploadFile = None):
             x, y, w, h = box.get("x"), box.get("y"), box.get("w"), box.get("h")
             img = cv2.imread(tmp_path)
             cropped_face = img[y:y+h, x:x+w]
+
+            # Normal DeepFace analyze (no preloaded MODELS)
             analyze_info = DeepFace.analyze(
                 cropped_face,
                 actions=["age", "gender"],
@@ -340,7 +342,7 @@ async def preview_faces(file: UploadFile = None):
                 confidence = gender_probs[dominant]
             gender = f"{dominant.capitalize()} ({confidence:.0f}%)"
 
-            # ⚡ Fast Hybrid Age Estimation (Optimized)
+            # Fast Hybrid Age Estimation (Optimized)
             raw_age = analyze_info[0].get("age", "N/A")
             if raw_age != "N/A":
                 try:
@@ -396,7 +398,7 @@ async def preview_faces(file: UploadFile = None):
         if status == "match":
             results.append({
                 "name": best_match["name"],
-                "employee_id": f"IFNT{best_match['id']:03d}",  
+                "employee_id": f"IFNT{best_match['id']:03d}",
                 "box": [box.get("x"), box.get("y"), box.get("w"), box.get("h")],
                 "status": "preview",
                 "gender": gender,
@@ -529,6 +531,8 @@ async def mark_attendance(
             x, y, w, h = box.get("x"), box.get("y"), box.get("w"), box.get("h")
             img = cv2.imread(tmp_path)
             cropped_face = img[y:y+h, x:x+w]
+
+            # Normal DeepFace analyze (no preloaded models)
             analyze_info = DeepFace.analyze(
                 cropped_face,
                 actions=["age", "gender"],
@@ -542,7 +546,7 @@ async def mark_attendance(
                 confidence = gender_probs[dominant]
             gender = f"{dominant.capitalize()} ({confidence:.0f}%)"
 
-            # ⚡ Fast Hybrid Age Estimation (Optimized)
+            # Fast Hybrid Age Estimation (Optimized)
             raw_age = analyze_info[0].get("age", "N/A")
             if raw_age != "N/A":
                 try:
