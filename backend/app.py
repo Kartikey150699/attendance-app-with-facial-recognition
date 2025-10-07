@@ -48,11 +48,10 @@ app = FastAPI(
 # CORS setup
 # =====================================================
 origins = [
-    "http://localhost:3000",
-    "https://attendance-face.vercel.app",
-    "https://13.115.9.144",
+    "http://localhost:3000",                 # local dev
+    "https://attendance-face.vercel.app",    # Vercel frontend
+    "https://facetrackaws.duckdns.org",      # new HTTPS backend
 ]
-
 app.add_middleware(
     CORSMiddleware,
     allow_origins=origins,
