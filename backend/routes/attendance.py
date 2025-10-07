@@ -327,12 +327,15 @@ async def preview_faces(file: UploadFile = None):
             img = cv2.imread(tmp_path)
             cropped_face = img[y:y+h, x:x+w]
 
+            # Temporarily disable age and gender analysis for speed
             # Normal DeepFace analyze (no preloaded MODELS)
-            analyze_info = DeepFace.analyze(
-                cropped_face,
-                actions=["age", "gender"],
-                enforce_detection=False
-            )
+#            analyze_info = DeepFace.analyze(
+ #               cropped_face,
+ #               actions=["gender"],                                 # actions=["age", "gender"],
+  #              enforce_detection=False
+ #           )
+
+            analyze_info = []
 
             # Gender
             dominant = analyze_info[0].get("dominant_gender", "unknown")
@@ -532,12 +535,15 @@ async def mark_attendance(
             img = cv2.imread(tmp_path)
             cropped_face = img[y:y+h, x:x+w]
 
+            # Temporarily disable age and gender analysis for speed
             # Normal DeepFace analyze (no preloaded models)
-            analyze_info = DeepFace.analyze(
-                cropped_face,
-                actions=["age", "gender"],
-                enforce_detection=False
-            )
+ #           analyze_info = DeepFace.analyze(
+ #              cropped_face,
+  #              actions=["gender"],                              # actions=["age", "gender"],
+  #              enforce_detection=False
+  #          )
+
+            analyze_info = []
 
             dominant = analyze_info[0].get("dominant_gender", "unknown")
             gender_probs = analyze_info[0].get("gender", {})

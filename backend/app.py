@@ -48,7 +48,9 @@ app = FastAPI(
 # CORS setup
 # =====================================================
 origins = [
-    "http://localhost:3000",  # React dev server
+    "http://localhost:3000",
+    "https://attendance-face.vercel.app",
+    "https://13.115.9.144",
 ]
 
 app.add_middleware(
