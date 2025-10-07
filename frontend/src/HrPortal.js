@@ -10,6 +10,7 @@ import {
 import Footer from "./Footer";
 import HeaderDateTime from "./HeaderDateTime";
 import { useState, useEffect } from "react";
+import { API_BASE } from "./config";
 
 function HrPortal() {
   const navigate = useNavigate();
@@ -20,7 +21,7 @@ function HrPortal() {
   useEffect(() => {
     const fetchPendingCount = async () => {
       try {
-        const res = await fetch("http://localhost:8000/work-applications/");
+        const res = await fetch(`${API_BASE}/work-applications/`);
         if (!res.ok) throw new Error("Failed to fetch applications");
         const data = await res.json();
 

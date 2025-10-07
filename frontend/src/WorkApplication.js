@@ -11,6 +11,7 @@ import {
 } from "@heroicons/react/24/solid";
 import Footer from "./Footer";
 import HeaderDateTime from "./HeaderDateTime";
+import { API_BASE } from "./config";
 
 function WorkApplication() {
   const location = useLocation();
@@ -57,7 +58,7 @@ function WorkApplication() {
   useEffect(() => {
     const fetchDepartment = async () => {
       try {
-        const res = await fetch(`http://localhost:8000/users/active`);
+        const res = await fetch(`${API_BASE}/users/active`);
         const data = await res.json();
         const record = data.find((u) => u.employee_id === employeeId);
         if (record) {
@@ -74,7 +75,7 @@ function WorkApplication() {
   useEffect(() => {
     const fetchRemaining = async () => {
       try {
-        const res = await fetch("http://localhost:8000/paid-holidays/");
+        const res = await fetch(`${API_BASE}/paid-holidays/`);
         if (!res.ok) throw new Error("Failed to fetch paid holidays");
         const data = await res.json();
         const record = data.find((h) => h.employee_id === employeeId);
@@ -93,7 +94,7 @@ function WorkApplication() {
     const fetchPendingApprovals = async () => {
       try {
         const res = await fetch(
-          `http://localhost:8000/approvers/by-approver/${employeeId}`
+          `${API_BASE}/approvers/by-approver/${employeeId}`
         );
         if (!res.ok) throw new Error("Failed to fetch approvals");
         const data = await res.json();
@@ -136,7 +137,7 @@ function WorkApplication() {
     };
 
     try {
-      const res = await fetch("http://localhost:8000/work-applications/", {
+      const res = await fetch(`${API_BASE}/work-applications/`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),

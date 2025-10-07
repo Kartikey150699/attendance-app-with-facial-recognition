@@ -8,6 +8,7 @@ import {
 } from "@heroicons/react/24/solid";
 import Footer from "./Footer";
 import HeaderDateTime from "./HeaderDateTime";
+import { API_BASE } from "./config";
 
 function AttendanceLogs() {
   const [logs, setLogs] = useState([]);
@@ -49,7 +50,7 @@ function AttendanceLogs() {
   async function fetchLogs() {
     try {
       const res = await fetch(
-        `http://localhost:8000/logs?year=${year}&month=${month}`
+        `${API_BASE}/logs?year=${year}&month=${month}`
       );
       const data = await res.json();
 
@@ -245,14 +246,11 @@ const saveEdit = async () => {
   const adminName = localStorage.getItem("currentAdmin");
 
   try {
-    const res = await fetch(
-      `http://localhost:8000/logs/update/${editLog.id}`,
-      {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ ...editTimes, edited_by: adminName }),
-      }
-    );
+const res = await fetch(`${API_BASE}/logs/update/${editLog.id}`, {
+  method: "PUT",
+  headers: { "Content-Type": "application/json" },
+  body: JSON.stringify({ ...editTimes, edited_by: adminName }),
+});
 
     if (res.ok) {
       const result = await res.json();
@@ -278,7 +276,7 @@ const saveEdit = async () => {
   // Fetch audit trail
 const openAuditTrail = async (log) => {
   try {
-    const res = await fetch(`http://localhost:8000/logs/audit/${log.id}`);
+    const res = await fetch(`${API_BASE}/logs/audit/${log.id}`);
     if (!res.ok) throw new Error("Failed to fetch audit trail");
 
     const data = await res.json();
@@ -301,7 +299,7 @@ const openAuditTrail = async (log) => {
 const confirmExport = async () => {
   try {
     const res = await fetch(
-      `http://localhost:8000/logs/export?year=${year}&month=${month}&format=${exportType}`,
+      `${API_BASE}/logs/export?year=${year}&month=${month}&format=${exportType}`,
       {
         method: "POST",
         headers: { "Content-Type": "application/json" },

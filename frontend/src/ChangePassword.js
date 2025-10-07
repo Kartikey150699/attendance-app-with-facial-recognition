@@ -8,6 +8,7 @@ import { EyeIcon,
 } from "@heroicons/react/24/solid";
 import Footer from "./Footer";
 import HeaderDateTime from "./HeaderDateTime"; 
+import { API_BASE } from "./config";
 
 function ChangePassword() {
   const [username, setUsername] = useState(""); 
@@ -40,10 +41,10 @@ function ChangePassword() {
       formData.append("old_password", oldPassword);
       formData.append("new_password", newPassword);
 
-      const response = await fetch("http://localhost:8000/admin/change-password", {
-        method: "POST",
-        body: formData,
-      });
+const response = await fetch(`${API_BASE}/admin/change-password`, {
+  method: "POST",
+  body: formData,
+});
 
       const data = await response.json();
 

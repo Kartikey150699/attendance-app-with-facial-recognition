@@ -8,6 +8,7 @@ import {
 } from "@heroicons/react/24/solid";
 import Footer from "./Footer";
 import HeaderDateTime from "./HeaderDateTime";
+import { API_BASE } from "./config";
 
 function MyApprovals() {
   const navigate = useNavigate();
@@ -38,7 +39,7 @@ function MyApprovals() {
     const fetchApprovals = async () => {
       try {
         const res = await fetch(
-          `http://localhost:8000/approvers/by-approver/${employeeId}`
+          `${API_BASE}/approvers/by-approver/${employeeId}`
         );
         if (!res.ok) throw new Error("Failed to fetch approvals");
         const data = await res.json();
@@ -56,7 +57,7 @@ function MyApprovals() {
   // Update status after confirmation
   const updateStatus = async (id, status) => {
     try {
-      const res = await fetch(`http://localhost:8000/approvers/${id}/status`, {
+      const res = await fetch(`${API_BASE}/approvers/${id}/status`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ status }),

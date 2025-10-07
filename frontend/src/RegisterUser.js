@@ -9,6 +9,7 @@ import {
 } from "@heroicons/react/24/solid";
 import Footer from "./Footer";
 import HeaderDateTime from "./HeaderDateTime";
+import { API_BASE } from "./config";
 
 // Move progress messages outside so it's stable
 const PROGRESS_MESSAGES = [
@@ -108,7 +109,7 @@ function RegisterUser() {
         await new Promise((resolve) => setTimeout(resolve, 300));
       }
 
-      const response = await fetch("http://localhost:8000/users/register", {
+      const response = await fetch(`${API_BASE}/users/register`, {
         method: "POST",
         body: formData,
       });

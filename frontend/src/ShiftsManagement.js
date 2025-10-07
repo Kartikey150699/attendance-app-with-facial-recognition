@@ -10,6 +10,7 @@ import {
 } from "@heroicons/react/24/solid";
 import Footer from "./Footer";
 import HeaderDateTime from "./HeaderDateTime";
+import { API_BASE } from "./config";
 
 function ShiftsManagement() {
   const [viewType, setViewType] = useState("weekly"); // default = weekly
@@ -45,11 +46,11 @@ useEffect(() => {
   const fetchData = async () => {
     try {
       const [empRes, shiftRes, groupRes, mappingRes, groupFullRes] = await Promise.all([
-        fetch("http://localhost:8000/users/active"),
-        fetch("http://localhost:8000/shifts/"),
-        fetch("http://localhost:8000/shift-groups/"),
-        fetch("http://localhost:8000/shift-groups/employee-groups/"),
-        fetch("http://localhost:8000/shift-groups/details/full"),
+        fetch(`${API_BASE}/users/active`),
+        fetch(`${API_BASE}/shifts/`),
+        fetch(`${API_BASE}/shift-groups/`),
+        fetch(`${API_BASE}/shift-groups/employee-groups/`),
+        fetch(`${API_BASE}/shift-groups/details/full`),
       ]);
 
       if (!empRes.ok || !shiftRes.ok || !groupRes.ok || !mappingRes.ok || !groupFullRes.ok)

@@ -8,6 +8,7 @@ import {
 } from "@heroicons/react/24/solid";
 import Footer from "./Footer";
 import HeaderDateTime from "./HeaderDateTime";
+import { API_BASE } from "./config";
 
 function AdminLogin() {
   const [username, setUsername] = useState("");
@@ -25,10 +26,11 @@ function AdminLogin() {
       formData.append("username", username);
       formData.append("password", password);
 
-      const response = await fetch("http://localhost:8000/admin/login", {
-        method: "POST",
-        body: formData,
-      });
+
+const response = await fetch(`${API_BASE}/admin/login`, {
+  method: "POST",
+  body: formData,
+});
 
       const data = await response.json();
 

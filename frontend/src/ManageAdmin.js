@@ -13,6 +13,7 @@ import { EyeIcon,
  } from "@heroicons/react/24/solid";
  import Footer from "./Footer";
  import HeaderDateTime from "./HeaderDateTime"; 
+ import { API_BASE } from "./config";
 
 function ManageAdmin() {
   const [showAddForm, setShowAddForm] = useState(false);
@@ -42,7 +43,7 @@ function ManageAdmin() {
   // Fetch Admin List
   const fetchAdmins = async () => {
     try {
-      const res = await fetch("http://localhost:8000/admin/list");
+      const res = await fetch(`${API_BASE}/admin/list`);
       const data = await res.json();
       if (data.error) {
         setPopup({ type: "error", message: data.error });
@@ -70,7 +71,7 @@ function ManageAdmin() {
       formData.append("username", username);
       formData.append("password", password);
 
-      const res = await fetch("http://localhost:8000/admin/create", {
+      const res = await fetch(`${API_BASE}/admin/create`, {
         method: "POST",
         body: formData,
       });
@@ -105,7 +106,7 @@ function ManageAdmin() {
       formData.append("username", deleteUsername);
       formData.append("current_admin", localStorage.getItem("currentAdmin"));
 
-      const res = await fetch("http://localhost:8000/admin/delete", {
+      const res = await fetch(`${API_BASE}/admin/delete`, {
         method: "POST",
         body: formData,
       });

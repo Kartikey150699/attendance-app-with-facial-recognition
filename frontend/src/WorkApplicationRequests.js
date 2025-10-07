@@ -10,6 +10,7 @@ import {
 } from "@heroicons/react/24/solid";
 import Footer from "./Footer";
 import HeaderDateTime from "./HeaderDateTime";
+import { API_BASE } from "./config";
 
 function WorkApplicationRequests() {
   const navigate = useNavigate();
@@ -53,13 +54,13 @@ const [users, setUsers] = useState([]);
   const fetchData = async () => {
     try {
       // Fetch applications
-      const resApps = await fetch("http://localhost:8000/work-applications/");
+      const resApps = await fetch(`${API_BASE}/work-applications/`);
       if (!resApps.ok) throw new Error("Failed to fetch applications");
       const appsData = await resApps.json();
       setApplications(appsData);
 
       // Fetch users
-      const resUsers = await fetch("http://localhost:8000/users/list");
+      const resUsers = await fetch(`${API_BASE}/users/list`);
       if (!resUsers.ok) throw new Error("Failed to fetch users");
       const usersData = await resUsers.json();
       setUsers(usersData);
@@ -140,7 +141,7 @@ const [users, setUsers] = useState([]);
   const handleUpdate = async (id, status, hrNotes) => {
     try {
       const res = await fetch(
-        `http://localhost:8000/work-applications/${id}/status`,
+        `${API_BASE}/work-applications/${id}/status`,
         {
           method: "PUT",
           headers: { "Content-Type": "application/json" },
@@ -174,7 +175,7 @@ const handleAddApprover = async () => {
   }
 
   try {
-    const res = await fetch("http://localhost:8000/approvers/assign", {
+    const res = await fetch(`${API_BASE}/approvers/assign`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
@@ -189,7 +190,7 @@ const handleAddApprover = async () => {
 
     // Refresh list
     const refresh = await fetch(
-      `http://localhost:8000/approvers/${approverModal.work_application_id}`
+      `${API_BASE}/approvers/${approverModal.work_application_id}`
     );
     const approvers = await refresh.json();
 
@@ -213,7 +214,7 @@ const handleAddApprover = async () => {
 // -------------------------
 const handleDeleteApproverConfirmed = async (approverId) => {
   try {
-    const res = await fetch(`http://localhost:8000/approvers/${approverId}`, {
+    const res = await fetch(`${API_BASE}/approvers/${approverId}`, {
       method: "DELETE",
     });
 
@@ -221,7 +222,7 @@ const handleDeleteApproverConfirmed = async (approverId) => {
 
     // Refresh list
     const refresh = await fetch(
-      `http://localhost:8000/approvers/${approverModal.work_application_id}`
+      `${API_BASE}/approvers/${approverModal.work_application_id}`
     );
     const approvers = await refresh.json();
 
@@ -258,7 +259,7 @@ const handleEditApproverConfirmed = async (approverId) => {
 
   try {
     const res = await fetch(
-      `http://localhost:8000/approvers/${approverId}/update`,
+      `${API_BASE}/approvers/${approverId}/update`,
       {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
@@ -274,7 +275,7 @@ const handleEditApproverConfirmed = async (approverId) => {
 
     // Refresh list
     const refresh = await fetch(
-      `http://localhost:8000/approvers/${approverModal.work_application_id}`
+      `${API_BASE}/approvers/${approverModal.work_application_id}`
     );
     const approvers = await refresh.json();
 
@@ -309,7 +310,7 @@ const handleEditApprover = (approverId) => {
 // -------------------------
 const openApproverModal = async (application) => {
   try {
-    const res = await fetch(`http://localhost:8000/approvers/${application.id}`);
+    const res = await fetch(`${API_BASE}/approvers/${application.id}`);
     let approvers = [];
     if (res.ok) {
       approvers = await res.json();

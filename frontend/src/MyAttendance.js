@@ -4,6 +4,7 @@ import { ArrowUturnLeftIcon } from "@heroicons/react/24/solid";
 import Footer from "./Footer";
 import HeaderDateTime from "./HeaderDateTime";
 import { ClipboardDocumentCheckIcon } from "@heroicons/react/24/solid";
+import { API_BASE } from "./config";
 
 function MyAttendance() {
   const navigate = useNavigate();
@@ -38,9 +39,9 @@ const fetchAttendance = useCallback(
     try {
       const [attRes, shiftRes] = await Promise.all([
         fetch(
-          `http://127.0.0.1:8000/attendance/my-attendance?employee_id=${employeeId}&month=${month}&year=${year}`
+          `${API_BASE}/attendance/my-attendance?employee_id=${employeeId}&month=${month}&year=${year}`
         ),
-        fetch(`http://127.0.0.1:8000/shifts?year=${year}&month=${month}`)
+        fetch(`${API_BASE}/shifts?year=${year}&month=${month}`)
       ]);
 
       const attData = await attRes.json();

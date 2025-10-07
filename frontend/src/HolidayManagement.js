@@ -12,6 +12,7 @@ import {
 } from "@heroicons/react/24/solid";
 import Footer from "./Footer";
 import HeaderDateTime from "./HeaderDateTime";
+import { API_BASE } from "./config";
 
 function HolidayManagement() {
   const navigate = useNavigate();
@@ -54,7 +55,7 @@ function HolidayManagement() {
 
   const fetchHolidays = async () => {
     try {
-      const res = await fetch("http://localhost:8000/holiday/");
+      const res = await fetch(`${API_BASE}/holiday/`);
       if (!res.ok) throw new Error("Failed to fetch holidays");
       const data = await res.json();
       setHolidays(data);
@@ -122,7 +123,7 @@ function HolidayManagement() {
       if (editHoliday) {
         // Update existing holiday
         const res = await fetch(
-          `http://localhost:8000/holiday/${editHoliday.id}`,
+          `${API_BASE}/holiday/${editHoliday.id}`,
           {
             method: "PUT",
             headers: { "Content-Type": "application/json" },
@@ -132,11 +133,11 @@ function HolidayManagement() {
         if (!res.ok) throw new Error("Failed to update holiday");
       } else {
         // Add new holiday
-        const res = await fetch("http://localhost:8000/holiday/", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(newHoliday),
-        });
+const res = await fetch(`${API_BASE}/holiday/`, {
+  method: "POST",
+  headers: { "Content-Type": "application/json" },
+  body: JSON.stringify(newHoliday),
+});
         if (!res.ok) throw new Error("Failed to add holiday");
       }
       await fetchHolidays();
@@ -153,7 +154,7 @@ function HolidayManagement() {
     if (deleteHoliday) {
       try {
         const res = await fetch(
-          `http://localhost:8000/holiday/${deleteHoliday.id}`,
+          `${API_BASE}/holiday/${deleteHoliday.id}`,
           {
             method: "DELETE",
           }

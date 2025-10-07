@@ -8,6 +8,7 @@ import Webcam from "react-webcam";
 import { useNavigate } from "react-router-dom";
 import Footer from "./Footer";
 import HeaderDateTime from "./HeaderDateTime";
+import { API_BASE } from "./config";
 
 function WorkApplicationLogin() {
   const [faces, setFaces] = useState([]);
@@ -55,7 +56,7 @@ function WorkApplicationLogin() {
     formData.append("file", blob, "frame.jpg");
 
     try {
-      const response = await fetch("http://localhost:8000/attendance/preview", {
+      const response = await fetch(`${API_BASE}/attendance/preview`, {
         method: "POST",
         body: formData,
       });
@@ -93,7 +94,7 @@ function WorkApplicationLogin() {
     formData.append("employee_id", employeeId);
 
     try {
-      const response = await fetch("http://localhost:8000/attendance/mark", {
+      const response = await fetch(`${API_BASE}/attendance/mark`, {
         method: "POST",
         body: formData,
       });

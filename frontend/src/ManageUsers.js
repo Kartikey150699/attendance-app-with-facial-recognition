@@ -9,6 +9,7 @@ import {
 } from "@heroicons/react/24/solid";
 import Footer from "./Footer";
 import HeaderDateTime from "./HeaderDateTime";
+import { API_BASE } from "./config";
 
 function ManageUsers() {
   const [users, setUsers] = useState([]);
@@ -33,7 +34,7 @@ function ManageUsers() {
   // Fetch active users only
   const fetchUsers = async () => {
     try {
-      const res = await fetch("http://127.0.0.1:8000/users/list");
+      const res = await fetch(`${API_BASE}/users/list`);
       const data = await res.json();
       setUsers(data);
     } catch (err) {
@@ -50,7 +51,7 @@ const fetchAttendance = async (user, month = selectedMonth, year = selectedYear)
   try {
     const employeeId = `IFNT${String(user.id).padStart(3, "0")}`;
     const res = await fetch(
-      `http://127.0.0.1:8000/hr_logs?year=${year}&month=${month}&employee_id=${employeeId}`
+      `${API_BASE}/hr_logs?year=${year}&month=${month}&employee_id=${employeeId}`
     );
     const data = await res.json();
 
@@ -82,7 +83,7 @@ const fetchAttendance = async (user, month = selectedMonth, year = selectedYear)
   }
 
   try {
-    const res = await fetch("http://127.0.0.1:8000/users/update-user", {
+    const res = await fetch(`${API_BASE}/users/update-user`, {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
@@ -121,10 +122,9 @@ if (!res.ok) {
     if (!selectedUser) return;
 
     try {
-      const res = await fetch(
-        `http://127.0.0.1:8000/users/delete-by-name/${selectedUser.name}`,
-        { method: "DELETE" }
-      );
+const res = await fetch(`${API_BASE}/users/delete-by-name/${selectedUser.name}`, {
+  method: "DELETE",
+});
       const data = await res.json();
 
       if (!res.ok) {

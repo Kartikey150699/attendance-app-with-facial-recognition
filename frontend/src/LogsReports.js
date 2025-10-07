@@ -10,6 +10,7 @@ import {
 } from "@heroicons/react/24/solid";
 import Footer from "./Footer";
 import HeaderDateTime from "./HeaderDateTime";
+import { API_BASE } from "./config";
 
 // This will be available everywhere in the file, no ESLint error, no duplicate
 const parseLocalDate = (input) => {
@@ -70,10 +71,10 @@ useEffect(() => {
     setAnimating("fade-out");
     try {
       // Only fetch logs and shifts (holidays are already included inside hr_logs)
-      const [logsRes, shiftsRes] = await Promise.all([
-        fetch(`http://localhost:8000/hr_logs/?year=${selectedYear}&month=${selectedMonth}`),
-        fetch(`http://localhost:8000/shifts/?year=${selectedYear}&month=${selectedMonth}`),
-      ]);
+const [logsRes, shiftsRes] = await Promise.all([
+  fetch(`${API_BASE}/hr_logs/?year=${selectedYear}&month=${selectedMonth}`),
+  fetch(`${API_BASE}/shifts/?year=${selectedYear}&month=${selectedMonth}`),
+]);
 
       // Parse responses
       const logsData = await logsRes.json();
@@ -108,7 +109,7 @@ useEffect(() => {
 // -----------------------------
 const fetchUserAttendance = useCallback(async (empId) => {
   try {
-    const url = `http://localhost:8000/hr_logs/?year=${selectedYear}&month=${selectedMonth}&employee_id=${empId}`;
+    const url = `${API_BASE}/hr_logs/?year=${selectedYear}&month=${selectedMonth}&employee_id=${empId}`;
     const res = await fetch(url);
 
     if (!res.ok) {

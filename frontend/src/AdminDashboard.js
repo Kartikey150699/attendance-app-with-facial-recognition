@@ -14,6 +14,7 @@ import {
 } from "@heroicons/react/24/solid";
 import Footer from "./Footer";
 import HeaderDateTime from "./HeaderDateTime";
+import { API_BASE } from "./config";
 
 function AdminDashboard() {
   const [currentAdmin, setCurrentAdmin] = useState(null);
@@ -24,9 +25,9 @@ function AdminDashboard() {
 
   const toggleAutoTrain = async () => {
     try {
-      const res = await fetch("http://localhost:8000/attendance/toggle-auto-train", {
-        method: "POST",
-      });
+const res = await fetch(`${API_BASE}/attendance/toggle-auto-train`, {
+  method: "POST",
+});
       const data = await res.json();
       setAutoTrainEnabled(data.auto_train_enabled);
     } catch (err) {
@@ -47,7 +48,9 @@ function AdminDashboard() {
   useEffect(() => {
     const fetchPendingCount = async () => {
       try {
-        const res = await fetch("http://localhost:8000/work-applications/");
+        const res = await fetch(`${API_BASE}/work-applications/`, {
+  method: "GET",
+});
         if (!res.ok) throw new Error("Failed to fetch applications");
         const data = await res.json();
         const count = data.filter((app) => app.status === "Pending").length;
@@ -71,7 +74,7 @@ function AdminDashboard() {
   useEffect(() => {
     async function fetchStatus() {
       try {
-        const res = await fetch("http://localhost:8000/attendance/auto-train-status");
+        const res = await fetch(`${API_BASE}/attendance/auto-train-status`);
         const data = await res.json();
         setAutoTrainEnabled(data.auto_train_enabled);
       } catch (err) {

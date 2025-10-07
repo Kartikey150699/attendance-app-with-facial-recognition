@@ -8,6 +8,7 @@ import {
 } from "@heroicons/react/24/solid";
 import Footer from "./Footer";
 import HeaderDateTime from "./HeaderDateTime";
+import { API_BASE } from "./config";
 
 function CalendarView() {
   const navigate = useNavigate();
@@ -56,7 +57,7 @@ function CalendarView() {
   useEffect(() => {
     const fetchHolidays = async () => {
       try {
-        const res = await fetch("http://localhost:8000/holiday");
+        const res = await fetch(`${API_BASE}/holiday`);
         if (!res.ok) throw new Error("Failed to fetch holidays");
         const data = await res.json();
 

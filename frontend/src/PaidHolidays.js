@@ -11,6 +11,7 @@ import {
 } from "@heroicons/react/24/solid";
 import Footer from "./Footer";
 import HeaderDateTime from "./HeaderDateTime";
+import { API_BASE } from "./config";
 
 function PaidHolidays() {
   const navigate = useNavigate();
@@ -41,7 +42,7 @@ function PaidHolidays() {
 
   const fetchPaidHolidays = async () => {
     try {
-      const res = await fetch("http://localhost:8000/paid-holidays/");
+      const res = await fetch(`${API_BASE}/paid-holidays/`);
       if (!res.ok) throw new Error("Failed to fetch paid holidays");
       const data = await res.json();
       setPaidHolidays(data);
@@ -52,7 +53,7 @@ function PaidHolidays() {
 
   const fetchUsers = async () => {
     try {
-      const res = await fetch("http://localhost:8000/users/list");
+      const res = await fetch(`${API_BASE}/users/list`);
       if (!res.ok) throw new Error("Failed to fetch users");
       const data = await res.json();
       setUsers(data);
@@ -72,7 +73,7 @@ function PaidHolidays() {
       if (editHoliday) {
         // Update existing
         const res = await fetch(
-          `http://localhost:8000/paid-holidays/${editHoliday.id}`,
+          `${API_BASE}/paid-holidays/${editHoliday.id}`,
           {
             method: "PUT",
             headers: { "Content-Type": "application/json" },
@@ -82,7 +83,7 @@ function PaidHolidays() {
         if (!res.ok) throw new Error("Failed to update record");
       } else {
         // Add new
-        const res = await fetch("http://localhost:8000/paid-holidays/", {
+        const res = await fetch(`${API_BASE}/paid-holidays/`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(newHoliday),
@@ -111,7 +112,7 @@ function PaidHolidays() {
     if (deleteHoliday) {
       try {
         const res = await fetch(
-          `http://localhost:8000/paid-holidays/${deleteHoliday.id}`,
+          `${API_BASE}/paid-holidays/${deleteHoliday.id}`,
           { method: "DELETE" }
         );
         if (!res.ok) throw new Error("Failed to delete record");

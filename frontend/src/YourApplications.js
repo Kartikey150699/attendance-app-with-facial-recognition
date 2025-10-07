@@ -11,6 +11,7 @@ import {
 } from "@heroicons/react/24/solid";
 import Footer from "./Footer";
 import HeaderDateTime from "./HeaderDateTime";
+import { API_BASE } from "./config";
 
 function YourApplications() {
   const location = useLocation();
@@ -43,7 +44,7 @@ function YourApplications() {
     const fetchApplications = async () => {
       try {
         const res = await fetch(
-          `http://localhost:8000/work-applications/?employee_id=${employeeId}`
+          `${API_BASE}/work-applications/?employee_id=${employeeId}`
         );
         if (!res.ok) throw new Error("Failed to fetch applications");
         const data = await res.json();

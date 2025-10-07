@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { ArrowUturnLeftIcon, Cog6ToothIcon } from "@heroicons/react/24/solid";
 import HeaderDateTime from "./HeaderDateTime";
 import Footer from "./Footer";
+import { API_BASE } from "./config";
 
 function GroupsManagement() {
   const [groups, setGroups] = useState([]);
@@ -13,7 +14,7 @@ function GroupsManagement() {
 
   // Fetch groups
   useEffect(() => {
-    fetch("http://localhost:8000/shift-groups/")
+    fetch(`${API_BASE}/shift-groups/`)
       .then((res) => res.json())
       .then((data) => setGroups(data))
       .catch(() =>
@@ -57,11 +58,11 @@ function GroupsManagement() {
       return;
     }
 
-    const res = await fetch("http://localhost:8000/shift-groups/create", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(newGroup),
-    });
+const res = await fetch(`${API_BASE}/shift-groups/create`, {
+  method: "POST",
+  headers: { "Content-Type": "application/json" },
+  body: JSON.stringify(newGroup),
+});
 
     const data = await res.json();
     if (res.ok) {
@@ -92,7 +93,7 @@ function GroupsManagement() {
       showCancel: true,
       onCancel: () => setModal({ isOpen: false }),
       onConfirm: async () => {
-        const res = await fetch(`http://localhost:8000/shift-groups/${g.id}`, {
+        const res = await fetch(`${API_BASE}/shift-groups/${g.id}`, {
           method: "DELETE",
         });
         if (res.ok) {
@@ -131,7 +132,7 @@ const saveEditGroup = async () => {
 
   try {
     // --- Send PUT request ---
-    const res = await fetch(`http://localhost:8000/shift-groups/${editingGroup.id}`, {
+    const res = await fetch(`${API_BASE}/shift-groups/${editingGroup.id}`, {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
@@ -145,10 +146,8 @@ const saveEditGroup = async () => {
 
     // --- On success ---
     if (res.ok) {
-      // ✅ Re-fetch all groups (ensures latest data + correct IDs)
-      const refreshedGroups = await fetch("http://localhost:8000/shift-groups/").then((r) =>
-        r.json()
-      );
+      // Re-fetch all groups (ensures latest data + correct IDs)
+      const refreshedGroups = await fetch(`${API_BASE}/shift-groups/`).then((r) => r.json());
       setGroups(refreshedGroups);
       setEditingGroup(null);
 
