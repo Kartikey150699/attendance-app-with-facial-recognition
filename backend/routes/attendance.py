@@ -14,6 +14,10 @@ from datetime import date, datetime, timezone, timedelta
 from calendar import monthrange
 import time 
 from sqlalchemy import inspect
+import os
+os.environ["TF_CPP_MIN_LOG_LEVEL"] = "3"
+import tensorflow as tf
+tf.get_logger().setLevel('ERROR')
 
 router = APIRouter(prefix="/attendance", tags=["Attendance"])
 
@@ -219,9 +223,17 @@ def load_embeddings(db: Session):
     print(f"✅ Loaded {len(user_ids)} embeddings for {len(users)} users into cache.")
 
 def refresh_embeddings():
-    """Call this after adding/removing/updating users to refresh the cache."""
-    with SessionLocal() as db:
-        load_embeddings(db)
+    """Safely refresh the embedding cache — skips if tables not ready."""
+    try:
+        with SessionLocal() as db:
+            inspector = inspect(db.bind)
+            if "users" not in inspector.get_table_names():
+                print("⚠️ Skipping embedding refresh — 'users' table not found yet.")
+                return
+            load_embeddings(db)
+            print("✅ Embedding cache refreshed successfully.")
+    except Exception as e:
+        print(f"⚠️ Safe refresh skipped: {e}")
 
 # =====================================================
 # Safe Embedding Load on Import (macOS + Windows compatible)
@@ -305,30 +317,118 @@ async def preview_faces(file: UploadFile = None):
             embedding, threshold, fallback_threshold
         )
 
+        # -------------------------
+        # Gender + Age detection (for preview only, not stored)
+        # -------------------------
+        gender = "unknown"
+        age = "N/A"
+        try:
+            x, y, w, h = box.get("x"), box.get("y"), box.get("w"), box.get("h")
+            img = cv2.imread(tmp_path)
+            cropped_face = img[y:y+h, x:x+w]
+            analyze_info = DeepFace.analyze(
+                cropped_face,
+                actions=["age", "gender"],
+                enforce_detection=False
+            )
+
+            # Gender
+            dominant = analyze_info[0].get("dominant_gender", "unknown")
+            gender_probs = analyze_info[0].get("gender", {})
+            confidence = 0
+            if dominant in gender_probs:
+                confidence = gender_probs[dominant]
+            gender = f"{dominant.capitalize()} ({confidence:.0f}%)"
+
+            # ⚡ Fast Hybrid Age Estimation (Optimized)
+            raw_age = analyze_info[0].get("age", "N/A")
+            if raw_age != "N/A":
+                try:
+                    raw_age = int(raw_age)
+
+                    # --- Step 1: Lightweight texture sharpness (meanStdDev, much faster) ---
+                    gray = cv2.cvtColor(cropped_face, cv2.COLOR_BGR2GRAY)
+                    _, stddev = cv2.meanStdDev(gray)
+                    blur_metric = stddev[0][0]  # higher = more detail
+
+                    # --- Step 2: Gender & texture correction ---
+                    gender_pred = analyze_info[0].get("dominant_gender", "unknown").lower()
+
+                    if blur_metric < 35:
+                        texture_correction = -3
+                    elif blur_metric < 60:
+                        texture_correction = -2
+                    else:
+                        texture_correction = -1
+
+                    gender_correction = -1 if gender_pred == "female" else -2  # beard/skin bias
+
+                    # --- Step 3: Base adaptive correction by predicted age ---
+                    if raw_age <= 20:
+                        base = -1
+                    elif 21 <= raw_age <= 30:
+                        base = -2
+                    elif 31 <= raw_age <= 45:
+                        base = -3
+                    elif 46 <= raw_age <= 60:
+                        base = -4
+                    else:
+                        base = -5
+
+                    # --- Step 4: Combine all corrections ---
+                    adjusted_age = raw_age + base + texture_correction + gender_correction
+                    age = max(adjusted_age, 1)
+
+                except Exception as e:
+                    print("⚠️ Fast hybrid age smoothing failed:", e)
+                    age = raw_age
+            else:
+                age = "N/A"
+
+        except Exception as e:
+            print("⚠️ Gender/Age detection skipped:", e)
+            gender = "unknown"
+            age = "N/A"
+
+        # -------------------------
+        # Append recognition results
+        # -------------------------
         if status == "match":
             results.append({
                 "name": best_match["name"],
                 "employee_id": f"IFNT{best_match['id']:03d}",  
                 "box": [box.get("x"), box.get("y"), box.get("w"), box.get("h")],
-                "status": "preview"
+                "status": "preview",
+                "gender": gender,
+                "age": age
             })
         elif status == "maybe":
             results.append({
                 "name": best_match["name"],
                 "employee_id": f"IFNT{best_match['id']:03d}",
                 "box": [box.get("x"), box.get("y"), box.get("w"), box.get("h")],
-                "status": "maybe_match"
+                "status": "maybe_match",
+                "gender": gender,
+                "age": age
             })
         else:
             results.append({
                 "name": "Unknown",
                 "employee_id": None,
                 "box": [box.get("x"), box.get("y"), box.get("w"), box.get("h")],
-                "status": "unknown"
+                "status": "unknown",
+                "gender": gender,
+                "age": age
             })
 
     duration = time.time() - start_time  # end timer
-    print(f"Recognition completed in {duration:.3f} seconds | Faces detected: {len(faces)}")
+
+    # Terminal Logs with detected faces
+    gender_age_summary = ", ".join([
+        f"{f.get('gender', 'unknown')} | Age: {f.get('age', 'N/A')}"
+        for f in results
+    ]) or "unknown"
+    print(f"Recognition completed in {duration:.3f} seconds | Faces detected: {len(faces)} | {gender_age_summary}")
 
     return {"results": results}
 
@@ -421,7 +521,79 @@ async def mark_attendance(
         box = face.get("facial_area", {})
 
         # -------------------------
-        # Work Application Login Flow
+        # Gender + Age detection (for preview only, not stored)
+        # -------------------------
+        gender = "unknown"
+        age = "N/A"
+        try:
+            x, y, w, h = box.get("x"), box.get("y"), box.get("w"), box.get("h")
+            img = cv2.imread(tmp_path)
+            cropped_face = img[y:y+h, x:x+w]
+            analyze_info = DeepFace.analyze(
+                cropped_face,
+                actions=["age", "gender"],
+                enforce_detection=False
+            )
+
+            dominant = analyze_info[0].get("dominant_gender", "unknown")
+            gender_probs = analyze_info[0].get("gender", {})
+            confidence = 0
+            if dominant in gender_probs:
+                confidence = gender_probs[dominant]
+            gender = f"{dominant.capitalize()} ({confidence:.0f}%)"
+
+            # ⚡ Fast Hybrid Age Estimation (Optimized)
+            raw_age = analyze_info[0].get("age", "N/A")
+            if raw_age != "N/A":
+                try:
+                    raw_age = int(raw_age)
+
+                    # --- Step 1: Lightweight texture sharpness (meanStdDev, faster) ---
+                    gray = cv2.cvtColor(cropped_face, cv2.COLOR_BGR2GRAY)
+                    _, stddev = cv2.meanStdDev(gray)
+                    blur_metric = stddev[0][0]  # higher = more detail, less blur
+
+                    # --- Step 2: Gender & texture-based correction ---
+                    gender_pred = analyze_info[0].get("dominant_gender", "unknown").lower()
+
+                    if blur_metric < 35:
+                        texture_correction = -3
+                    elif blur_metric < 60:
+                        texture_correction = -2
+                    else:
+                        texture_correction = -1
+
+                    gender_correction = -1 if gender_pred == "female" else -2  # beard/skin bias
+
+                    # --- Step 3: Base adaptive correction by predicted age ---
+                    if raw_age <= 20:
+                        base = -1
+                    elif 21 <= raw_age <= 30:
+                        base = -2
+                    elif 31 <= raw_age <= 45:
+                        base = -3
+                    elif 46 <= raw_age <= 60:
+                        base = -4
+                    else:
+                        base = -5
+
+                    # --- Step 4: Combine all corrections ---
+                    adjusted_age = raw_age + base + texture_correction + gender_correction
+                    age = max(adjusted_age, 1)
+
+                except Exception as e:
+                    print("⚠️ Fast hybrid age smoothing failed:", e)
+                    age = raw_age
+            else:
+                age = "N/A"
+
+        except Exception as e:
+            print("⚠️ Gender/Age detection skipped:", e)
+            gender = "unknown"
+            age = "N/A"
+
+        # -------------------------
+        # Work Application Login Flow (STRICT ID VALIDATION)
         # -------------------------
         if action == "work-application-login":
             if not employee_id:
@@ -429,24 +601,30 @@ async def mark_attendance(
                     "name": "Unknown",
                     "employee_id": None,
                     "box": [box.get("x"), box.get("y"), box.get("w"), box.get("h")],
-                    "status": "employee_id_missing"
+                    "status": "employee_id_missing",
+                    "gender": gender,
+                    "age": age
                 })
                 continue
 
-            user_id = employee_id.replace("IFNT", "")
-            try:
-                user_id = int(user_id)
-            except:
-                user_id = None
-
-            user = db.query(User).filter(User.id == user_id, User.is_active == True).first()
+            # Strict format check: must be IFNT followed by exactly 3 digits
+            user = None
+            if employee_id.startswith("IFNT"):
+                numeric_part = employee_id[4:]
+                if numeric_part.isdigit() and len(numeric_part) == 3:
+                    expected_id = int(numeric_part)
+                    db_user = db.query(User).filter(User.id == expected_id, User.is_active == True).first()
+                    if db_user and employee_id == f"IFNT{db_user.id:03d}":
+                        user = db_user
 
             if not user:
                 results.append({
                     "name": "Unknown",
                     "employee_id": employee_id,
                     "box": [box.get("x"), box.get("y"), box.get("w"), box.get("h")],
-                    "status": "invalid_employee_id"
+                    "status": "invalid_employee_id",
+                    "gender": gender,
+                    "age": age
                 })
                 continue
 
@@ -474,7 +652,9 @@ async def mark_attendance(
                 "name": user.name,
                 "employee_id": employee_id,
                 "box": [box.get("x"), box.get("y"), box.get("w"), box.get("h")],
-                "status": status
+                "status": status,
+                "gender": gender,
+                "age": age
             })
             continue
 
@@ -571,7 +751,9 @@ async def mark_attendance(
                 "employee_id": f"IFNT{best_match['id']:03d}",
                 "box": [box.get("x"), box.get("y"), box.get("w"), box.get("h")],
                 "status": status,
-                "total_work": record.total_work
+                "total_work": record.total_work,
+                "gender": gender,
+                "age": age
             })
 
         elif status == "maybe":
@@ -580,14 +762,18 @@ async def mark_attendance(
                 "name": best_match["name"],
                 "employee_id": f"IFNT{best_match['id']:03d}",
                 "box": [box.get("x"), box.get("y"), box.get("w"), box.get("h")],
-                "status": "maybe_match"
+                "status": "maybe_match",
+                "gender": gender,
+                "age": age
             })
         else:
             results.append({
                 "name": "Unknown",
                 "employee_id": None,
                 "box": [box.get("x"), box.get("y"), box.get("w"), box.get("h")],
-                "status": "unknown"
+                "status": "unknown",
+                "gender": gender,
+                "age": age
             })
 
     return {"results": results}

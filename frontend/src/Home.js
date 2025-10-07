@@ -70,6 +70,8 @@ const handleBackendResponse = useCallback(
         name: face.name,
         status: face.status,
         box: face.box,
+        gender: face.gender, 
+        age: face.age,
       }));
 
       // Always update faces (so preview shows boxes too)
@@ -171,7 +173,7 @@ useEffect(() => {
     captureAndSendFrame("preview");
 
     // Then keep sending every 2 seconds
-    interval = setInterval(() => captureAndSendFrame("preview"), 2000);
+    interval = setInterval(() => captureAndSendFrame("preview"), 1500);
   }
   return () => clearInterval(interval);
 }, [showCamera, action, captureAndSendFrame]);
@@ -329,27 +331,52 @@ useEffect(() => {
                 </div>
 
                 {/* Face Boxes */}
-                {faces.map((face, index) => (
-                  <div
-                    key={index}
-                    className={`absolute border-4 ${getBoxColor(
-                      face.status
-                    )} rounded-lg flex items-end justify-center`}
-                    style={{
-                      top: `${face.box[1]}px`,
-                      left: `${videoWidth - face.box[0] - face.box[2]}px`,
-                      width: `${face.box[2]}px`,
-                      height: `${face.box[3]}px`,
-                    }}
-                  >
-                    <span className="bg-black text-white px-2 py-1 rounded-b-lg font-bold">
-                      {face.status === "spoof"
-                        ? "Photo Detected – Not Allowed"
-                        : face.name}
-                    </span>
-                  </div>
-                ))}
+{faces.map((face, index) => {
+  // Normalize gender text for reliable color detection
+  const genderLower = face.gender?.toLowerCase() || "";
 
+  // Determine color purely based on detected gender, not recognition
+  const genderBgClass =
+    genderLower.includes("woman") || genderLower.includes("female")
+      ? "bg-pink-500"
+      : genderLower.includes("man") || genderLower.includes("male")
+      ? "bg-blue-500"
+      : "bg-gray-400";
+
+  return (
+    <div
+      key={index}
+      className={`absolute border-4 ${getBoxColor(face.status)} rounded-lg transition-all duration-200 ease-linear`}
+      style={{
+        top: `${face.box[1]}px`,
+        left: `${videoWidth - face.box[0] - face.box[2]}px`,
+        width: `${face.box[2]}px`,
+        height: `${face.box[3]}px`,
+      }}
+    >
+      {/* Gender + Age label ABOVE the box */}
+      {(face.gender || face.age) && (
+        <span
+          className={`absolute -top-8 left-1/2 transform -translate-x-1/2 ${genderBgClass} 
+                     text-white text-sm font-semibold px-3 py-[2px] rounded-md shadow-lg 
+                     whitespace-nowrap border border-white`}
+        >
+          {face.gender}
+          {face.age && face.age !== "N/A" ? `, Age: ${face.age}` : ""}
+        </span>
+      )}
+
+      {/* Name label INSIDE bottom of box */}
+      <div className="absolute bottom-0 left-0 right-0 flex justify-center">
+        <span className="bg-black text-white px-2 py-1 rounded-b-lg font-bold whitespace-nowrap shadow">
+          {face.status === "spoof"
+            ? "Photo Detected – Not Allowed"
+            : face.name}
+        </span>
+      </div>
+    </div>
+  );
+})}
                 {/* Buttons under Camera */}
                 <div className="flex gap-4 mt-6 mb-4 justify-center">
                   {action === "break" ? (

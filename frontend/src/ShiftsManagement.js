@@ -109,43 +109,52 @@ useEffect(() => {
 
 // Weekly Shifts (auto-refresh after group or week change)
 const weeklyShifts = useMemo(() => {
-  return employees.map((emp) => ({
-    ...emp,
-    shifts: weekDates.map((d) => {
+  return employees.map((emp) => {
+    let lateCount = 0; // count "yes" in this week
+
+    const empShifts = weekDates.map((d) => {
       const shift = shifts.find(
         (s) => s.employee_id === emp.employee_id && s.date === formatDate(d)
       );
 
-if (shift) {
-  // Normalize invalid times like 00:00 → "-"
-  const cleanStart =
-    !shift.start_time ||
-    shift.start_time === "-" ||
-    shift.start_time === "00:00"
-      ? "-"
-      : shift.start_time.slice(0, 5);
-  const cleanEnd =
-    !shift.end_time ||
-    shift.end_time === "-" ||
-    shift.end_time === "00:00"
-      ? "-"
-      : shift.end_time.slice(0, 5);
+      if (shift) {
+        // Normalize times like 00:00 → "-"
+        const cleanStart =
+          !shift.start_time ||
+          shift.start_time === "-" ||
+          shift.start_time === "00:00"
+            ? "-"
+            : shift.start_time.slice(0, 5);
+        const cleanEnd =
+          !shift.end_time ||
+          shift.end_time === "-" ||
+          shift.end_time === "00:00"
+            ? "-"
+            : shift.end_time.slice(0, 5);
 
-  return {
-    date: shift.date,
-    start: cleanStart,
-    end: cleanEnd,
-    hours:
-      cleanStart === "-" || cleanEnd === "-"
-        ? 0
-        : getShiftHours(cleanStart, cleanEnd),
-  };
-}
+        // if late=yes or is_late=yes → increment counter
+        if (shift.late === "yes" || shift.is_late === "yes") {
+          lateCount++;
+        }
+
+        return {
+          date: shift.date,
+          start: cleanStart,
+          end: cleanEnd,
+          hours:
+            cleanStart === "-" || cleanEnd === "-"
+              ? 0
+              : getShiftHours(cleanStart, cleanEnd),
+        };
+      }
 
       // if no shift found → placeholder
       return { date: formatDate(d), start: "-", end: "-", hours: 0 };
-    }),
-  }));
+    });
+
+    // attach lateCount to each employee
+    return { ...emp, shifts: empShifts, lateCount };
+  });
 }, [employees, shifts, weekDates]);
 
 // Monthly summary
@@ -209,8 +218,10 @@ const assignGroup = async (employeeId, groupId) => {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        employee_id: employeeId,
-        group_id: parseInt(groupId),
+      employee_id: employeeId,
+      group_id: parseInt(groupId),
+      apply_to_future: true, // Apply changes to future weeks
+      week_start: formatDate(currentWeekStart), // Start from current visible week
       }),
     });
 

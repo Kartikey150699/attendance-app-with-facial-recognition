@@ -5,12 +5,11 @@ from models.ShiftGroup import ShiftGroup
 from models.EmployeeGroup import EmployeeGroup
 from models.User import User
 from models.Shift import Shift
-from datetime import date, timedelta
+from datetime import date, datetime, timedelta
 from pydantic import BaseModel
 from typing import Optional, Dict, List
 
 router = APIRouter(prefix="/shift-groups", tags=["Shift Groups"])
-
 
 # =====================================================
 # DB Session dependency
@@ -41,6 +40,8 @@ class ShiftGroupUpdate(BaseModel):
 class AssignEmployeeRequest(BaseModel):
     employee_id: str
     group_id: int
+    apply_to_future: Optional[bool] = False
+    week_start: Optional[str] = None
 
 
 # =====================================================
@@ -57,24 +58,26 @@ def serialize_group(group: ShiftGroup):
 
 
 # =====================================================
-# Helper → Regenerate shifts for an employee (today → next 60 days)
+# Helper → Regenerate shifts for an employee (custom start → future days)
 # =====================================================
-def regenerate_shifts_for_employee(db: Session, user: User, group: ShiftGroup):
-    today = date.today()
-    end_date = today + timedelta(days=60)
+def regenerate_shifts_for_employee(
+    db: Session, user: User, group: ShiftGroup, start_date: date, days_ahead: int
+):
+    """Regenerate shifts for an employee from a given start_date up to days_ahead days."""
+    end_date = start_date + timedelta(days=days_ahead)
     schedule = {k.lower(): v for k, v in (group.schedule or {}).items()}
 
-    # Delete existing future group-assigned shifts
+    # Delete existing shifts in the window
     db.query(Shift).filter(
         Shift.employee_id == user.employee_id,
-        Shift.assigned_by.like("Group%"),
-        Shift.date >= today,
+        Shift.date >= start_date,
+        Shift.date <= end_date,
     ).delete()
 
     # Create new ones
-    current = today
+    current = start_date
     while current <= end_date:
-        weekday = current.strftime("%a").lower()[:3]  # mon, tue, wed
+        weekday = current.strftime("%a").lower()[:3]
         shift_def = schedule.get(weekday)
 
         if (
@@ -87,7 +90,7 @@ def regenerate_shifts_for_employee(db: Session, user: User, group: ShiftGroup):
             continue
 
         start_time, end_time = shift_def
-        if start_time == "00:00" and end_time == "00:00":
+        if start_time in ["00:00", "-", "0:00", ""] or end_time in ["00:00", "-", "0:00", ""]:
             current += timedelta(days=1)
             continue
 
@@ -136,6 +139,11 @@ def create_group(payload: ShiftGroupCreate, db: Session = Depends(get_db)):
 # =====================================================
 @router.post("/assign")
 def assign_employee(payload: AssignEmployeeRequest, db: Session = Depends(get_db)):
+    """
+    Assign employee to group.
+    If apply_to_future=True, regenerate shifts starting from 'week_start'
+    (or today if not provided) for ~8 weeks ahead.
+    """
     user = db.query(User).filter(User.employee_id == payload.employee_id).first()
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
@@ -152,10 +160,23 @@ def assign_employee(payload: AssignEmployeeRequest, db: Session = Depends(get_db
         db.add(EmployeeGroup(employee_id=payload.employee_id, group_id=payload.group_id))
     db.commit()
 
-    regenerate_shifts_for_employee(db, user, group)
+    # Determine starting date
+    if payload.week_start:
+        try:
+            start_date = datetime.strptime(payload.week_start, "%Y-%m-%d").date()
+        except Exception:
+            start_date = date.today()
+    else:
+        start_date = date.today()
+
+    # Determine duration (1 week or 8 weeks)
+    days_ahead = 56 if payload.apply_to_future else 7
+
+    regenerate_shifts_for_employee(db, user, group, start_date, days_ahead)
 
     return {
-        "message": f"✅ {payload.employee_id} assigned to group '{group.name}' and shifts regenerated.",
+        "message": f"✅ {payload.employee_id} assigned to group '{group.name}' "
+                   f"starting {start_date} for {'8 weeks' if payload.apply_to_future else '1 week'}.",
         "data": serialize_group(group),
     }
 
@@ -209,7 +230,7 @@ def update_group(group_id: int, payload: ShiftGroupUpdate, db: Session = Depends
     for m in mappings:
         user = db.query(User).filter(User.employee_id == m.employee_id).first()
         if user:
-            regenerate_shifts_for_employee(db, user, group)
+            regenerate_shifts_for_employee(db, user, group, date.today(), 60)
 
     return {"message": "✅ Shift group updated and shifts regenerated", "data": serialize_group(group)}
 
