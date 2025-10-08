@@ -87,33 +87,49 @@ const res = await fetch(`${API_BASE}/attendance/toggle-auto-train`, {
   return (
     <div className="flex flex-col min-h-screen bg-gradient-to-tr from-gray-100 via-indigo-100 to-blue-200">
       {/* Header */}
-      <div className="w-full flex items-center justify-center px-10 py-4 bg-indigo-300 shadow-md relative">
-        <div className="absolute left-10 text-blue-800 text-xl font-bold">
-          <HeaderDateTime />
-        </div>
+      {/* Midnight Glass Header */}
+<header className="relative w-full bg-gradient-to-r from-slate-800 via-gray-800 to-slate-900 text-white shadow-xl overflow-hidden border-b border-gray-700/30">
+  {/* Frosted overlay for glass effect */}
+  <div className="absolute inset-0 bg-gradient-to-tr from-white/10 via-transparent to-white/5 backdrop-blur-md"></div>
 
-        <h1
-          onClick={() => {
-            localStorage.removeItem("currentAdmin");
-            navigate("/", { replace: true });
-          }}
-          className="text-5xl font-bold text-blue-900 cursor-pointer hover:text-blue-700 transition-colors"
-        >
-          FaceTrack Attendance
-        </h1>
+  {/* Header Content */}
+  <div className="relative z-10 flex flex-col sm:flex-row items-center justify-between px-6 sm:px-10 lg:px-16 py-4 sm:py-5">
+    
+    {/* Left: Logo + Title */}
+    <div
+      onClick={() => navigate("/")}
+      className="flex items-center gap-3 cursor-pointer transition-transform duration-300 hover:scale-105"
+    >
+      <img
+        src={`${process.env.PUBLIC_URL}/favicon.png`}
+        alt="FaceTrack Logo"
+        className="w-10 h-10 sm:w-12 sm:h-12 rounded-full shadow-md border border-white/20 bg-white/10 p-1 object-contain"
+      />
+      <h1 className="text-3xl sm:text-4xl font-extrabold tracking-tight text-white drop-shadow-sm">
+        FaceTrack <span className="font-light text-gray-300 ml-1">Attendance</span>
+      </h1>
+    </div>
 
-        <div className="absolute right-10">
-          <button
-            onClick={handleLogout}
-            className="w-40 px-6 py-3 bg-red-500 hover:bg-red-600 hover:scale-105 active:scale-95 
-                       transition-transform duration-200 text-white font-bold rounded-lg shadow flex 
-                       items-center justify-center gap-2"
-          >
-            <ArrowRightOnRectangleIcon className="h-5 w-5 text-white" />
-            Logout
-          </button>
-        </div>
+    {/* Right: Date & Time + Logout Button */}
+    <div className="flex flex-col sm:flex-row items-center justify-end gap-2 sm:gap-4 mt-3 sm:mt-0">
+      {/* Date & Time */}
+      <div className="text-center text-sm sm:text-base md:text-lg font-semibold text-white tracking-wide drop-shadow-md order-2 sm:order-1">
+        <HeaderDateTime />
       </div>
+
+      {/* Logout Button */}
+      <button
+        onClick={handleLogout}
+        className="order-1 sm:order-2 px-5 sm:px-6 py-2.5 rounded-xl bg-gradient-to-r from-red-500 via-rose-500 to-pink-500 
+                   hover:from-red-600 hover:to-rose-600 text-white font-semibold shadow-lg hover:shadow-xl 
+                   transition-all duration-300 flex items-center gap-2"
+      >
+        <ArrowRightOnRectangleIcon className="h-5 w-5" />
+        Logout
+      </button>
+    </div>
+  </div>
+</header>
 
       {/* Dashboard Content */}
       <div className="flex flex-col items-center flex-grow py-10">
@@ -123,16 +139,16 @@ const res = await fetch(`${API_BASE}/attendance/toggle-auto-train`, {
         </h2>
 
         {currentAdmin && (
-          <p className="text-2xl font-semibold text-gray-700 mb-12">
+          <p className="text-xl sm:text-2xl font-semibold text-gray-700 mb-8 sm:mb-12 text-center px-4">
             Welcome <span className="text-indigo-700 font-bold">{currentAdmin}</span>
           </p>
         )}
 
-        <div className="grid grid-cols-2 gap-6 -mt-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6 px-6 sm:px-12 lg:px-24 -mt-2 w-full max-w-6xl">
           {/* Row 1 */}
           <button
             onClick={() => navigate("/register-user")}
-            className="px-14 py-8 bg-green-500 hover:bg-green-600 hover:scale-105 active:scale-95 
+            className="px-14 py-8 px-8 sm:px-12 md:px-14 py-6 sm:py-8 w-full sm:w-auto bg-green-500 hover:bg-green-600 hover:scale-105 active:scale-95 
                        transition-transform duration-200 text-white text-2xl font-bold rounded-lg shadow"
           >
             <UserPlusIcon className="h-6 w-6 inline-block mr-2" />
@@ -141,7 +157,7 @@ const res = await fetch(`${API_BASE}/attendance/toggle-auto-train`, {
 
           <button
             onClick={() => navigate("/attendance-logs")}
-            className="px-14 py-8 bg-blue-500 hover:bg-blue-600 hover:scale-105 active:scale-95 
+            className="px-14 py-8 px-8 sm:px-12 md:px-14 py-6 sm:py-8 w-full sm:w-auto bg-blue-500 hover:bg-blue-600 hover:scale-105 active:scale-95 
                        transition-transform duration-200 text-white text-2xl font-bold rounded-lg shadow"
           >
             <DocumentTextIcon className="h-6 w-6 inline-block mr-2" />
@@ -151,7 +167,7 @@ const res = await fetch(`${API_BASE}/attendance/toggle-auto-train`, {
           {/* Row 2 */}
           <button
             onClick={() => navigate("/change-password")}
-            className="px-14 py-8 bg-yellow-500 hover:bg-yellow-600 hover:scale-105 active:scale-95 
+            className="px-14 py-8 px-8 sm:px-12 md:px-14 py-6 sm:py-8 w-full sm:w-auto bg-yellow-500 hover:bg-yellow-600 hover:scale-105 active:scale-95 
                        transition-transform duration-200 text-white text-2xl font-bold rounded-lg shadow"
           >
             <LockClosedIcon className="h-6 w-6 inline-block mr-2" />
@@ -160,7 +176,7 @@ const res = await fetch(`${API_BASE}/attendance/toggle-auto-train`, {
 
           <button
             onClick={() => navigate("/hr-portal", { replace: true })}
-            className="relative px-14 py-8 bg-purple-500 hover:bg-purple-600 hover:scale-105 active:scale-95 
+            className="relative px-14 py-8 px-8 sm:px-12 md:px-14 py-6 sm:py-8 w-full sm:w-auto bg-purple-500 hover:bg-purple-600 hover:scale-105 active:scale-95 
                        transition-transform duration-200 text-white text-2xl font-bold rounded-lg shadow flex items-center justify-center"
           >
             <UserGroupIcon className="h-6 w-6 inline-block mr-2" />
@@ -176,8 +192,9 @@ const res = await fetch(`${API_BASE}/attendance/toggle-auto-train`, {
           {/* Row 3 */}
           <button
             onClick={() => navigate("/manage-users")}
-            className="px-14 py-8 bg-indigo-500 hover:bg-indigo-600 hover:scale-105 active:scale-95 
-                       transition-transform duration-200 text-white text-2xl font-bold rounded-lg shadow"
+            className="px-8 sm:px-12 md:px-14 py-8 sm:py-10 lg:py-8 w-full sm:w-auto 
+           bg-indigo-500 hover:bg-indigo-600 hover:scale-105 active:scale-95 
+           transition-transform duration-200 text-white text-2xl font-bold rounded-lg shadow"
           >
             <UsersIcon className="h-6 w-6 inline-block mr-2" />
             Manage Users
@@ -185,7 +202,7 @@ const res = await fetch(`${API_BASE}/attendance/toggle-auto-train`, {
 
           <button
             onClick={() => navigate("/manage-admin")}
-            className="px-14 py-8 bg-pink-500 hover:bg-pink-600 hover:scale-105 active:scale-95 
+            className="px-8 sm:px-12 md:px-14 py-8 md:py-8 sm:py-10 w-full sm:w-auto bg-pink-500 hover:bg-pink-600 hover:scale-105 active:scale-95 
                        transition-transform duration-200 text-white text-2xl font-bold rounded-lg shadow"
           >
             <ShieldCheckIcon className="h-6 w-6 inline-block mr-2" />
@@ -195,7 +212,7 @@ const res = await fetch(`${API_BASE}/attendance/toggle-auto-train`, {
           {/* Row 4 - New Buttons */}
           <button
             onClick={() => navigate("/paid-holidays")}
-            className="px-14 py-8 bg-orange-500 hover:bg-orange-600 hover:scale-105 active:scale-95 
+            className="px-14 py-8 px-8 sm:px-12 md:px-14 py-6 sm:py-8 w-full sm:w-auto bg-orange-500 hover:bg-orange-600 hover:scale-105 active:scale-95 
                        transition-transform duration-200 text-white text-2xl font-bold rounded-lg shadow"
           >
             <CalendarDaysIcon className="h-6 w-6 inline-block mr-2" />
@@ -204,7 +221,7 @@ const res = await fetch(`${API_BASE}/attendance/toggle-auto-train`, {
 
           <button
             onClick={() => navigate("/shifts-management")}
-            className="px-14 py-8 bg-teal-500 hover:bg-teal-600 hover:scale-105 active:scale-95 
+            className="px-14 py-8 px-8 sm:px-12 md:px-14 py-6 sm:py-8 w-full sm:w-auto bg-teal-500 hover:bg-teal-600 hover:scale-105 active:scale-95 
                        transition-transform duration-200 text-white text-2xl font-bold rounded-lg shadow"
           >
             <ClockIcon className="h-6 w-6 inline-block mr-2" />
@@ -213,7 +230,14 @@ const res = await fetch(`${API_BASE}/attendance/toggle-auto-train`, {
         </div>
 
         {/* Auto-Train Controls (Single Row) */}
-        <div className="fixed bottom-20 right-6 flex flex-row items-center gap-4 bg-white p-3 rounded-lg shadow-lg">
+        <div
+  className="fixed sm:bottom-20 bottom-10 right-3 sm:right-6 z-50
+             flex flex-row items-center gap-3 sm:gap-4 bg-white/95 
+             p-2 sm:p-3 rounded-lg shadow-lg border border-gray-300
+             sm:static sm:mt-8 sm:self-end sm:mr-6 sm:z-0
+             transition-all duration-500 ease-in-out transform
+             animate-[slideUp_0.5s_ease-in-out]"
+>
           {/* Label */}
           <span className="text-base font-semibold text-gray-800">
             {autoTrainEnabled ? "AutoTrain Model (ON)" : "AutoTrain Model (OFF)"}

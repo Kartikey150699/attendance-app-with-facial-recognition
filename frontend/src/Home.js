@@ -193,47 +193,68 @@ useEffect(() => {
   };
 
   return (
-    <div className="flex flex-col min-h-screen bg-gradient-to-tr from-blue-300 via-indigo-200 to-cyan-300">
-      {/* Header */}
-      <div className="w-full flex items-center justify-center px-10 py-4 bg-indigo-300 shadow-md relative">
-        <div className="absolute left-10 text-blue-800 text-xl font-bold">
-          <HeaderDateTime />
-        </div>
+    <div className="flex flex-col min-h-screen bg-gradient-to-tr from-blue-300 via-indigo-200 to-cyan-300 overflow-x-hidden">
+{/* Header */}
+{/* Midnight Glass Header */}
+<header className="relative w-full bg-gradient-to-r from-slate-800 via-gray-800 to-slate-900 text-white shadow-xl overflow-hidden border-b border-gray-700/30">
+  {/* Frosted overlay for glass effect */}
+  <div className="absolute inset-0 bg-gradient-to-tr from-white/10 via-transparent to-white/5 backdrop-blur-md"></div>
 
-        <h1
-          onClick={() => navigate("/")}
-          className="text-5xl font-bold text-blue-900 cursor-pointer hover:text-blue-700 transition-colors"
-        >
-          FaceTrack Attendance
-        </h1>
+  {/* Header Content */}
+  <div className="relative z-10 flex flex-col sm:flex-row items-center justify-between px-6 sm:px-10 lg:px-16 py-4 sm:py-5">
+    
+    {/* Left: Logo + Title */}
+    <div
+      onClick={() => navigate("/")}
+      className="flex items-center gap-3 cursor-pointer transition-transform duration-300 hover:scale-105"
+    >
+      <img
+        src={`${process.env.PUBLIC_URL}/favicon.png`}
+        alt="FaceTrack Logo"
+        className="w-10 h-10 sm:w-12 sm:h-12 rounded-full shadow-md border border-white/20 bg-white/10 p-1 object-contain"
+      />
+      <h1 className="text-3xl sm:text-4xl font-extrabold tracking-tight text-white drop-shadow-sm">
+        FaceTrack <span className="font-light text-gray-300 ml-1">Attendance</span>
+      </h1>
+    </div>
 
-        <div className="absolute right-10">
-          <button
-            onClick={() => navigate("/admin-login")}
-            className="w-350 px-6 py-3 bg-red-500 hover:bg-red-600 hover:scale-105 active:scale-95 transition-transform 
-            duration-200 text-white font-bold rounded-lg shadow flex items-center justify-center gap-2"
-          >
-            <KeyIcon className="h-5 w-5" />
-            Admin Login
-          </button>
-        </div>
-      </div>
+{/* Right: Date & Time + Admin Login */}
+<div className="flex flex-col sm:flex-row items-center justify-end gap-2 sm:gap-4 mt-3 sm:mt-0">
+  {/* Date & Time */}
+  <div className="text-center text-sm sm:text-base md:text-lg font-semibold text-white tracking-wide drop-shadow-md order-2 sm:order-1">
+    <HeaderDateTime />
+  </div>
+
+  {/* Admin Login Button */}
+  <button
+    onClick={() => navigate("/admin-login")}
+    className="order-1 sm:order-2 px-5 sm:px-6 py-2.5 rounded-xl bg-gradient-to-r from-indigo-500 via-sky-500 to-teal-400 
+               hover:from-indigo-600 hover:to-teal-500 text-white font-semibold shadow-lg hover:shadow-xl 
+               transition-all duration-300 flex items-center gap-2"
+  >
+    <KeyIcon className="h-5 w-5" />
+    Admin Login
+  </button>
+</div>
+  </div>
+</header>
 
       {/* Main Content */}
       <div className="flex flex-col items-center justify-center flex-grow">
         {!showCamera ? (
-          <div className="grid grid-cols-2 gap-x-0 gap-y-10 w-full px-32 -mt-10 justify-items-center">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-y-8 sm:gap-y-10 w-full px-4 sm:px-12 md:px-24 lg:px-32 -mt-6 sm:-mt-10 justify-items-center">
             {/* Check In */}
             <button
   onClick={() => {
     setAction("checkin");
     setShowCamera(true);
   }}
-  className="relative w-[70%] h-48 bg-green-500 hover:bg-green-600 hover:scale-105 active:scale-95 
+  className="relative w-[85%] md:w-[90%] lg:w-[70%] h-40 sm:h-48 bg-green-500 hover:bg-green-600 hover:scale-105 active:scale-95 
              transition-transform duration-200 text-white text-4xl font-semibold 
              rounded-xl shadow-lg flex flex-col items-center justify-center overflow-hidden"
 >
   {/* subtle diagonal stripes */}
+  <div className="absolute top-0 left-0 w-full h-[2px] bg-gradient-to-r from-indigo-400 via-sky-400 to-teal-400"></div>
   <span className="absolute inset-0 bg-[repeating-linear-gradient(45deg,rgba(255,255,255,0.08)_0,rgba(255,255,255,0.08)_2px,transparent_2px,transparent_6px)]"></span>
 
   {/* actual content stays on top */}
@@ -249,7 +270,7 @@ useEffect(() => {
     setAction("checkout");
     setShowCamera(true);
   }}
-  className="relative w-[70%] h-48 bg-red-500 hover:bg-red-600 hover:scale-105 active:scale-95 
+  className="relative w-[85%] md:w-[90%] lg:w-[70%] h-48 bg-red-500 hover:bg-red-600 hover:scale-105 active:scale-95 
              transition-transform duration-200 text-white text-4xl font-semibold 
              rounded-xl shadow-lg flex flex-col items-center justify-center overflow-hidden"
 >
@@ -266,7 +287,7 @@ useEffect(() => {
     setAction("break");
     setShowCamera(true);
   }}
-  className="relative w-[70%] h-48 bg-yellow-400 hover:bg-yellow-500 hover:scale-105 active:scale-95 
+  className="relative w-[85%] md:w-[90%] lg:w-[70%] h-48 bg-yellow-400 hover:bg-yellow-500 hover:scale-105 active:scale-95 
              transition-transform duration-200 text-white text-4xl font-semibold 
              rounded-xl shadow-lg flex flex-col items-center justify-center overflow-hidden"
 >
@@ -282,7 +303,7 @@ useEffect(() => {
   onClick={() => {
     navigate("/work-application-login");
   }}
-  className="relative w-[70%] h-48 bg-purple-500 hover:bg-purple-600 hover:scale-105 active:scale-95 
+  className="relative w-[85%] md:w-[90%] lg:w-[70%] h-48 bg-purple-500 hover:bg-purple-600 hover:scale-105 active:scale-95 
              transition-transform duration-200 text-white text-4xl font-semibold 
              rounded-xl shadow-lg flex flex-col items-center justify-center overflow-hidden"
 >
@@ -294,17 +315,17 @@ useEffect(() => {
 </button>
           </div>
         ) : (
-          <div className="flex flex-col items-center w-full gap-12 -mt-8">
+          <div className="flex flex-col items-center w-full gap-12 mt-4 sm:mt-6 md:mt-8 lg:mt-0">
             {/* Camera Selection Dropdown */}
             <div className="flex flex-col items-center mt-0 mb-0">
               <label className="text-xl font-semibold text-indigo-700 mb-2">
                 Select Camera
               </label>
               <select
-                value={selectedCamera || ""}
-                onChange={(e) => setSelectedCamera(e.target.value)}
-                className="px-4 py-2 border-2 border-indigo-400 rounded-lg shadow-md text-base w-72 focus:outline-none focus:ring-2 focus:ring-indigo-500"
-              >
+  value={selectedCamera || ""}
+  onChange={(e) => setSelectedCamera(e.target.value)}
+  className="px-3 py-2 border-2 border-indigo-400 rounded-lg shadow-md text-sm sm:text-base w-56 sm:w-72 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+>
                 {cameras.map((cam, idx) => (
                   <option key={cam.deviceId} value={cam.deviceId}>
                     {cam.label || `Camera ${idx + 1}`}
@@ -313,19 +334,19 @@ useEffect(() => {
               </select>
             </div>
 
-            <div className="flex w-full justify-center gap-6">
+            <div className="flex flex-col lg:flex-row w-full justify-center items-center lg:items-start gap-8 px-4 sm:px-8">
               {/* Camera */}
               <div className="relative">
                 <div
-  className="relative border-[6px] border-blue-800 rounded-lg shadow-2xl inline-block"
-  style={{ width: videoWidth, height: videoHeight }}
+  className="relative border-[4px] sm:border-[6px] border-blue-800 rounded-lg shadow-2xl inline-block max-w-full"
+  style={{ width: "100%", maxWidth: "580px", height: "355px" }}
 >
   <Webcam
     key={selectedCamera}
     audio={false}
     ref={webcamRef}
     screenshotFormat="image/jpeg"
-    className="transform scale-x-[-1]"
+    className="w-full h-full object-cover transform scale-x-[-1] rounded-lg"
     videoConstraints={{
       width: videoWidth,
       height: videoHeight,
@@ -346,7 +367,7 @@ useEffect(() => {
         height: `${face.box[3]}px`,
       }}
     >
-      {/* 🟢 Only show name/status below face box */}
+      {/* Only show name/status below face box */}
       <div className="absolute bottom-0 left-0 right-0 flex justify-center">
         <span className="bg-black text-white px-2 py-1 rounded-b-lg font-bold whitespace-nowrap shadow">
           {face.status === "spoof"
@@ -359,7 +380,7 @@ useEffect(() => {
 })}
 </div>
                 {/* Buttons under Camera */}
-                <div className="flex gap-4 mt-6 mb-4 justify-center">
+                <div className="flex flex-wrap gap-3 sm:gap-4 mt-4 mb-4 justify-center px-2">
                   {action === "break" ? (
                     <>
                       <button
@@ -405,9 +426,9 @@ useEffect(() => {
 
               {/* Status Panel */}
               <div
-                className="w-[37%] bg-white border-[6px] border-indigo-700 rounded-xl shadow-2xl p-6 flex flex-col items-center"
-                style={{ height: `${videoHeight + 12}px` }}
-              >
+  className="w-full lg:w-[37%] bg-white border-[4px] sm:border-[6px] border-indigo-700 rounded-xl shadow-2xl p-4 sm:p-6 flex flex-col items-center mt-6 lg:mt-0"
+  style={{ minHeight: "355px" }}
+>
                 <h2 className="text-2xl font-bold text-indigo-700 mb-6 flex items-center gap-2">
                   {action === "checkin" ? (
                     <>

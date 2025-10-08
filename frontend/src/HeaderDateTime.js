@@ -9,7 +9,9 @@ function HeaderDateTime({ className = "" }) {
   }, []);
 
   return (
-    <div className={`text-blue-800 text-xl font-bold ${className}`}>
+    <div
+      className={`text-white text-base sm:text-lg md:text-xl font-semibold drop-shadow-md ${className}`}
+    >
       {dateTime.toLocaleDateString("en-US", {
         weekday: "short",
         year: "numeric",

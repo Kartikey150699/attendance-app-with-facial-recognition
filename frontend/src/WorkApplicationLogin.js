@@ -106,7 +106,7 @@ function WorkApplicationLogin() {
         if (face.status === "logged_in") {
           setStatusMessages([`✅ Welcome ${face.name}`]);
 
-          // ✅ Persist user in localStorage
+          // Persist user in localStorage
           localStorage.setItem("user", face.name);
           localStorage.setItem("employeeId", employeeId);
 
@@ -140,51 +140,49 @@ function WorkApplicationLogin() {
   return (
     <div className="flex flex-col min-h-screen bg-gradient-to-tr from-gray-100 via-indigo-100 to-blue-200">
       {/* Header */}
-      <div className="w-full flex items-center justify-center px-10 py-4 bg-indigo-300 shadow-md relative">
-        <div className="absolute left-10 text-blue-800 text-xl font-bold">
-          <HeaderDateTime />
-        </div>
+      {/* Midnight Glass Header */}
+<header className="relative w-full bg-gradient-to-r from-slate-800 via-gray-800 to-slate-900 text-white shadow-xl overflow-hidden border-b border-gray-700/30 mb-10">
+  {/* Frosted glass overlay */}
+  <div className="absolute inset-0 bg-gradient-to-tr from-white/10 via-transparent to-white/5 backdrop-blur-md"></div>
 
-        <h1
-          onClick={() => navigate("/")}
-          className="text-5xl font-bold text-blue-900 cursor-pointer hover:text-blue-700 transition-colors"
-        >
-          FaceTrack Attendance
-        </h1>
+  {/* Header Content */}
+  <div className="relative z-10 flex flex-col sm:flex-row items-center justify-between px-6 sm:px-10 lg:px-16 py-4 sm:py-5">
 
-        <div className="absolute right-10 flex flex-col items-end gap-3">
-          {/* Back button */}
-          <button
-            onClick={() => navigate("/")}
-            className="w-40 px-6 py-3 bg-red-500 hover:bg-red-600 hover:scale-105 active:scale-95 
-                       transition-transform duration-200 text-white font-bold rounded-lg shadow flex items-center justify-center gap-2"
-          >
-            <ArrowUturnLeftIcon className="h-5 w-5" />
-            Back
-          </button>
+    {/* Left: Logo + Title */}
+    <div
+      onClick={() => navigate("/")}
+      className="flex items-center gap-3 cursor-pointer transition-transform duration-300 hover:scale-105"
+    >
+      <img
+        src={`${process.env.PUBLIC_URL}/favicon.png`}
+        alt="FaceTrack Logo"
+        className="w-10 h-10 sm:w-12 sm:h-12 rounded-full shadow-md border border-white/20 bg-white/10 p-1 object-contain"
+      />
+      <h1 className="text-3xl sm:text-4xl font-extrabold tracking-tight text-white drop-shadow-sm">
+        FaceTrack <span className="font-light text-gray-300 ml-1">Work Portal</span>
+      </h1>
+    </div>
 
-          {/* Camera Selection */}
-          <div className="absolute right-15 top-20 flex flex-col items-center">
-            <label className="text-xl font-semibold text-indigo-700 mb-2 mt-4">
-              Select Camera
-            </label>
-            <select
-              value={selectedCamera || ""}
-              onChange={(e) => {
-                setSelectedCamera(e.target.value);
-                localStorage.setItem("selectedCamera", e.target.value);
-              }}
-              className="px-6 py-2 border-2 border-indigo-400 rounded-lg shadow-md text-sm w-64 focus:outline-none focus:ring-2 focus:ring-indigo-500"
-            >
-              {cameras.map((cam, idx) => (
-                <option key={cam.deviceId} value={cam.deviceId}>
-                  {cam.label || `Camera ${idx + 1}`}
-                </option>
-              ))}
-            </select>
-          </div>
-        </div>
+    {/* Right: Date & Time + Back Button */}
+    <div className="flex flex-col sm:flex-row items-center justify-end gap-2 sm:gap-4 mt-3 sm:mt-0">
+      {/* Date & Time */}
+      <div className="text-center text-sm sm:text-base md:text-lg font-semibold text-white tracking-wide drop-shadow-md order-2 sm:order-1">
+        <HeaderDateTime />
       </div>
+
+      {/* Back Button */}
+      <button
+        onClick={() => navigate("/")}
+        className="order-1 sm:order-2 px-5 sm:px-6 py-2.5 rounded-xl bg-gradient-to-r from-red-500 via-pink-500 to-rose-500 
+                   hover:from-red-600 hover:to-rose-600 text-white font-semibold shadow-lg hover:shadow-xl 
+                   transition-all duration-300 flex items-center gap-2"
+      >
+        <ArrowUturnLeftIcon className="h-5 w-5" />
+        Back
+      </button>
+    </div>
+  </div>
+</header>
 
       {/* Camera + Input Section (wrapped in a form for Enter support) */}
       <form
@@ -194,23 +192,50 @@ function WorkApplicationLogin() {
         }}
         className="flex flex-col items-center w-full gap-6 mt-10"
       >
-        {/* Employee ID Input */}
-        <div className="flex flex-col items-center mb-4">
-          <label className="text-xl font-semibold text-indigo-700 mb-2">
-            Enter Employee ID
-          </label>
-          <input
-            type="text"
-            value={employeeId}
-            onChange={(e) => setEmployeeId(e.target.value)}
-            placeholder="e.g., IFNT001"
-            className="px-4 py-2 border-2 border-indigo-400 rounded-lg shadow-md text-base w-72 focus:outline-none focus:ring-2 focus:ring-indigo-500 text-center"
-          />
-        </div>
+{/* Employee ID + Camera Selection Row */}
+<div className="flex flex-col sm:flex-row items-center justify-center sm:justify-between w-full max-w-6xl mx-auto mb-10 px-6 gap-8">
 
-        <div className="flex w-full justify-center gap-6">
+  {/* Center: Employee ID */}
+  <div className="flex flex-col items-center sm:items-center text-center w-full sm:w-auto">
+    <label className="text-lg sm:text-xl font-semibold text-indigo-700 mb-2">
+      Enter Employee ID
+    </label>
+    <input
+      type="text"
+      value={employeeId}
+      onChange={(e) => setEmployeeId(e.target.value)}
+      placeholder="e.g., IFNT001"
+      className="px-4 py-2 border-2 border-indigo-400 rounded-lg shadow-md text-base w-64 sm:w-72 
+                 text-center focus:outline-none focus:ring-2 focus:ring-indigo-500"
+    />
+  </div>
+
+  {/* Right: Camera Selection */}
+  <div className="flex flex-col items-center sm:items-end text-center sm:text-right w-full sm:w-auto">
+    <label className="text-lg sm:text-xl font-semibold text-indigo-700 mb-2 text-center sm:text-right">
+      Select Camera
+    </label>
+    <select
+      value={selectedCamera || ""}
+      onChange={(e) => {
+        setSelectedCamera(e.target.value);
+        localStorage.setItem("selectedCamera", e.target.value);
+      }}
+      className="px-4 py-2 border-2 border-indigo-400 rounded-lg shadow-md text-base w-64 sm:w-72 
+                 text-center focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-white"
+    >
+      {cameras.map((cam, idx) => (
+        <option key={cam.deviceId} value={cam.deviceId}>
+          {cam.label || `Camera ${idx + 1}`}
+        </option>
+      ))}
+    </select>
+  </div>
+</div>
+
+        <div className="flex flex-col lg:flex-row w-full justify-center items-center lg:items-start gap-8 px-4 sm:px-8">
           {/* Camera */}
-          <div className="relative" style={{ width: videoWidth, height: videoHeight }}>
+          <div className="relative w-full sm:w-[580px] max-w-[580px] flex flex-col items-center">
             <div className="relative border-[6px] border-blue-800 rounded-lg shadow-2xl inline-block">
               <Webcam
                 key={selectedCamera}
@@ -253,21 +278,22 @@ function WorkApplicationLogin() {
 </div>
 
             {/* Buttons */}
-            <div className="flex gap-4 mt-6 mb-4 justify-center">
-              <button
-                type="submit" 
-                className="px-6 py-3 bg-green-500 hover:bg-green-600 hover:scale-105 active:scale-95 
-                  transition-transform duration-200 text-white font-bold rounded-lg shadow flex items-center gap-2"
-              >
-                <ArrowRightOnRectangleIcon className="h-5 w-5" />
-                Login
-              </button>
-            </div>
+<div className="flex justify-center mt-6 sm:mt-8 mb-4">
+  <button
+    type="submit"
+    className="px-6 sm:px-8 py-3 sm:py-3.5 bg-green-500 hover:bg-green-600 
+               hover:scale-105 active:scale-95 transition-transform duration-200 
+               text-white font-bold rounded-lg shadow-md flex items-center gap-2 text-base sm:text-lg"
+  >
+    <ArrowRightOnRectangleIcon className="h-5 w-5 sm:h-6 sm:w-6" />
+    Login
+  </button>
+</div>
           </div>
 
           {/* Status Panel */}
-          <div
-            className="w-[37%] bg-white border-[6px] border-indigo-700 rounded-xl shadow-2xl p-6 flex flex-col items-center"
+<div className="w-full lg:w-[37%] bg-white border-[4px] sm:border-[6px] border-indigo-700 rounded-xl shadow-2xl 
+                p-4 sm:p-6 flex flex-col items-center mt-6 lg:mt-0"
             style={{ height: `${videoHeight + 12}px` }}
           >
             <h2 className="text-2xl font-bold text-indigo-700 mb-6 flex items-center gap-2">
