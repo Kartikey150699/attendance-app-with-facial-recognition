@@ -189,8 +189,11 @@ def delete_shift_by_date(employee_id: str, date_: str, db: Session = Depends(get
         .first()
     )
     if not shift:
-        raise HTTPException(status_code=404, detail="Shift not found")
-
+        # Instead of raising 404, just respond 200 OK
+        return {
+            "message": f"No existing shift found for {employee_id} on {local_date} — nothing to delete.",
+            "deleted": False
+        }
     db.delete(shift)
     db.commit()
     return {"message": "Shift deleted successfully"}

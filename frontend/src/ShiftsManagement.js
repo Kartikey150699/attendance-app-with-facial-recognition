@@ -229,13 +229,15 @@ const assignGroup = async (employeeId, groupId) => {
     if (!res.ok) throw new Error("Failed to assign group");
     console.log("✅ Group assigned");
 
-    // Delete all existing shifts for this week
-    for (const d of weekDates) {
-      await fetch(
-        `${API_BASE}/shifts/delete-by-date?employee_id=${employeeId}&date_=${formatDate(d)}`,
-        { method: "DELETE" }
-      ).catch(() => {});
-    }
+// Delete all existing shifts for this week (parallel & safe)
+await Promise.all(
+  weekDates.map((d) =>
+    fetch(
+      `${API_BASE}/shifts/delete-by-date?employee_id=${employeeId}&date_=${formatDate(d)}`,
+      { method: "DELETE" }
+    ).catch(() => null)
+  )
+);
 
     // Get group schedule and assign clean shifts
     const group = groups.find((g) => g.id === parseInt(groupId));
