@@ -207,10 +207,35 @@ function RegisterUser() {
 
       {/* Body */}
       <div className="flex flex-col items-center flex-grow py-4 mt-8">
-        <h2 className="text-3xl font-bold text-indigo-700 mb-4 flex items-center justify-center gap-2">
-          <UserPlusIcon className="h-8 w-8 text-indigo-700" />
-          Register New User
-        </h2>
+{/* Title Row with Centered Title + Camera Selection Touching Scrollbar */}
+<div className="relative flex items-center justify-center w-full mb-6">
+  {/* Centered Title */}
+  <h2 className="text-3xl font-bold text-indigo-700 flex items-center justify-center gap-2 mx-auto">
+    <UserPlusIcon className="h-8 w-8 text-indigo-700" />
+    Register New User
+  </h2>
+
+  {/* Right: Camera Selection (Label Centered Above Dropdown) */}
+<div className="absolute right-3 top-1/2 -translate-y-1/2 flex flex-col items-center">
+  <label className="text-xl font-semibold text-indigo-700 mb-1 text-center">
+    Select Camera
+  </label>
+  <select
+    value={selectedDeviceId}
+    onChange={(e) => {
+      setSelectedDeviceId(e.target.value);
+      localStorage.setItem("selectedCamera", e.target.value);
+    }}
+    className="px-4 py-2 border-2 border-indigo-400 rounded-lg shadow-md text-sm w-64 text-center focus:outline-none focus:ring-2 focus:ring-indigo-500"
+  >
+    {devices.map((device, idx) => (
+      <option key={idx} value={device.deviceId}>
+        {device.label || `Camera ${idx + 1}`}
+      </option>
+    ))}
+  </select>
+</div>
+</div>
 
         <div className="flex w-full max-w-6xl px-10 mt-10">
           {/* Camera */}
