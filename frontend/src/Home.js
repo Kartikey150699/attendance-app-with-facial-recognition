@@ -25,6 +25,7 @@ function Home() {
   const [action, setAction] = useState("checkin");
   const [cameras, setCameras] = useState([]);
   const [selectedCamera, setSelectedCamera] = useState(null);
+
   
 
   const webcamRef = useRef(null);
@@ -32,6 +33,8 @@ function Home() {
 
   const videoWidth = 580;
   const videoHeight = 343;
+
+  const [displayWidth, setDisplayWidth] = useState(videoWidth);
 
   // Live date/time
   useEffect(() => {
@@ -242,7 +245,7 @@ useEffect(() => {
       {/* Main Content */}
       <div className="flex flex-col items-center justify-center flex-grow">
         {!showCamera ? (
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-y-8 sm:gap-y-10 w-full px-4 sm:px-12 md:px-24 lg:px-32 -mt-6 sm:-mt-10 justify-items-center">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-y-8 sm:gap-y-10 w-full px-4 sm:px-12 md:px-24 lg:px-32 mt-6 sm:mt-0 mb-10 sm:mb-0 justify-items-center">
             {/* Check In */}
             <button
   onClick={() => {
@@ -334,12 +337,19 @@ useEffect(() => {
               </select>
             </div>
 
-            <div className="flex flex-col lg:flex-row w-full justify-center items-center lg:items-start gap-8 px-4 sm:px-8">
+            <div className="flex flex-col lg:flex-row w-full justify-center items-center lg:items-start gap-8 px-4 sm:px-8 mb-20 sm:mb-10 lg:mb-0">
               {/* Camera */}
               <div className="relative">
-                <div
-  className="relative border-[4px] sm:border-[6px] border-blue-800 rounded-lg shadow-2xl inline-block max-w-full"
-  style={{ width: "100%", maxWidth: "580px", height: "355px" }}
+               <div
+  ref={(el) => {
+    if (el) setDisplayWidth(el.offsetWidth);
+  }}
+  className="relative border-[4px] sm:border-[6px] border-blue-800 rounded-lg shadow-2xl inline-block w-full sm:w-auto max-w-full"
+  style={{
+    width: "100%",
+    maxWidth: "580px",
+    height: window.innerWidth >= 1024 ? "355px" : "auto",
+  }}
 >
   <Webcam
     key={selectedCamera}
@@ -362,7 +372,7 @@ useEffect(() => {
       className={`absolute border-4 ${getBoxColor(face.status)} rounded-lg transition-all duration-200 ease-linear`}
       style={{
         top: `${face.box[1]}px`,
-        left: `${videoWidth - face.box[0] - face.box[2]}px`,
+        left: `${displayWidth - face.box[0] - face.box[2]}px`,
         width: `${face.box[2]}px`,
         height: `${face.box[3]}px`,
       }}

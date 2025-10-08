@@ -22,6 +22,7 @@ function WorkApplicationLogin() {
 
   const videoWidth = 580;
   const videoHeight = 323;
+  const [displayWidth, setDisplayWidth] = useState(videoWidth);
 
   // detect cameras
   useEffect(() => {
@@ -234,68 +235,82 @@ function WorkApplicationLogin() {
 </div>
 
         <div className="flex flex-col lg:flex-row w-full justify-center items-center lg:items-start gap-8 px-4 sm:px-8">
-          {/* Camera */}
-          <div className="relative w-full sm:w-[580px] max-w-[580px] flex flex-col items-center">
-            <div className="relative border-[6px] border-blue-800 rounded-lg shadow-2xl inline-block">
-              <Webcam
-                key={selectedCamera}
-                audio={false}
-                ref={webcamRef}
-                screenshotFormat="image/jpeg"
-                className="transform scale-x-[-1]"
-                videoConstraints={{
-                  width: { ideal: 1920 },  // request HD feed
-                  height: { ideal: 1080 }, // request HD feed
-                  deviceId: selectedCamera ? { exact: selectedCamera } : undefined,
-                }}
-              />
-
-              {/* Face Boxes */}
- {/* Face Boxes inside the same container */}
-{faces.map((face, index) => {
-  return (
-    <div
-      key={index}
-      className={`absolute border-4 ${getBoxColor(face.status)} rounded-lg transition-all duration-200 ease-linear`}
-      style={{
-        top: `${face.box[1]}px`,
-        left: `${videoWidth - face.box[0] - face.box[2]}px`,
-        width: `${face.box[2]}px`,
-        height: `${face.box[3]}px`,
-      }}
-    >
-      {/* 🟢 Only show name/status below face box */}
-      <div className="absolute bottom-0 left-0 right-0 flex justify-center">
-        <span className="bg-black text-white px-2 py-1 rounded-b-lg font-bold whitespace-nowrap shadow">
-          {face.status === "spoof"
-            ? "Photo Detected – Not Allowed"
-            : face.name}
-        </span>
-      </div>
-    </div>
-  );
-})}
-</div>
-
-            {/* Buttons */}
-<div className="flex justify-center mt-6 sm:mt-8 mb-4">
-  <button
-    type="submit"
-    className="px-6 sm:px-8 py-3 sm:py-3.5 bg-green-500 hover:bg-green-600 
-               hover:scale-105 active:scale-95 transition-transform duration-200 
-               text-white font-bold rounded-lg shadow-md flex items-center gap-2 text-base sm:text-lg"
+{/* Camera Section */}
+<div className="relative w-full sm:w-[580px] max-w-[580px] flex flex-col items-center">
+  <div
+    ref={(el) => {
+      if (el) setDisplayWidth(el.offsetWidth);
+    }}
+    className="relative border-[4px] sm:border-[6px] border-blue-800 rounded-lg shadow-2xl inline-block max-w-full"
+    style={{
+      width: "100%",
+      maxWidth: "580px",
+      height: window.innerWidth >= 1024 ? "355px" : "auto",
+    }}
   >
-    <ArrowRightOnRectangleIcon className="h-5 w-5 sm:h-6 sm:w-6" />
-    Login
-  </button>
-</div>
+    <Webcam
+      key={selectedCamera}
+      audio={false}
+      ref={webcamRef}
+      screenshotFormat="image/jpeg"
+      className="w-full h-full object-cover transform scale-x-[-1] rounded-lg"
+      videoConstraints={{
+        width: videoWidth,
+        height: videoHeight,
+        deviceId: selectedCamera ? { exact: selectedCamera } : undefined,
+      }}
+    />
+
+    {/* Face Boxes inside the same container */}
+    {faces.map((face, index) => {
+      return (
+        <div
+          key={index}
+          className={`absolute border-4 ${getBoxColor(
+            face.status
+          )} rounded-lg transition-all duration-200 ease-linear`}
+          style={{
+            top: `${face.box[1]}px`,
+            left: `${displayWidth - face.box[0] - face.box[2]}px`,
+            width: `${face.box[2]}px`,
+            height: `${face.box[3]}px`,
+          }}
+        >
+          {/* Label below box */}
+          <div className="absolute bottom-0 left-0 right-0 flex justify-center">
+            <span className="bg-black text-white px-2 py-1 rounded-b-lg font-bold whitespace-nowrap shadow">
+              {face.status === "spoof"
+                ? "Photo Detected – Not Allowed"
+                : face.name}
+            </span>
           </div>
+        </div>
+      );
+    })}
+  </div>
+
+  {/* Buttons under Camera */}
+  <div className="flex justify-center mt-6 sm:mt-8 mb-4">
+    <button
+      type="submit"
+      className="px-6 sm:px-8 py-3 sm:py-3.5 bg-green-500 hover:bg-green-600 
+                 hover:scale-105 active:scale-95 transition-transform duration-200 
+                 text-white font-bold rounded-lg shadow-md flex items-center gap-2 text-base sm:text-lg"
+    >
+      <ArrowRightOnRectangleIcon className="h-5 w-5 sm:h-6 sm:w-6" />
+      Login
+    </button>
+  </div>
+</div>
 
           {/* Status Panel */}
-<div className="w-full lg:w-[37%] bg-white border-[4px] sm:border-[6px] border-indigo-700 rounded-xl shadow-2xl 
-                p-4 sm:p-6 flex flex-col items-center mt-6 lg:mt-0"
-            style={{ height: `${videoHeight + 12}px` }}
-          >
+<div
+  className="w-full lg:w-[37%] bg-white border-[4px] sm:border-[6px] border-indigo-700 rounded-xl shadow-2xl 
+              p-4 sm:p-6 flex flex-col items-center mt-6 lg:mt-0 mb-16 sm:mb-0"
+  style={{
+    height: `${videoHeight + 12}px`,
+  }}
+>
             <h2 className="text-2xl font-bold text-indigo-700 mb-6 flex items-center gap-2">
               <ClipboardDocumentListIcon className="h-6 w-6 text-indigo-700" />
               Work Application Login

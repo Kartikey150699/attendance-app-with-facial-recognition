@@ -207,130 +207,154 @@ function RegisterUser() {
 
       {/* Body */}
       <div className="flex flex-col items-center flex-grow py-4 mt-8">
-{/* Title Row with Centered Title + Camera Selection Touching Scrollbar */}
-<div className="relative flex items-center justify-center w-full mb-6">
+{/* Title Row with Centered Title + Responsive Camera Selection */}
+<div className="relative flex flex-col lg:flex-row items-center justify-center w-full mb-6 px-4">
   {/* Centered Title */}
-  <h2 className="text-3xl font-bold text-indigo-700 flex items-center justify-center gap-2 mx-auto">
+  <h2 className="text-3xl font-bold text-indigo-700 flex items-center justify-center gap-2 text-center mb-4 lg:mb-0">
     <UserPlusIcon className="h-8 w-8 text-indigo-700" />
     Register New User
   </h2>
 
-  {/* Right: Camera Selection (Label Centered Above Dropdown) */}
-<div className="absolute right-3 top-1/2 -translate-y-1/2 flex flex-col items-center">
-  <label className="text-xl font-semibold text-indigo-700 mb-1 text-center">
-    Select Camera
-  </label>
-  <select
-    value={selectedDeviceId}
-    onChange={(e) => {
-      setSelectedDeviceId(e.target.value);
-      localStorage.setItem("selectedCamera", e.target.value);
-    }}
-    className="px-4 py-2 border-2 border-indigo-400 rounded-lg shadow-md text-sm w-64 text-center focus:outline-none focus:ring-2 focus:ring-indigo-500"
+  {/* Camera Selection */}
+  <div
+    className="
+      flex flex-col items-center 
+      lg:absolute lg:right-6 
+      text-center lg:text-right 
+      relative z-[50]
+    "
   >
-    {devices.map((device, idx) => (
-      <option key={idx} value={device.deviceId}>
-        {device.label || `Camera ${idx + 1}`}
-      </option>
-    ))}
-  </select>
+    <label className="text-lg lg:text-xl font-semibold text-indigo-700 mb-1 text-center lg:text-right">
+      Select Camera
+    </label>
+
+    <div className="relative inline-block w-56 sm:w-64">
+      <select
+        value={selectedDeviceId}
+        onChange={(e) => {
+          setSelectedDeviceId(e.target.value);
+          localStorage.setItem('selectedCamera', e.target.value);
+        }}
+        className="appearance-none px-4 py-2 border-2 border-indigo-400 rounded-lg shadow-md text-sm w-full text-center bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
+        style={{
+          WebkitAppearance: 'menulist-button',
+          position: 'relative',
+          zIndex: 60,
+        }}
+      >
+        {devices.map((device, idx) => (
+          <option key={idx} value={device.deviceId}>
+            {device.label || `Camera ${idx + 1}`}
+          </option>
+        ))}
+      </select>
+
+      {/* Custom dropdown arrow */}
+      <svg
+        className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-indigo-600"
+        xmlns="http://www.w3.org/2000/svg"
+        fill="none"
+        viewBox="0 0 24 24"
+        stroke="currentColor"
+      >
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+      </svg>
+    </div>
+  </div>
 </div>
+
+ {/* Camera + Form Section — Responsive */}
+<div className="flex flex-col lg:flex-row w-full max-w-6xl px-6 sm:px-10 mt-10 gap-10">
+
+  {/* Camera Section */}
+  <div className="relative flex flex-col justify-center items-center w-full lg:w-1/2">
+    <div
+      className={`relative rounded-lg shadow-lg border-4 ${
+        isSubmitting ? "border-green-400 animate-pulse" : "border-indigo-500"
+      } w-full max-w-[520px]`}
+    >
+      {devices.length > 0 && selectedDeviceId ? (
+        <Webcam
+          ref={webcamRef}
+          audio={false}
+          screenshotFormat="image/jpeg"
+          className="rounded-lg transform scale-x-[-1] w-full h-auto"
+          playsInline
+          mirrored
+          videoConstraints={{
+            width: 520,
+            height: 380,
+            deviceId: { exact: selectedDeviceId },
+          }}
+          onUserMediaError={(err) => console.error("❌ Webcam error:", err)}
+        />
+      ) : (
+        <div className="w-full h-[300px] flex items-center justify-center bg-gray-200 rounded-lg">
+          <p className="text-gray-600 text-center">No camera detected</p>
+        </div>
+      )}
+      {isSubmitting && (
+        <>
+          <div className="absolute top-0 left-0 w-full h-full overflow-hidden rounded-lg">
+            <div className="w-full h-1 animate-scan glow-line"></div>
+          </div>
+          <div className="absolute bottom-2 w-full text-center text-white font-bold text-lg bg-black bg-opacity-40 py-1 rounded">
+            {frameCount < 10
+              ? `Capturing frame ${frameCount}/10`
+              : "Processing..."}
+          </div>
+        </>
+      )}
+    </div>
+  </div>
+
+  {/* Form Section */}
+  <div className="flex flex-col items-center justify-center w-full lg:w-1/2 mt-8 lg:mt-0 space-y-4">
+    <input
+      type="text"
+      placeholder="Enter user's name"
+      value={name}
+      onChange={(e) => setName(e.target.value)}
+      disabled={isSubmitting}
+      className="w-72 sm:w-80 px-4 py-2 border rounded-lg shadow focus:outline-none focus:ring-2 focus:ring-indigo-400 disabled:bg-gray-200"
+    />
+    <input
+      type="text"
+      placeholder="Enter department"
+      value={department}
+      onChange={(e) => setDepartment(e.target.value)}
+      disabled={isSubmitting}
+      className="w-72 sm:w-80 px-4 py-2 border rounded-lg shadow focus:outline-none focus:ring-2 focus:ring-indigo-400 disabled:bg-gray-200"
+    />
+    <button
+      onClick={handleSubmit}
+      disabled={isSubmitting}
+      className={`w-72 sm:w-80 py-3 font-bold rounded-lg shadow transition-transform ${
+        isSubmitting
+          ? "bg-gray-400 text-white cursor-not-allowed"
+          : "bg-green-500 hover:bg-green-600 hover:scale-105 active:scale-95 text-white"
+      }`}
+    >
+      <div className="flex items-center justify-center gap-2">
+        <IdentificationIcon className="h-5 w-5 text-white" />
+        <span>{isSubmitting ? buttonText : "Register"}</span>
+      </div>
+    </button>
+  </div>
 </div>
 
-        <div className="flex w-full max-w-6xl px-10 mt-10">
-          {/* Camera */}
-          <div className="relative flex flex-col justify-center items-center w-1/2">
-            <div
-              className={`relative rounded-lg shadow-lg border-4 ${
-                isSubmitting
-                  ? "border-green-400 animate-pulse"
-                  : "border-indigo-500"
-              }`}
-            >
-              {devices.length > 0 && selectedDeviceId ? (
-                <Webcam
-                  ref={webcamRef}
-                  audio={false}
-                  screenshotFormat="image/jpeg"
-                  className="rounded-lg transform scale-x-[-1]"
-                  playsInline
-                  mirrored
-                  videoConstraints={{
-                    width: 520,
-                    height: 380,
-                    deviceId: { exact: selectedDeviceId },
-                  }}
-                  onUserMediaError={(err) =>
-                    console.error("❌ Webcam error:", err)
-                  }
-                />
-              ) : (
-                <div className="w-[520px] h-[380px] flex items-center justify-center bg-gray-200 rounded-lg">
-                  <p className="text-gray-600">No camera detected</p>
-                </div>
-              )}
-              {isSubmitting && (
-                <div className="absolute top-0 left-0 w-full h-full overflow-hidden rounded-lg">
-                  <div className="w-full h-1 animate-scan glow-line"></div>
-                </div>
-              )}
-              {isSubmitting && (
-                <div className="absolute bottom-2 w-full text-center text-white font-bold text-lg bg-black bg-opacity-40 py-1 rounded">
-                  {frameCount < 10
-                    ? `Capturing frame ${frameCount}/10`
-                    : "Processing..."}
-                </div>
-              )}
-            </div>
-          </div>
-
-          {/* Form */}
-          <div className="flex flex-col items-center justify-center w-1/2">
-            <input
-              type="text"
-              placeholder="Enter user's name"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              disabled={isSubmitting}
-              className="w-80 px-4 py-2 mb-4 border rounded-lg shadow focus:outline-none focus:ring-2 focus:ring-indigo-400 disabled:bg-gray-200"
-            />
-            <input
-              type="text"
-              placeholder="Enter department"
-              value={department}
-              onChange={(e) => setDepartment(e.target.value)}
-              disabled={isSubmitting}
-              className="w-80 px-4 py-2 mb-4 border rounded-lg shadow focus:outline-none focus:ring-2 focus:ring-indigo-400 disabled:bg-gray-200"
-            />
-            <button
-              onClick={handleSubmit}
-              disabled={isSubmitting}
-              className={`w-80 py-3 font-bold rounded-lg shadow transition-transform ${
-                isSubmitting
-                  ? "bg-gray-400 text-white cursor-not-allowed"
-                  : "bg-green-500 hover:bg-green-600 hover:scale-105 active:scale-95 text-white"
-              }`}
-            >
-              <div className="flex items-center justify-center gap-2">
-                <IdentificationIcon className="h-5 w-5 text-white" />
-                <span>{isSubmitting ? buttonText : "Register"}</span>
-              </div>
-            </button>
-          </div>
-        </div>
-
-        {/* Advisory Box */}
-        <div className="mt-6 flex items-center gap-4 bg-yellow-100 border-2 border-yellow-500 text-yellow-800 rounded-xl px-8 py-4 shadow-lg w-full max-w-6xl mx-auto">
-          <ExclamationTriangleIcon className="h-12 w-12 text-yellow-600 flex-shrink-0" />
-          <div className="flex flex-col text-left w-full">
-            <p className="text-lg font-semibold">
-              Please remove Masks, Hats, Glasses, and keep forehead clear — show your full face for accurate registration.
-            </p>
-            <p className="text-xl font-semibold text-gray-700">
-              帽子や眼鏡、マスクを外し、おでこを隠さず、顔全体をカメラに映してください。
-            </p>
-          </div>
-        </div>
+     {/* Advisory Box */}
+<div className="mt-10 flex flex-col sm:flex-row items-center gap-4 bg-yellow-100 border-2 border-yellow-500 text-yellow-800 rounded-xl px-6 sm:px-8 py-4 shadow-lg w-[90%] sm:w-full max-w-6xl mx-auto">
+  <ExclamationTriangleIcon className="h-12 w-12 text-yellow-600 flex-shrink-0 self-center sm:self-start" />
+  <div className="flex flex-col text-left w-full text-center sm:text-left">
+    <p className="text-base sm:text-lg font-semibold leading-snug">
+      Please remove Masks, Hats, Glasses, and keep forehead clear — show your full face for accurate registration.
+    </p>
+    <p className="text-base sm:text-xl font-semibold text-gray-700 mt-1">
+      帽子や眼鏡、マスクを外し、おでこを隠さず、顔全体をカメラに映してください。
+    </p>
+  </div>
+</div>
       </div>
 
       {/* Popup */}

@@ -77,39 +77,57 @@ const response = await fetch(`${API_BASE}/admin/change-password`, {
   return (
     <div className="flex flex-col min-h-screen bg-gradient-to-tr from-gray-100 via-indigo-100 to-blue-200">
       {/* Header */}
-      <div className="w-full flex items-center justify-center px-10 py-4 bg-indigo-300 shadow-md">
-        {/* Date & Time */}
-        <div className="absolute left-10 text-blue-800 text-xl font-bold">
-          <HeaderDateTime />
-        </div>
+{/* Midnight Glass Header */}
+<header className="relative w-full bg-gradient-to-r from-slate-800 via-gray-800 to-slate-900 text-white shadow-xl overflow-hidden border-b border-gray-700/30">
+  {/* Frosted overlay for glass effect */}
+  <div className="absolute inset-0 bg-gradient-to-tr from-white/10 via-transparent to-white/5 backdrop-blur-md"></div>
 
-        {/* Title */}
-        <h1
-  onClick={() => {
-    // clear admin session
-    localStorage.removeItem("currentAdmin");
-    // redirect home and prevent back navigation
-    navigate("/", { replace: true });
-  }}
-  className="text-5xl font-bold text-blue-900 cursor-pointer hover:text-blue-700 transition-colors"
->
-  FaceTrack Attendance
-</h1>
+  {/* Header Content */}
+  <div className="relative z-10 flex flex-col sm:flex-row items-center justify-between px-6 sm:px-10 lg:px-16 py-4 sm:py-5">
 
-        {/* Back Button */}
-        <div className="absolute right-10">
-          <button
-  onClick={() => navigate("/admin-dashboard")}
-  className="w-40 px-6 py-3 bg-red-500 hover:bg-red-600 hover:scale-105 active:scale-95 transition-transform duration-200 text-white font-bold rounded-lg shadow flex items-center justify-center gap-2"
->
-  <ArrowUturnLeftIcon className="h-5 w-5 text-white" />
-  <span>Back</span>
-</button>
-        </div>
+    {/* Left: Logo + Title */}
+    <div
+      onClick={() => {
+        // clear admin session
+        localStorage.removeItem("currentAdmin");
+        navigate("/", { replace: true });
+      }}
+      className="flex items-center gap-3 cursor-pointer transition-transform duration-300 hover:scale-105"
+    >
+      <img
+        src={`${process.env.PUBLIC_URL}/favicon.png`}
+        alt="FaceTrack Logo"
+        className="w-10 h-10 sm:w-12 sm:h-12 rounded-full shadow-md border border-white/20 bg-white/10 p-1 object-contain"
+      />
+      <h1 className="text-3xl sm:text-4xl font-extrabold tracking-tight text-white drop-shadow-sm">
+        FaceTrack <span className="font-light text-gray-300 ml-1">Attendance</span>
+      </h1>
+    </div>
+
+    {/* Right: Date & Time + Back Button */}
+    <div className="flex flex-col sm:flex-row items-center justify-end gap-2 sm:gap-4 mt-3 sm:mt-0">
+      {/* Date & Time */}
+      <div className="text-center text-sm sm:text-base md:text-lg font-semibold text-white tracking-wide drop-shadow-md order-2 sm:order-1">
+        <HeaderDateTime />
       </div>
 
+      {/* Back Button */}
+      <button
+        onClick={() => navigate("/admin-dashboard")}
+        className="order-1 sm:order-2 px-5 sm:px-6 py-2.5 rounded-xl bg-gradient-to-r from-red-500 via-pink-500 to-rose-500 
+                   hover:from-red-600 hover:to-rose-600 text-white font-semibold shadow-lg hover:shadow-xl 
+                   transition-all duration-300 flex items-center gap-2"
+      >
+        <ArrowUturnLeftIcon className="h-5 w-5" />
+        Back
+      </button>
+    </div>
+  </div>
+</header>
+
       {/* Change Password Box */}
-      <div className="bg-white p-8 rounded-xl shadow-md w-96 mx-auto mt-20">
+      {/* Change Password Box */}
+<div className="bg-white p-6 sm:p-8 rounded-xl shadow-md w-[90%] sm:w-96 md:w-[420px] lg:w-[460px] mx-auto mt-12 sm:mt-20 mb-10 sm:mb-16 transition-all duration-300">
         <h2 className="text-2xl font-bold text-center mb-6 text-indigo-700 flex items-center justify-center gap-2">
   <LockClosedIcon className="h-6 w-6 text-indigo-700" />
   Change Admin Password
@@ -133,7 +151,7 @@ const response = await fetch(`${API_BASE}/admin/change-password`, {
             placeholder="Old Password"
             value={oldPassword}
             onChange={(e) => setOldPassword(e.target.value)}
-            className="w-full px-4 py-2 pr-10 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-400"
+            className="w-full px-4 py-2.5 sm:py-3 pr-10 text-base sm:text-lg border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-400"
           />
           <button
             type="button"
@@ -151,7 +169,7 @@ const response = await fetch(`${API_BASE}/admin/change-password`, {
             placeholder="New Password"
             value={newPassword}
             onChange={(e) => setNewPassword(e.target.value)}
-            className="w-full px-4 py-2 pr-10 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-400"
+            className="w-full px-4 py-2.5 sm:py-3 pr-10 text-base sm:text-lg border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-400"
           />
           <button
             type="button"
@@ -169,7 +187,7 @@ const response = await fetch(`${API_BASE}/admin/change-password`, {
             placeholder="Confirm New Password"
             value={confirmPassword}
             onChange={(e) => setConfirmPassword(e.target.value)}
-            className="w-full px-4 py-2 pr-10 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-400"
+            className="w-full px-4 py-2.5 sm:py-3 pr-10 text-base sm:text-lg border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-400"
           />
           <button
             type="button"
@@ -181,11 +199,13 @@ const response = await fetch(`${API_BASE}/admin/change-password`, {
         </div>
 
         {/* Submit Button */}
-        <button
+<button
   onClick={handleSubmit}
-  className="w-full py-2 bg-indigo-500 hover:bg-indigo-600 hover:scale-105 active:scale-95 transition-transform duration-200 text-white font-bold rounded-lg shadow flex items-center justify-center gap-2"
+  className="w-full py-3 sm:py-3.5 bg-indigo-500 hover:bg-indigo-600 hover:scale-105 active:scale-95 
+             transition-transform duration-200 text-white font-bold text-base sm:text-lg 
+             rounded-lg shadow flex items-center justify-center gap-2 mt-2"
 >
-  <FingerPrintIcon className="h-5 w-5 text-white" />
+  <FingerPrintIcon className="h-5 w-5 sm:h-6 sm:w-6 text-white" />
   Change Password
 </button>
 
