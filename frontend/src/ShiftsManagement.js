@@ -215,7 +215,7 @@ const assignGroup = async (employeeId, groupId) => {
 
   try {
     // Assign group to employee
-    const res = await fetch("http://localhost:8000/shift-groups/assign", {
+    const res = await fetch(`${API_BASE}/shift-groups/assign`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
@@ -232,7 +232,7 @@ const assignGroup = async (employeeId, groupId) => {
     // Delete all existing shifts for this week
     for (const d of weekDates) {
       await fetch(
-        `http://localhost:8000/shifts/delete-by-date?employee_id=${employeeId}&date_=${formatDate(d)}`,
+        `${API_BASE}/shifts/delete-by-date?employee_id=${employeeId}&date_=${formatDate(d)}`,
         { method: "DELETE" }
       ).catch(() => {});
     }
@@ -262,7 +262,7 @@ const assignGroup = async (employeeId, groupId) => {
         end_time = times[1];
       }
 
-      await fetch("http://localhost:8000/shifts/assign", {
+      await fetch(`${API_BASE}/shifts/assign`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -277,8 +277,8 @@ const assignGroup = async (employeeId, groupId) => {
 
     // Refresh data
     const [shiftRes, mappingRes] = await Promise.all([
-      fetch("http://localhost:8000/shifts/"),
-      fetch("http://localhost:8000/shift-groups/employee-groups/"),
+      fetch(`${API_BASE}/shifts/`),
+      fetch(`${API_BASE}/shift-groups/employee-groups/`),
     ]);
 
     let shiftData = await shiftRes.json();
@@ -312,7 +312,7 @@ const assignGroup = async (employeeId, groupId) => {
 // Save shift function (keep as-is below)
 const saveShift = async () => {
   try {
-    const response = await fetch("http://localhost:8000/shifts/assign", {
+    const response = await fetch(`${API_BASE}/shifts/assign`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
@@ -329,7 +329,7 @@ const saveShift = async () => {
     await response.json();
 
     // Re-fetch shifts immediately
-    const shiftRes = await fetch("http://localhost:8000/shifts/");
+    const shiftRes = await fetch(`${API_BASE}/shifts/`);
     const shiftData = await shiftRes.json();
     setShifts(shiftData);
 
@@ -359,7 +359,7 @@ useEffect(() => {
 
 const copyShiftToCell = async (employeeId, date_, start_time, end_time) => {
   try {
-    await fetch("http://localhost:8000/shifts/assign", {
+    await fetch(`${API_BASE}/shifts/assign`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
@@ -770,7 +770,7 @@ const copyShiftToCell = async (employeeId, date_, start_time, end_time) => {
     if (draggedGroup) {
       await assignGroup(emp.employee_id, draggedGroup.id);
       const updatedMappings = await fetch(
-        "http://localhost:8000/shift-groups/employee-groups/"
+        `${API_BASE}/shift-groups/employee-groups/`
       ).then((r) => r.json());
       setEmployeeGroups(updatedMappings);
       setDraggedGroup(null);
@@ -800,7 +800,7 @@ const copyShiftToCell = async (employeeId, date_, start_time, end_time) => {
         }
 
         const updatedMappings = await fetch(
-          "http://localhost:8000/shift-groups/employee-groups/"
+          `${API_BASE}/shift-groups/employee-groups/`
         ).then((r) => r.json());
         setEmployeeGroups(updatedMappings);
       }
@@ -822,7 +822,7 @@ const copyShiftToCell = async (employeeId, date_, start_time, end_time) => {
     onChange={async (e) => {
       await assignGroup(emp.employee_id, e.target.value);
       const updatedMappings = await fetch(
-        "http://localhost:8000/shift-groups/employee-groups/"
+        `${API_BASE}/shift-groups/employee-groups/`
       ).then((r) => r.json());
       setEmployeeGroups(updatedMappings);
       setFlashCell(emp.employee_id);
@@ -904,7 +904,7 @@ const copyShiftToCell = async (employeeId, date_, start_time, end_time) => {
           }
 
           // refresh shifts
-          const shiftRes = await fetch("http://localhost:8000/shifts/");
+          const shiftRes = await fetch(`${API_BASE}/shifts/`);
           const shiftData = await shiftRes.json();
           setShifts(shiftData);
 
@@ -1015,7 +1015,7 @@ const copyShiftToCell = async (employeeId, date_, start_time, end_time) => {
         <button
   onClick={async () => {
     await fetch(
-      `http://localhost:8000/shifts/delete-by-date?employee_id=${editShift.employee_id}&date_=${editShift.date}`,
+      `${API_BASE}/shifts/delete-by-date?employee_id=${editShift.employee_id}&date_=${editShift.date}`,
       { method: "DELETE" }
     );
 

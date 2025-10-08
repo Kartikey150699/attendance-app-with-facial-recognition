@@ -267,34 +267,44 @@ const res = await fetch(`${API_BASE}/attendance/toggle-auto-train`, {
         </div>
 
         {/* Info Modal (Japanese) */}
-        {showAutoTrainInfo && (
-          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-            <div className="bg-white rounded-lg shadow-lg p-6 w-[500px]">
-              <h2 className="text-2xl font-bold text-indigo-700 mb-4">
-                Auto-Trainモデル（顔の経年変化対応）
-              </h2>
-              <p className="mb-3">
-                Auto-Train機能は、ユーザーの顔が加齢、髪型、眼鏡などで変化しても、
-                システムが自動的に適応し、手動での更新を行わずに精度を維持する仕組みです。
-              </p>
-              <ul className="list-disc list-inside space-y-1 mb-4 text-gray-700">
-                <li>最新の埋め込みデータ20件のみを保持。</li>
-                <li>類似度が0.90以上の場合のみ保存。</li>
-                <li>「曖昧な一致」は保存しない。</li>
-                <li>管理者がAuto-TrainをON/OFFで制御可能。</li>
-              </ul>
-              <p className="font-semibold text-green-700 mb-4">
-                利点：長期的な精度維持、管理者の作業負担軽減、手動ミス防止。
-              </p>
-              <button
-                onClick={() => setShowAutoTrainInfo(false)}
-                className="px-6 py-2 bg-red-500 hover:bg-red-600 text-white font-bold rounded-lg shadow"
-              >
-                閉じる
-              </button>
-            </div>
-          </div>
-        )}
+{showAutoTrainInfo && (
+  <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 px-4 sm:px-6">
+    <div
+      className="bg-white rounded-lg shadow-lg p-6 sm:p-8 w-full max-w-[500px] 
+                 transform transition-all duration-300 scale-100"
+    >
+      <h2 className="text-xl sm:text-2xl font-bold text-indigo-700 mb-4 text-center">
+        Auto-Trainモデル（顔の経年変化対応）
+      </h2>
+
+      <p className="mb-3 text-sm sm:text-base leading-relaxed text-gray-700">
+        Auto-Train機能は、ユーザーの顔が加齢、髪型、眼鏡などで変化しても、
+        システムが自動的に適応し、手動での更新を行わずに精度を維持する仕組みです。
+      </p>
+
+      <ul className="list-disc list-inside space-y-1 mb-4 text-gray-700 text-sm sm:text-base">
+        <li>最新の埋め込みデータ20件のみを保持。</li>
+        <li>類似度が0.90以上の場合のみ保存。</li>
+        <li>「曖昧な一致」は保存しない。</li>
+        <li>管理者がAuto-TrainをON/OFFで制御可能。</li>
+      </ul>
+
+      <p className="font-semibold text-green-700 mb-4 text-sm sm:text-base">
+        利点：長期的な精度維持、管理者の作業負担軽減、手動ミス防止。
+      </p>
+
+      <div className="flex justify-center">
+        <button
+          onClick={() => setShowAutoTrainInfo(false)}
+          className="px-6 py-2 bg-red-500 hover:bg-red-600 text-white font-bold rounded-lg shadow 
+                     text-sm sm:text-base"
+        >
+          閉じる
+        </button>
+      </div>
+    </div>
+  </div>
+)}
       </div>
 
       <Footer />

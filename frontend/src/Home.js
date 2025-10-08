@@ -18,6 +18,8 @@ import HeaderDateTime from "./HeaderDateTime";
 import { API_BASE } from "./config";
 
 function Home() {
+  const videoWidth = 580;
+  const videoHeight = 343;
   const [dateTime, setDateTime] = useState(new Date());
   const [showCamera, setShowCamera] = useState(false);
   const [faces, setFaces] = useState([]);
@@ -29,10 +31,7 @@ function Home() {
   
 
   const webcamRef = useRef(null);
-  const navigate = useNavigate();
-
-  const videoWidth = 580;
-  const videoHeight = 343;
+  const navigate = useNavigate(); 
 
   const [displayWidth, setDisplayWidth] = useState(videoWidth);
 

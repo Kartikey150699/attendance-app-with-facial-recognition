@@ -11,6 +11,8 @@ import HeaderDateTime from "./HeaderDateTime";
 import { API_BASE } from "./config";
 
 function WorkApplicationLogin() {
+  const videoWidth = 580;
+  const videoHeight = 323;
   const [faces, setFaces] = useState([]);
   const [statusMessages, setStatusMessages] = useState([]);
   const [cameras, setCameras] = useState([]);
@@ -20,8 +22,6 @@ function WorkApplicationLogin() {
   const webcamRef = useRef(null);
   const navigate = useNavigate();
 
-  const videoWidth = 580;
-  const videoHeight = 323;
   const [displayWidth, setDisplayWidth] = useState(videoWidth);
 
   // detect cameras
@@ -211,11 +211,12 @@ function WorkApplicationLogin() {
     />
   </div>
 
-  {/* Right: Camera Selection */}
-  <div className="flex flex-col items-center sm:items-end text-center sm:text-right w-full sm:w-auto">
-    <label className="text-lg sm:text-xl font-semibold text-indigo-700 mb-2 text-center sm:text-right">
-      Select Camera
-    </label>
+{/* Right: Camera Selection */}
+<div className="flex flex-col items-center sm:items-end justify-center w-full sm:w-auto text-center sm:text-right">
+  <label className="text-lg sm:text-xl font-semibold text-indigo-700 mb-2 text-center w-full">
+    Select Camera
+  </label>
+  <div className="flex justify-center sm:justify-end w-full">
     <select
       value={selectedCamera || ""}
       onChange={(e) => {
@@ -232,6 +233,7 @@ function WorkApplicationLogin() {
       ))}
     </select>
   </div>
+</div>
 </div>
 
         <div className="flex flex-col lg:flex-row w-full justify-center items-center lg:items-start gap-8 px-4 sm:px-8">
