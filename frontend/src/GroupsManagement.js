@@ -185,41 +185,67 @@ const saveEditGroup = async () => {
   return (
     <div className="flex flex-col min-h-screen bg-gradient-to-tr from-gray-100 via-indigo-100 to-blue-200">
       {/* Header */}
-      <div className="w-full flex items-center justify-center px-10 py-4 bg-indigo-300 shadow-md relative">
-        <div className="absolute left-10 text-blue-800 text-xl font-bold">
-          <HeaderDateTime />
-        </div>
-        <h1
-          onClick={() => navigate("/", { replace: true })}
-          className="text-5xl font-bold text-blue-900 cursor-pointer hover:text-blue-700 transition-colors"
-        >
-          FaceTrack Attendance
-        </h1>
-        <div className="absolute right-10">
-          <button
-            onClick={() => navigate("/shifts-management")}
-            className="w-40 px-6 py-3 bg-red-500 hover:bg-red-600 hover:scale-105 
-                       active:scale-95 transition-transform duration-200 text-white font-bold 
-                       rounded-lg shadow flex items-center justify-center gap-2"
-          >
-            <ArrowUturnLeftIcon className="h-5 w-5 text-white" />
-            <span>Back</span>
-          </button>
-        </div>
+{/* Midnight Glass Header */}
+<header className="relative w-full bg-gradient-to-r from-slate-800 via-gray-800 to-slate-900 text-white shadow-xl overflow-hidden border-b border-gray-700/30">
+  {/* Frosted glass overlay */}
+  <div className="absolute inset-0 bg-gradient-to-tr from-white/10 via-transparent to-white/5 backdrop-blur-md"></div>
+
+  {/* Header Content */}
+  <div className="relative z-10 flex flex-col sm:flex-row items-center justify-between px-6 sm:px-10 lg:px-16 py-4 sm:py-5">
+    {/* Left: Logo + Title */}
+    <div
+      onClick={() => navigate("/", { replace: true })}
+      className="flex items-center gap-3 cursor-pointer transition-transform duration-300 hover:scale-105"
+    >
+      <img
+        src={`${process.env.PUBLIC_URL}/favicon.png`}
+        alt="FaceTrack Logo"
+        className="w-10 h-10 sm:w-12 sm:h-12 rounded-full shadow-md border border-white/20 bg-white/10 p-1 object-contain"
+      />
+      <h1 className="text-3xl sm:text-4xl font-extrabold tracking-tight text-white drop-shadow-sm">
+        FaceTrack <span className="font-light text-gray-300 ml-1">Attendance</span>
+      </h1>
+    </div>
+
+    {/* Right: Date & Time + Back Button */}
+    <div className="flex flex-col sm:flex-row items-center justify-end gap-2 sm:gap-4 mt-3 sm:mt-0">
+      {/* Date & Time */}
+      <div className="text-center text-sm sm:text-base md:text-lg font-semibold text-white tracking-wide drop-shadow-md order-2 sm:order-1">
+        <HeaderDateTime />
       </div>
 
-      {/* Title */}
-      <div className="flex flex-col items-center py-6">
-        <h2 className="text-4xl font-bold text-indigo-700 mb-4 flex items-center gap-3">
-          <Cog6ToothIcon className="h-8 w-8 text-indigo-700 animate-spin-slow" />
-          Groups Management
-        </h2>
-      </div>
+      {/* Back Button */}
+      <button
+        onClick={() => navigate("/shifts-management")}
+        className="px-5 sm:px-6 py-2.5 rounded-xl bg-gradient-to-r from-red-500 via-pink-500 to-rose-500 
+                   hover:from-red-600 hover:to-rose-600 text-white font-semibold shadow-lg hover:shadow-xl 
+                   transition-all duration-300 flex items-center gap-2 order-1 sm:order-2"
+      >
+        <ArrowUturnLeftIcon className="h-5 w-5" />
+        Back
+      </button>
+    </div>
+  </div>
+</header>
+
+{/* Page Title */}
+<div className="w-full flex justify-center py-6 px-4 sm:px-6">
+  <h2 className="text-3xl sm:text-4xl font-bold text-indigo-700 flex items-center gap-3 text-center">
+    <Cog6ToothIcon className="h-7 w-7 sm:h-8 sm:w-8 text-indigo-700 animate-spin-slow" />
+    <span>Groups Management</span>
+  </h2>
+</div>
 
       {/* Side by side layout */}
-      <div className="max-w-6xl mx-auto flex gap-6 px-6 mb-6">
+      <div
+  className="max-w-6xl mx-auto flex flex-col lg:flex-row gap-6 px-4 sm:px-6 md:px-8 mb-6"
+  style={{
+    width: "100%",
+    boxSizing: "border-box",
+  }}
+>
         {/* Create Group */}
-        <div className="flex-1 bg-white shadow rounded-lg p-6 hover:shadow-xl transition">
+        <div className="flex-1 min-w-0 bg-white shadow rounded-lg p-6 hover:shadow-xl transition">
           <h4 className="text-2xl font-semibold mb-3">Create New Group</h4>
 
           <input
@@ -319,7 +345,7 @@ const saveEditGroup = async () => {
         </div>
 
         {/* Existing Groups */}
-        <div className="flex-1 bg-white shadow rounded-lg p-6">
+        <div className="flex-1 min-w-0 bg-white shadow rounded-lg p-6">
           <h4 className="text-2xl font-semibold mb-3">Existing Groups</h4>
           <div className="space-y-4">
             {groups.map((g) => {
@@ -498,31 +524,38 @@ setEditingGroup({ ...editingGroup, schedule });
         </div>
       </div>
 
-      {/* Modal */}
-      {modal.isOpen && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 animate-fadeIn">
-          <div className="bg-white rounded-lg shadow-lg p-6 w-96 animate-scaleIn">
-            <h3 className="text-xl font-bold mb-4">{modal.title}</h3>
-            <p className="mb-6">{modal.message}</p>
-            <div className="flex justify-end gap-3">
-              {modal.showCancel && (
-                <button
-                  onClick={modal.onCancel}
-                  className="px-4 py-2 bg-gray-400 text-white rounded hover:bg-gray-500 transition"
-                >
-                  Cancel
-                </button>
-              )}
-              <button
-                onClick={modal.onConfirm}
-                className="px-4 py-2 bg-indigo-600 text-white rounded hover:bg-indigo-700 transition"
-              >
-                OK
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+{/* Modal */}
+{modal.isOpen && (
+  <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 animate-fadeIn px-4 sm:px-0">
+    <div
+      className="bg-white rounded-lg shadow-xl p-5 sm:p-6 w-full max-w-sm sm:max-w-md md:max-w-lg animate-scaleIn"
+      style={{
+        margin: "auto",
+        boxSizing: "border-box",
+      }}
+    >
+      <h3 className="text-lg sm:text-xl font-bold mb-4 text-center">{modal.title}</h3>
+      <p className="mb-6 text-sm sm:text-base text-center break-words">{modal.message}</p>
+
+      <div className="flex justify-center sm:justify-end gap-3 flex-wrap">
+        {modal.showCancel && (
+          <button
+            onClick={modal.onCancel}
+            className="px-4 py-2 text-sm sm:text-base bg-gray-400 text-white rounded hover:bg-gray-500 transition"
+          >
+            Cancel
+          </button>
+        )}
+        <button
+          onClick={modal.onConfirm}
+          className="px-4 py-2 text-sm sm:text-base bg-indigo-600 text-white rounded hover:bg-indigo-700 transition"
+        >
+          OK
+        </button>
+      </div>
+    </div>
+  </div>
+)}
 
       <Footer />
     </div>
