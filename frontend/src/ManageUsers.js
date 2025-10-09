@@ -197,45 +197,70 @@ const getStatusClass = (status) => {
   return (
     <div className="flex flex-col min-h-screen bg-gradient-to-tr from-gray-100 via-indigo-100 to-blue-200">
       {/* Header */}
-      <div className="w-full flex items-center justify-center px-10 py-4 bg-indigo-300 shadow-md">
-        <div className="absolute left-10 text-blue-800 text-xl font-bold">
-          <HeaderDateTime />
-        </div>
-        <h1
-          onClick={() => {
-            localStorage.removeItem("currentAdmin");
-            navigate("/", { replace: true });
-          }}
-          className="text-5xl font-bold text-blue-900 cursor-pointer hover:text-blue-700 transition-colors"
-        >
-          FaceTrack Attendance
-        </h1>
-        <div className="absolute right-10">
-          <button
-            onClick={() => navigate("/admin-dashboard")}
-            className="w-40 px-6 py-3 bg-red-500 hover:bg-red-600 hover:scale-105 
-                       active:scale-95 transition-transform duration-200 text-white font-bold rounded-lg shadow flex items-center justify-center gap-2"
-          >
-            <ArrowUturnLeftIcon className="h-5 w-5 text-white" />
-            Back
-          </button>
-        </div>
+{/* Midnight Glass Header */}
+<header className="relative w-full bg-gradient-to-r from-slate-800 via-gray-800 to-slate-900 text-white shadow-xl overflow-hidden border-b border-gray-700/30">
+  {/* Frosted glass overlay */}
+  <div className="absolute inset-0 bg-gradient-to-tr from-white/10 via-transparent to-white/5 backdrop-blur-md"></div>
+
+  {/* Header Content */}
+  <div className="relative z-10 flex flex-col sm:flex-row items-center justify-between px-6 sm:px-10 lg:px-16 py-4 sm:py-5">
+
+    {/* Left: Logo + Title */}
+    <div
+      onClick={() => {
+        localStorage.removeItem("currentAdmin");
+        navigate("/", { replace: true });
+      }}
+      className="flex items-center gap-3 cursor-pointer transition-transform duration-300 hover:scale-105"
+    >
+      <img
+        src={`${process.env.PUBLIC_URL}/favicon.png`}
+        alt="FaceTrack Logo"
+        className="w-10 h-10 sm:w-12 sm:h-12 rounded-full shadow-md border border-white/20 bg-white/10 p-1 object-contain"
+      />
+      <h1 className="text-3xl sm:text-4xl font-extrabold tracking-tight text-white drop-shadow-sm">
+        FaceTrack <span className="font-light text-gray-300 ml-1">Attendance</span>
+      </h1>
+    </div>
+
+    {/* Right: Date & Time + Back button */}
+    <div className="flex flex-col sm:flex-row items-center justify-end gap-2 sm:gap-4 mt-3 sm:mt-0">
+      {/* Date & Time */}
+      <div className="text-center text-sm sm:text-base md:text-lg font-semibold text-white tracking-wide drop-shadow-md order-2 sm:order-1">
+        <HeaderDateTime />
       </div>
+
+      {/* Back Button */}
+      <button
+        onClick={() => navigate("/admin-dashboard")}
+        className="px-5 sm:px-6 py-2.5 rounded-xl bg-gradient-to-r from-red-500 via-pink-500 to-rose-500 
+                   hover:from-red-600 hover:to-rose-600 text-white font-semibold shadow-lg hover:shadow-xl 
+                   transition-all duration-300 flex items-center gap-2 order-1 sm:order-2"
+      >
+        <ArrowUturnLeftIcon className="h-5 w-5" />
+        Back
+      </button>
+    </div>
+  </div>
+</header>
 
       {/* Attendance View */}
       {showAttendanceView && selectedUser ? (
-        <div className="flex flex-col flex-grow p-10 relative">
-          {/* Close Button */}
-          <button
-            onClick={() => {
-              setShowAttendanceView(false);
-              setAttendanceData([]);
-              setSelectedUser(null);
-            }}
-            className="absolute top-6 right-6 bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-lg shadow flex items-center gap-2"
-          >
-            <XMarkIcon className="h-5 w-5" /> Close
-          </button>
+        <div className="flex flex-col flex-grow p-4 sm:p-10 relative">
+{/* Close Button - Responsive Fix */}
+<div className="w-full flex justify-center sm:justify-end mb-4 sm:mb-0 sm:absolute sm:top-6 sm:right-6 z-10">
+  <button
+    onClick={() => {
+      setShowAttendanceView(false);
+      setAttendanceData([]);
+      setSelectedUser(null);
+    }}
+    className="px-4 py-2 bg-red-500 hover:bg-red-600 text-white rounded-lg shadow flex items-center justify-center gap-2 text-sm sm:text-base"
+  >
+    <XMarkIcon className="h-5 w-5" />
+    <span className="hidden sm:inline">Close</span>
+  </button>
+</div>
 
           {/* User Info */}
           <h2 className="text-3xl font-bold text-indigo-700 mb-2">
@@ -290,34 +315,34 @@ const getStatusClass = (status) => {
           </div>
 
           {/* Attendance Logs */}
-          <div className="bg-white p-6 rounded-lg shadow-md overflow-auto">
+          <div className="bg-white p-4 sm:p-6 rounded-lg shadow-md overflow-x-auto w-[95%] sm:w-[90%] mx-auto">
             <h3 className="text-xl font-bold text-green-600 mb-4">Attendance Logs</h3>
-            <table className="w-full border-collapse text-sm">
+            <table className="min-w-[550px] sm:min-w-[800px] w-full border-collapse text-[10px] sm:text-[13px] md:text-base">
               <thead>
                 <tr className="bg-gray-200">
-                  <th className="p-2 border">Date</th>
-                  <th className="p-2 border">Check-in</th>
-                  <th className="p-2 border">Check-out</th>
-                  <th className="p-2 border">Total Work</th>
-                  <th className="p-2 border">Overtime</th>
-                  <th className="p-2 border">Status</th>
+                  <th className="px-2 py-1 sm:px-3 sm:py-2 border">Date</th>
+                  <th className="px-2 py-1 sm:px-3 sm:py-2 border">Check-in</th>
+                  <th className="px-2 py-1 sm:px-3 sm:py-2 border">Check-out</th>
+                  <th className="px-2 py-1 sm:px-3 sm:py-2 border">Total Work</th>
+                  <th className="px-2 py-1 sm:px-3 sm:py-2 border">Overtime</th>
+                  <th className="px-2 py-1 sm:px-3 sm:py-2 border">Status</th>
                 </tr>
               </thead>
               <tbody>
                 {attendanceData.length > 0 ? (
                   attendanceData.map((log, i) => (
                     <tr key={i} className="text-center">
-                      <td className="p-2 border">
+                      <td className="px-2 py-1 sm:px-3 sm:py-2 border">
                         {new Date(log.date).toLocaleDateString("en-US", {
                           year: "numeric",
                           month: "short",
                           day: "numeric",
                         })}
                       </td>
-                      <td className="p-2 border">{log.check_in}</td>
-                      <td className="p-2 border">{log.check_out}</td>
-                      <td className="p-2 border">{log.actual_work || "-"}</td>
-                      <td className="p-2 border">{calculateOvertime(log.total_work)}</td>
+                      <td className="px-2 py-1 sm:px-3 sm:py-2 border">{log.check_in}</td>
+                      <td className="px-2 py-1 sm:px-3 sm:py-2 border">{log.check_out}</td>
+                      <td className="px-2 py-1 sm:px-3 sm:py-2 border">{log.actual_work || "-"}</td>
+                      <td className="px-2 py-1 sm:px-3 sm:py-2 border">{calculateOvertime(log.total_work)}</td>
                       <td className={`p-2 border ${getStatusClass(log.status)}`}>
                         {log.status || "-"}
                       </td>
@@ -336,13 +361,13 @@ const getStatusClass = (status) => {
         </div>
       ) : (
         /* User List View */
-        <div className="flex flex-col items-center flex-grow py-10">
+        <div className="flex flex-col items-center flex-grow py-6 sm:py-10 px-3 sm:px-0">
           <h2 className="text-4xl font-bold text-indigo-700 mb-10 flex items-center gap-2">
             <UsersIcon className="h-8 w-8 text-indigo-700" />
             Manage Users
           </h2>
 
-          <div className="bg-white p-6 rounded-lg shadow-md w-2/3">
+          <div className="bg-white p-4 sm:p-6 rounded-lg shadow-md w-[95%] sm:w-4/5 md:w-2/3 overflow-x-auto">
             <h3 className="text-xl font-bold text-green-600 mb-4">Active Users</h3>
 
             {/* Search bar */}
@@ -352,16 +377,16 @@ const getStatusClass = (status) => {
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               className="w-full mb-4 px-4 py-2 border-2 border-indigo-400 rounded-lg shadow-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
-            />
+              />
 
-            <table className="w-full border-collapse">
+            <table className="min-w-[600px] sm:min-w-[800px] w-full border-collapse text-[10px] sm:text-[13px] md:text-base">
               <thead>
                 <tr className="bg-gray-200">
-                  <th className="p-2 border">Employee ID</th>
-                  <th className="p-2 border">Department</th>
-                  <th className="p-2 border">Name</th>
-                  <th className="p-2 border">Created At</th>
-                  <th className="p-2 border">Actions</th>
+                  <th className="px-2 py-1 sm:px-3 sm:py-2 border">Employee ID</th>
+                  <th className="px-2 py-1 sm:px-3 sm:py-2 border">Department</th>
+                  <th className="px-2 py-1 sm:px-3 sm:py-2 border">Name</th>
+                  <th className="px-2 py-1 sm:px-3 sm:py-2 border">Created At</th>
+                  <th className="px-2 py-1 sm:px-3 sm:py-2 border">Actions</th>
                 </tr>
               </thead>
               <tbody>
@@ -376,24 +401,24 @@ const getStatusClass = (status) => {
       return (
         <tr key={u.id} className="text-center">
           {/* Employee ID */}
-          <td className="p-2 border">{formatEmployeeId(u.id)}</td>
+          <td className="px-2 py-1 sm:px-3 sm:py-2 border">{formatEmployeeId(u.id)}</td>
 
           {/* Department */}
-          <td className="p-2 border">{u.department || "—"}</td>
+          <td className="px-2 py-1 sm:px-3 sm:py-2 border">{u.department || "—"}</td>
 
           {/* Name */}
           <td
-            className="p-2 border text-blue-600 cursor-pointer hover:underline"
+            className="px-2 py-1 sm:px-3 sm:py-2 border text-blue-600 cursor-pointer hover:underline"
             onClick={() => fetchAttendance(u)}
           >
             {u.name}
           </td>
 
           {/* Created At */}
-          <td className="p-2 border">{formattedDate}</td>
+          <td className="px-2 py-1 sm:px-3 sm:py-2 border">{formattedDate}</td>
 
           {/* Actions */}
-          <td className="p-2 border flex gap-2 justify-center">
+          <td className="px-2 py-1 sm:px-3 sm:py-2 border flex gap-2 justify-center">
             <button
               onClick={() => {
                 setSelectedUser(u);
@@ -436,14 +461,14 @@ const getStatusClass = (status) => {
 
       {showPopup && (
   <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50">
-    <div className="bg-white rounded-lg shadow-lg p-6 w-full max-w-md relative">
-      {/* Close button */}
-      <button
-        onClick={handlePopupClose}
-        className="absolute top-2 right-2 text-gray-500 hover:text-gray-700"
-      >
-        <XMarkIcon className="h-6 w-6" />
-      </button>
+    <div className="bg-white rounded-lg shadow-lg p-4 sm:p-6 w-[90%] sm:w-full max-w-md relative mx-3">
+{/* Proper Close Button for Popup */}
+<button
+  onClick={handlePopupClose}
+  className="absolute top-2 right-2 text-gray-500 hover:text-gray-700 transition-colors"
+>
+  <XMarkIcon className="h-6 w-6" />
+</button>
 
       {/* EDIT MODE */}
       {popupMode === "edit" && selectedUser && (

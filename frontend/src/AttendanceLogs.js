@@ -379,69 +379,90 @@ const calculateOvertime = (totalWork) => {
 return (
     <div className="flex flex-col min-h-screen bg-gradient-to-tr from-gray-100 via-indigo-100 to-blue-200">
       {/* Header */}
-      <div className="w-full flex items-center justify-center px-10 py-4 bg-indigo-300 shadow-md relative">
-        <div className="absolute left-10 text-blue-800 text-xl font-bold">
-          <HeaderDateTime />
-        </div>
-        <h1
-  onClick={() => {
-    // clear admin session to prevent unauthorized logins
-    localStorage.removeItem("currentAdmin");
-    // redirect home and prevent back navigation
-    navigate("/", { replace: true });
-  }}
-  className="text-5xl font-bold text-blue-900 cursor-pointer hover:text-blue-700 transition-colors"
->
-  FaceTrack Attendance
-</h1>
-        <div className="absolute right-10 flex gap-3">
-  <button
-    onClick={() => setShowExportPopup(true)}
-    className="px-6 py-3 bg-green-600 hover:bg-green-700 text-white font-bold rounded-lg shadow flex items-center gap-2 
-               transition-all duration-200 transform hover:scale-105 hover:shadow-lg"
-  >
-    <ArrowDownTrayIcon className="h-5 w-5" />
-    Export
-  </button>
-  <button
-    onClick={() => navigate(-1)}
-    className="px-6 py-3 bg-red-500 hover:bg-red-600 text-white font-bold rounded-lg shadow flex items-center gap-2 
-               transition-all duration-200 transform hover:scale-105 hover:shadow-lg"
-  >
-    <ArrowUturnLeftIcon className="h-5 w-5" />
-    Back
-  </button>
-</div>
+ {/* Midnight Glass Header */}
+<header className="relative w-full bg-gradient-to-r from-slate-800 via-gray-800 to-slate-900 text-white shadow-xl overflow-hidden border-b border-gray-700/30">
+  {/* Frosted glass overlay */}
+  <div className="absolute inset-0 bg-gradient-to-tr from-white/10 via-transparent to-white/5 backdrop-blur-md"></div>
+
+  {/* Header Content */}
+  <div className="relative z-10 flex flex-col sm:flex-row items-center justify-between px-6 sm:px-10 lg:px-16 py-4 sm:py-5">
+
+    {/* Left: Logo + Title */}
+    <div
+      onClick={() => {
+        localStorage.removeItem("currentAdmin");
+        navigate("/", { replace: true });
+      }}
+      className="flex items-center gap-3 cursor-pointer transition-transform duration-300 hover:scale-105"
+    >
+      <img
+        src={`${process.env.PUBLIC_URL}/favicon.png`}
+        alt="FaceTrack Logo"
+        className="w-10 h-10 sm:w-12 sm:h-12 rounded-full shadow-md border border-white/20 bg-white/10 p-1 object-contain"
+      />
+      <h1 className="text-3xl sm:text-4xl font-extrabold tracking-tight text-white drop-shadow-sm">
+        FaceTrack <span className="font-light text-gray-300 ml-1">Attendance</span>
+      </h1>
+    </div>
+
+    {/* Right: Date & Time + Buttons */}
+    <div className="flex flex-col sm:flex-row items-center justify-end gap-2 sm:gap-4 mt-3 sm:mt-0">
+      {/* Date & Time */}
+      <div className="text-center text-sm sm:text-base md:text-lg font-semibold text-white tracking-wide drop-shadow-md order-2 sm:order-1">
+        <HeaderDateTime />
       </div>
 
-      {/* Month-Year Navigation (Combined) */}
-<div className="flex flex-wrap justify-center items-center gap-4 mt-6">
-  {/* Prev Button */}
+      {/* Buttons */}
+      <div className="flex gap-3 order-1 sm:order-2">
+        {/* Export */}
+        <button
+          onClick={() => setShowExportPopup(true)}
+          className="px-5 sm:px-6 py-2.5 rounded-xl bg-gradient-to-r from-green-500 via-emerald-500 to-green-600 
+                     hover:from-green-600 hover:to-green-700 text-white font-semibold shadow-lg hover:shadow-xl 
+                     transition-all duration-300 flex items-center gap-2"
+        >
+          <ArrowDownTrayIcon className="h-5 w-5" />
+          Export
+        </button>
+
+        {/* Back */}
+        <button
+          onClick={() => navigate(-1)}
+          className="px-5 sm:px-6 py-2.5 rounded-xl bg-gradient-to-r from-red-500 via-pink-500 to-rose-500 
+                     hover:from-red-600 hover:to-rose-600 text-white font-semibold shadow-lg hover:shadow-xl 
+                     transition-all duration-300 flex items-center gap-2"
+        >
+          <ArrowUturnLeftIcon className="h-5 w-5" />
+          Back
+        </button>
+      </div>
+    </div>
+  </div>
+</header>
+
+{/* Month-Year Navigation (Responsive) */}
+<div className="flex flex-wrap justify-center items-center gap-3 sm:gap-4 mt-6 px-4">
   <button
     onClick={handlePrevMonth}
-    className="px-4 py-2 bg-indigo-500 hover:bg-indigo-600 text-white rounded-lg shadow"
+    className="px-3 sm:px-4 py-2 bg-indigo-500 hover:bg-indigo-600 text-white rounded-lg shadow"
   >
     ◀
   </button>
 
-  {/* Year Selector */}
   <select
     value={year}
     onChange={(e) => setYear(parseInt(e.target.value))}
-    className="px-3 py-2 border-2 border-indigo-500 rounded-lg shadow focus:outline-none focus:ring-2 focus:ring-indigo-400"
+    className="px-3 py-2 border-2 border-indigo-500 rounded-lg shadow focus:outline-none focus:ring-2 focus:ring-indigo-400 text-sm sm:text-base"
   >
     {Array.from({ length: 6 }, (_, i) => today.getFullYear() - 3 + i).map((y) => (
-      <option key={y} value={y}>
-        {y}
-      </option>
+      <option key={y} value={y}>{y}</option>
     ))}
   </select>
 
-  {/* Month Selector */}
   <select
     value={month}
     onChange={(e) => setMonth(parseInt(e.target.value))}
-    className="px-3 py-2 border-2 border-indigo-500 rounded-lg shadow focus:outline-none focus:ring-2 focus:ring-indigo-400"
+    className="px-3 py-2 border-2 border-indigo-500 rounded-lg shadow focus:outline-none focus:ring-2 focus:ring-indigo-400 text-sm sm:text-base"
   >
     {Array.from({ length: 12 }, (_, i) => i + 1).map((m) => (
       <option key={m} value={m}>
@@ -450,172 +471,170 @@ return (
     ))}
   </select>
 
-  {/* Next Button */}
   <button
     onClick={handleNextMonth}
-    className="px-4 py-2 bg-indigo-500 hover:bg-indigo-600 text-white rounded-lg shadow"
+    className="px-3 sm:px-4 py-2 bg-indigo-500 hover:bg-indigo-600 text-white rounded-lg shadow"
   >
     ▶
   </button>
 </div>
 
 
-      {/* Search & Filters */}
-      <div className="flex flex-col md:flex-row justify-between items-center px-10 mt-6 gap-4">
-        <input
-          type="text"
-          placeholder="Search by Employee ID or Name..."
-          value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
-          className="px-4 py-2 border-2 border-indigo-400 rounded-lg shadow-md text-base w-full md:w-1/3 focus:outline-none focus:ring-2 focus:ring-indigo-500"
-        />
-        <div className="flex flex-wrap gap-3">
-          {["today", "week", "month"].map((type) => (
-  <button
-    key={type}
-    onClick={() => isCurrentMonth && setFilterType(type)}
-    disabled={!isCurrentMonth}
-    className={`px-4 py-2 rounded-lg font-semibold shadow-md ${
-      !isCurrentMonth
-        ? "bg-gray-300 text-gray-600 cursor-not-allowed"
-        : filterType === type
-        ? "bg-indigo-600 text-white"
-        : "bg-white border border-indigo-400 text-indigo-700 hover:bg-indigo-100"
-    }`}
+{/* Search & Filters (Responsive) */}
+<div className="flex flex-col lg:flex-row justify-between items-center px-4 sm:px-10 mt-6 gap-4 w-full">
+  <input
+    type="text"
+    placeholder="Search by Employee ID or Name..."
+    value={searchTerm}
+    onChange={(e) => setSearchTerm(e.target.value)}
+    className="px-4 py-2 border-2 border-indigo-400 rounded-lg shadow-md text-sm sm:text-base w-full lg:w-1/3 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+  />
+  <div className="flex flex-wrap justify-center lg:justify-end gap-2 sm:gap-3 w-full lg:w-auto">
+    {["today", "week", "month"].map((type) => (
+      <button
+        key={type}
+        onClick={() => isCurrentMonth && setFilterType(type)}
+        disabled={!isCurrentMonth}
+        className={`px-3 sm:px-4 py-2 rounded-lg font-semibold text-sm sm:text-base shadow-md ${
+          !isCurrentMonth
+            ? "bg-gray-300 text-gray-600 cursor-not-allowed"
+            : filterType === type
+            ? "bg-indigo-600 text-white"
+            : "bg-white border border-indigo-400 text-indigo-700 hover:bg-indigo-100"
+        }`}
+      >
+        {type === "today" ? "Today" : type === "week" ? "This Week" : "This Month"}
+      </button>
+    ))}
+
+    <button
+      onClick={() => setShowDeleted(!showDeleted)}
+      className={`px-3 sm:px-4 py-2 rounded-lg font-semibold text-sm sm:text-base shadow-md ${
+        showDeleted
+          ? "bg-red-500 text-white"
+          : "bg-white border border-red-400 text-red-600 hover:bg-red-100"
+      }`}
+    >
+      {showDeleted ? "Hide Deleted" : "Show Deleted"}
+    </button>
+
+    <button
+      onClick={resetFilters}
+      className="px-3 sm:px-4 py-2 rounded-lg font-semibold text-sm sm:text-base shadow-md bg-indigo-500 text-white hover:bg-indigo-600 active:scale-95 transition-transform"
+    >
+      Reset
+    </button>
+  </div>
+</div>
+
+{/* Logs Table */}
+<div className="flex-grow p-2 sm:p-8 overflow-x-auto">
+  <table
+    className="min-w-[700px] sm:min-w-[900px] w-full border-collapse bg-white shadow-lg rounded-xl overflow-hidden 
+               text-[11px] sm:text-sm md:text-base"
   >
-    {type === "today"
-      ? "Today"
-      : type === "week"
-      ? "This Week"
-      : "This Month"}
-  </button>
-))}
-          <button
-            onClick={() => setShowDeleted(!showDeleted)}
-            className={`px-4 py-2 rounded-lg font-semibold shadow-md ${
-              showDeleted
-                ? "bg-red-500 text-white"
-                : "bg-white border border-red-400 text-red-600 hover:bg-red-100"
-            }`}
-          >
-            {showDeleted ? "Hide Deleted Users" : "Show Deleted Users"}
-          </button>
-          <button
-            onClick={resetFilters}
-            className="px-4 py-2 rounded-lg font-semibold shadow-md bg-indigo-500 text-white hover:bg-indigo-600 active:scale-95 transition-transform"
-          >
-            Reset
-          </button>
-        </div>
-      </div>
-
-      {/* Logs Table */}
-      <div className="flex-grow p-10">
-        <table className="w-full border-collapse bg-white shadow-lg rounded-xl overflow-hidden">
-          <thead>
-  <tr className="bg-indigo-500 text-white text-lg">
-    <th
-      className="p-4 cursor-pointer select-none"
-      onClick={() => requestSort("employee_id")}
-    >
-      Employee ID {getArrow("employee_id")}
-    </th>
-    <th
-      className="p-4 cursor-pointer select-none"
-      onClick={() => requestSort("date")}
-    >
-      Date {getArrow("date")}
-    </th>
-    <th
-      className="p-4 cursor-pointer select-none"
-      onClick={() => requestSort("user_name_snapshot")}
-    >
-      Employee {getArrow("user_name_snapshot")}
-    </th>
-    <th
-      className="p-4 cursor-pointer select-none"
-      onClick={() => requestSort("department")}
-    >
-      Department {getArrow("department")}
-    </th>
-    <th className="p-4">Check In</th>
-    <th className="p-4">Break Start</th>
-    <th className="p-4">Break End</th>
-    <th className="p-4">Check Out</th>
-    <th className="p-4">Total Working</th>
-    <th
-      className="p-4 cursor-pointer select-none"
-      onClick={() => requestSort("overtime")}
-    >
-      Overtime {getArrow("overtime")}
-    </th>
-    <th className="p-4">Actions</th>
-  </tr>
-</thead>
-<tbody>
-  {filteredLogs.length > 0 ? (
-    filteredLogs.map((log, idx) => (
-      <tr key={idx} className="text-center border-b">
-        <td
-          className={`p-4 font-bold ${
-            log.employee_id === "DELETED"
-              ? "text-red-600"
-              : "text-indigo-700"
-          }`}
+    <thead>
+      <tr className="bg-indigo-500 text-white text-[12px] sm:text-lg">
+        <th
+          className="p-2 sm:p-4 cursor-pointer select-none"
+          onClick={() => requestSort("employee_id")}
         >
-          {log.employee_id}
-        </td>
-        <td className="p-4">{log.date}</td>
-        <td className="p-4">{log.user_name_snapshot}</td>
-        <td className="p-4">{log.department || "-"}</td> {/* Department */}
-        <td className="p-4">{log.check_in || "-"}</td>
-        <td className="p-4">{log.break_start || "-"}</td>
-        <td className="p-4">{log.break_end || "-"}</td>
-        <td className="p-4">{log.check_out || "-"}</td>
-        <td className="p-4 font-bold text-green-600">
-          {log.total_work}
-        </td>
-        <td className="p-4 font-bold text-blue-600">
-          {log.overtime || "-"} {/* Overtime */}
-        </td>
-        <td className="p-4 flex gap-2 justify-center">
-          {/* Show Edit only if not deleted */}
-          {log.employee_id !== "DELETED" && (
-            <button
-              onClick={() => openEditModal(log)}
-              className="px-3 py-1 bg-yellow-500 hover:bg-yellow-600 text-white rounded-lg shadow flex items-center gap-1"
-            >
-              <PencilSquareIcon className="h-4 w-4" />
-              Edit
-            </button>
-          )}
-
-          {/* History should always be visible even for deleted users */}
-          <button
-            onClick={() => openAuditTrail(log)}
-            className="px-3 py-1 bg-blue-500 hover:bg-blue-600 text-white rounded-lg shadow flex items-center gap-1"
-          >
-            <ClockIcon className="h-4 w-4" />
-            History
-          </button>
-        </td>
+          Employee ID {getArrow("employee_id")}
+        </th>
+        <th
+          className="p-2 sm:p-4 cursor-pointer select-none"
+          onClick={() => requestSort("date")}
+        >
+          Date {getArrow("date")}
+        </th>
+        <th
+          className="p-2 sm:p-4 cursor-pointer select-none"
+          onClick={() => requestSort("user_name_snapshot")}
+        >
+          Employee {getArrow("user_name_snapshot")}
+        </th>
+        <th
+          className="p-2 sm:p-4 cursor-pointer select-none"
+          onClick={() => requestSort("department")}
+        >
+          Dept {getArrow("department")}
+        </th>
+        <th className="p-2 sm:p-4">In</th>
+        <th className="p-2 sm:p-4">Break Start</th>
+        <th className="p-2 sm:p-4">Break End</th>
+        <th className="p-2 sm:p-4">Out</th>
+        <th className="p-2 sm:p-4">Work</th>
+        <th
+          className="p-2 sm:p-4 cursor-pointer select-none"
+          onClick={() => requestSort("overtime")}
+        >
+          Overtime {getArrow("overtime")}
+        </th>
+        <th className="p-2 sm:p-4">Actions</th>
       </tr>
-    ))
-  ) : (
-    <tr>
-      <td colSpan="11" className="p-6 text-gray-500">
-        No logs found
-      </td>
-    </tr>
-  )}
-</tbody>
-        </table>
-      </div>
+    </thead>
+
+    <tbody>
+      {filteredLogs.length > 0 ? (
+        filteredLogs.map((log, idx) => (
+          <tr key={idx} className="text-center border-b">
+            <td
+              className={`p-2 sm:p-4 font-bold ${
+                log.employee_id === "DELETED"
+                  ? "text-red-600"
+                  : "text-indigo-700"
+              }`}
+            >
+              {log.employee_id}
+            </td>
+            <td className="p-2 sm:p-4">{log.date}</td>
+            <td className="p-2 sm:p-4">{log.user_name_snapshot}</td>
+            <td className="p-2 sm:p-4">{log.department || "-"}</td>
+            <td className="p-2 sm:p-4">{log.check_in || "-"}</td>
+            <td className="p-2 sm:p-4">{log.break_start || "-"}</td>
+            <td className="p-2 sm:p-4">{log.break_end || "-"}</td>
+            <td className="p-2 sm:p-4">{log.check_out || "-"}</td>
+            <td className="p-2 sm:p-4 font-bold text-green-600">
+              {log.total_work}
+            </td>
+            <td className="p-2 sm:p-4 font-bold text-blue-600">
+              {log.overtime || "-"}
+            </td>
+            <td className="p-2 sm:p-4 flex gap-1 sm:gap-2 justify-center">
+              {log.employee_id !== "DELETED" && (
+                <button
+                  onClick={() => openEditModal(log)}
+                  className="px-2 py-1 sm:px-3 sm:py-1 bg-yellow-500 hover:bg-yellow-600 text-white rounded-md shadow text-[10px] sm:text-sm flex items-center gap-1"
+                >
+                  <PencilSquareIcon className="h-4 w-4" />
+                  Edit
+                </button>
+              )}
+              <button
+                onClick={() => openAuditTrail(log)}
+                className="px-2 py-1 sm:px-3 sm:py-1 bg-blue-500 hover:bg-blue-600 text-white rounded-md shadow text-[10px] sm:text-sm flex items-center gap-1"
+              >
+                <ClockIcon className="h-4 w-4" />
+                History
+              </button>
+            </td>
+          </tr>
+        ))
+      ) : (
+        <tr>
+          <td colSpan="11" className="p-6 text-gray-500">
+            No logs found
+          </td>
+        </tr>
+      )}
+    </tbody>
+  </table>
+</div>
 
       {/* Export Popup */}
       {showExportPopup && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-xl shadow-lg p-6 w-[400px]">
+<div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center sm:items-center overflow-y-auto z-50 px-3 sm:px-0 py-[15vh] sm:py-0">        
+  <div className="bg-white rounded-xl shadow-lg p-5 sm:p-6 w-[92%] sm:w-[90%] max-w-md mx-auto rounded-2xl overflow-y-auto max-h-[85vh]">
             <h2 className="text-lg font-bold text-indigo-700 mb-4">
               Export Logs
             </h2>
@@ -646,61 +665,61 @@ return (
         </div>
       )}
 
-      {/* Edit Modal */}
-      {isModalOpen && editLog && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-xl shadow-lg p-6 w-[400px]">
-            <h2 className="text-lg font-bold text-indigo-700 mb-2">
-              Edit Attendance – {editLog.employee_id} ({editLog.user_name_snapshot})
-            </h2>
-            <p className="text-sm text-gray-600 mb-4">
-              Date: {new Date(editLog.date).toLocaleDateString("en-GB", {
-                year: "numeric",
-                month: "short",
-                day: "numeric",
-              })}
-            </p>
+{/* Edit Modal */}
+{isModalOpen && editLog && (
+  <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center sm:items-center overflow-y-auto z-50 px-[5vw] sm:px-0 py-[15vh] sm:py-0">
+    <div className="bg-white rounded-2xl shadow-lg p-5 sm:p-6 w-full sm:w-[400px] max-w-md mx-auto overflow-y-auto max-h-[85vh]">
+      <h2 className="text-lg font-bold text-indigo-700 mb-2">
+        Edit Attendance – {editLog.employee_id} ({editLog.user_name_snapshot})
+      </h2>
+      <p className="text-sm text-gray-600 mb-4">
+        Date:{" "}
+        {new Date(editLog.date).toLocaleDateString("en-GB", {
+          year: "numeric",
+          month: "short",
+          day: "numeric",
+        })}
+      </p>
 
-            {["check_in", "break_start", "break_end", "check_out"].map(
-              (field) => (
-                <div key={field} className="mb-3">
-                  <label className="block text-gray-700 font-semibold capitalize mb-1">
-                    {field.replace("_", " ")}
-                  </label>
-                  <input
-                    type="time"
-                    step="60"
-                    value={editTimes[field]}
-                    onChange={(e) =>
-                      setEditTimes({ ...editTimes, [field]: e.target.value })
-                    }
-                    className="w-full px-3 py-2 border-2 border-gray-300 rounded-lg"
-                  />
-                </div>
-              )
-            )}
-            <div className="flex justify-end gap-3 mt-4">
-              <button
-                onClick={() => setIsModalOpen(false)}
-                className="px-4 py-2 bg-gray-400 text-white rounded-lg hover:bg-gray-500"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={saveEdit}
-                className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700"
-              >
-                Save
-              </button>
-            </div>
-          </div>
+      {["check_in", "break_start", "break_end", "check_out"].map((field) => (
+        <div key={field} className="mb-3">
+          <label className="block text-gray-700 font-semibold capitalize mb-1">
+            {field.replace("_", " ")}
+          </label>
+          <input
+            type="time"
+            step="60"
+            value={editTimes[field]}
+            onChange={(e) =>
+              setEditTimes({ ...editTimes, [field]: e.target.value })
+            }
+            className="w-full px-3 py-2 border-2 border-gray-300 rounded-lg"
+          />
         </div>
-      )}
+      ))}
+
+      <div className="flex justify-end gap-3 mt-4">
+        <button
+          onClick={() => setIsModalOpen(false)}
+          className="px-4 py-2 bg-gray-400 text-white rounded-lg hover:bg-gray-500"
+        >
+          Cancel
+        </button>
+        <button
+          onClick={saveEdit}
+          className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700"
+        >
+          Save
+        </button>
+      </div>
+    </div>
+  </div>
+)}
 
       {/* Audit Trail Modal */}
 {isAuditModalOpen && (
   <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-    <div className="bg-white rounded-xl shadow-lg p-6 w-[500px] max-h-[80vh] flex flex-col">
+    <div className="bg-white rounded-xl shadow-lg p-4 sm:p-6 w-[95%] sm:w-[90%] max-w-lg max-h-[90vh] flex flex-col mx-4 overflow-y-auto">
       {/* Header */}
       <h2 className="text-lg font-bold text-indigo-700 mb-4">
         Audit Trail – {editLog?.user_name_snapshot} ({editLog?.employee_id})

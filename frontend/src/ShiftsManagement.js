@@ -22,6 +22,8 @@ function ShiftsManagement() {
   const [search, setSearch] = useState("");
   const [editShift, setEditShift] = useState(null); // for modal
   const navigate = useNavigate();
+  const [touchDragPreview] = useState(null); // {x, y, group}
+  const [dragPreview, setDragPreview] = useState(null); // {x, y, group, visible}
 
   const [groups, setGroups] = useState([]);
 
@@ -380,146 +382,295 @@ const copyShiftToCell = async (employeeId, date_, start_time, end_time) => {
   return (
     <div className="flex flex-col min-h-screen bg-gradient-to-tr from-gray-100 via-indigo-100 to-blue-200">
       {/* Header */}
-      <div className="w-full flex items-center justify-center px-10 py-4 bg-indigo-300 shadow-md relative">
-        <div className="absolute left-10 text-blue-800 text-xl font-bold">
-          <HeaderDateTime />
-        </div>
-        <h1
-          onClick={() => {
-            localStorage.removeItem("currentAdmin");
-            navigate("/", { replace: true });
-          }}
-          className="text-5xl font-bold text-blue-900 cursor-pointer hover:text-blue-700 transition-colors"
-        >
-          FaceTrack Attendance
-        </h1>
-        <div className="absolute right-10">
-          <button
-            onClick={() => navigate("/admin-dashboard")}
-            className="w-40 px-6 py-3 bg-red-500 hover:bg-red-600 hover:scale-105 
-                       active:scale-95 transition-transform duration-200 text-white font-bold 
-                       rounded-lg shadow flex items-center justify-center gap-2"
-          >
-            <ArrowUturnLeftIcon className="h-5 w-5 text-white" />
-            <span>Back</span>
-          </button>
-        </div>
+{/* Midnight Glass Header */}
+<header className="relative w-full bg-gradient-to-r from-slate-800 via-gray-800 to-slate-900 text-white shadow-xl overflow-hidden border-b border-gray-700/30">
+  {/* Frosted glass overlay */}
+  <div className="absolute inset-0 bg-gradient-to-tr from-white/10 via-transparent to-white/5 backdrop-blur-md"></div>
+
+  {/* Header Content */}
+  <div className="relative z-10 flex flex-col sm:flex-row items-center justify-between px-6 sm:px-10 lg:px-16 py-4 sm:py-5">
+    {/* Left: Logo + Title */}
+    <div
+      onClick={() => {
+        localStorage.removeItem("currentAdmin");
+        navigate("/", { replace: true });
+      }}
+      className="flex items-center gap-3 cursor-pointer transition-transform duration-300 hover:scale-105"
+    >
+      <img
+        src={`${process.env.PUBLIC_URL}/favicon.png`}
+        alt="FaceTrack Logo"
+        className="w-10 h-10 sm:w-12 sm:h-12 rounded-full shadow-md border border-white/20 bg-white/10 p-1 object-contain"
+      />
+      <h1 className="text-3xl sm:text-4xl font-extrabold tracking-tight text-white drop-shadow-sm">
+        FaceTrack <span className="font-light text-gray-300 ml-1">Attendance</span>
+      </h1>
+    </div>
+
+    {/* Right: Date & Time + Back button */}
+    <div className="flex flex-col sm:flex-row items-center justify-end gap-2 sm:gap-4 mt-3 sm:mt-0">
+      {/* Date & Time */}
+      <div className="text-center text-sm sm:text-base md:text-lg font-semibold text-white tracking-wide drop-shadow-md order-2 sm:order-1">
+        <HeaderDateTime />
       </div>
 
-{/* Title + Groups Button */}
-<div className="relative flex justify-center items-center py-6">
-  <h2 className="text-4xl font-bold text-indigo-700 flex items-center gap-3">
-    <Cog6ToothIcon className="h-8 w-8 text-indigo-700" />
+      {/* Back Button */}
+      <button
+        onClick={() => navigate("/admin-dashboard")}
+        className="px-5 sm:px-6 py-2.5 rounded-xl bg-gradient-to-r from-red-500 via-pink-500 to-rose-500 
+                   hover:from-red-600 hover:to-rose-600 text-white font-semibold shadow-lg hover:shadow-xl 
+                   transition-all duration-300 flex items-center gap-2 order-1 sm:order-2"
+      >
+        <ArrowUturnLeftIcon className="h-5 w-5" />
+        Back
+      </button>
+    </div>
+  </div>
+</header>
+
+{/* Title + Groups Button (Responsive) */}
+<div className="relative flex flex-col sm:flex-row justify-center sm:justify-between items-center px-6 sm:px-12 py-6 mt-2 gap-3 sm:gap-0">
+  <h2 className="text-2xl sm:text-4xl font-bold text-indigo-700 flex items-center gap-2 sm:gap-3 text-center sm:text-left">
+    <Cog6ToothIcon className="h-6 sm:h-8 w-6 sm:w-8 text-indigo-700" />
     Shifts Management
   </h2>
 
-  {/* Groups Button — top-right corner below header */}
+  {/* Groups Button */}
   <button
     onClick={() => navigate("/groups-management")}
-    className="absolute right-10 top-10 px-10 py-2 rounded-lg font-semibold 
+    className="px-6 sm:px-10 py-2 rounded-lg font-semibold 
                bg-gradient-to-r from-indigo-400 to-indigo-600 
                text-white shadow-md 
                hover:from-indigo-500 hover:to-indigo-700 
                hover:scale-105 active:scale-95 
-               transition-transform duration-200"
+               transition-transform duration-200 w-full sm:w-auto mt-2 sm:mt-0"
   >
     Groups
   </button>
 </div>
 
 {/* Group Overview Row */}
-<div className="max-w-7xl mx-auto px-6 mb-8">
-  <div className="flex gap-4 overflow-x-auto pb-3 scrollbar-thin scrollbar-thumb-indigo-500">
-    {groups.length === 0 ? (
-      <p className="text-gray-500 text-sm">No groups found.</p>
-    ) : (
-      groups.map((g, index) => {
-        const schedule = g.schedule || {};
-        const grouped = {};
+<div className="w-full flex justify-center px-4 sm:px-6 md:px-8 mb-8">
+  {/* Fixed-width safe white box */}
+  <div className="w-full max-w-7xl bg-white/80 backdrop-blur-sm rounded-xl shadow-md border border-gray-200 p-3 sm:p-4 md:p-5 overflow-hidden">
+    {/* Scrollable container for group boxes */}
+    <div className="overflow-x-auto pb-3 scrollbar-thin scrollbar-thumb-indigo-500 scrollbar-track-transparent">
+      <div className="flex gap-4 min-w-max px-1">
+        {groups.length === 0 ? (
+          <p className="text-gray-500 text-sm pl-1">No groups found.</p>
+        ) : (
+          groups.map((g, index) => {
+            const schedule = g.schedule || {};
+            const grouped = {};
 
-        const weekOrder = ["mon", "tue", "wed", "thu", "fri", "sat", "sun"];
-        const dayNames = {
-          mon: "Mon",
-          tue: "Tue",
-          wed: "Wed",
-          thu: "Thu",
-          fri: "Fri",
-          sat: "Sat",
-          sun: "Sun",
-        };
+            const weekOrder = ["mon", "tue", "wed", "thu", "fri", "sat", "sun"];
+            const dayNames = {
+              mon: "Mon",
+              tue: "Tue",
+              wed: "Wed",
+              thu: "Thu",
+              fri: "Fri",
+              sat: "Sat",
+              sun: "Sun",
+            };
 
-        weekOrder.forEach((day) => {
-          if (schedule[day]) {
-            const times = schedule[day];
-            const key = Array.isArray(times) ? `${times[0]} - ${times[1]}` : "-";
-            if (!grouped[key]) grouped[key] = [];
-            grouped[key].push(dayNames[day]);
-          }
-        });
+            weekOrder.forEach((day) => {
+              if (schedule[day]) {
+                const times = schedule[day];
+                const key = Array.isArray(times)
+                  ? `${times[0]} - ${times[1]}`
+                  : "-";
+                if (!grouped[key]) grouped[key] = [];
+                grouped[key].push(dayNames[day]);
+              }
+            });
 
-        // Catchy gradient palette
-        const gradients = [
-          "from-indigo-500 via-purple-500 to-pink-500",
-          "from-blue-500 via-cyan-400 to-teal-400",
-          "from-amber-500 via-orange-500 to-red-500",
-          "from-green-500 via-emerald-400 to-lime-400",
-          "from-rose-500 via-pink-500 to-fuchsia-500",
-        ];
-        const gradient = gradients[index % gradients.length];
+            const gradients = [
+              "from-indigo-500 via-purple-500 to-pink-500",
+              "from-blue-500 via-cyan-400 to-teal-400",
+              "from-amber-500 via-orange-500 to-red-500",
+              "from-green-500 via-emerald-400 to-lime-400",
+              "from-rose-500 via-pink-500 to-fuchsia-500",
+            ];
+            const gradient = gradients[index % gradients.length];
 
-        return (
-          <div
-            key={g.id}
-            draggable
-            onDragStart={() =>
-  setDraggedGroup({
-    id: g.id,
-    name: g.name,
-    schedule: g.schedule || {},
-  })
-}
-            onDragEnd={() => setDraggedGroup(null)}
-            className={`min-w-[230px] max-w-[250px] h-[100px] rounded-lg cursor-grab active:cursor-grabbing
-                       bg-gradient-to-br ${gradient} text-white shadow-md p-3 flex flex-col justify-between
-                       transition-all duration-300 ease-out
-                       hover:scale-[1.06] hover:shadow-[0_0_15px_rgba(255,255,255,0.5)]
-                       ${draggedGroup?.id === g.id ? "ring-4 ring-white ring-offset-2 ring-offset-indigo-400 scale-[1.08]" : ""}`}
-          >
-            <div>
-              <h5 className="text-base font-bold mb-0.5 tracking-wide drop-shadow-sm">
-                {g.name}
-              </h5>
+            return (
+<div
+  key={g.id}
+  draggable={true}
+  // 🖱️ Desktop drag-drop
+  onDragStart={() => {
+    setDraggedGroup({
+      id: g.id,
+      name: g.name,
+      schedule: g.schedule || {},
+      gradient,
+    });
+  }}
+  onDragEnd={() => setDraggedGroup(null)}
 
-              <ul className="text-xs space-y-1 font-medium mt-1">
-                {Object.entries(grouped).map(([time, days]) => (
-                  <li key={time} className="drop-shadow-sm">
-                    <div className="flex items-center gap-1">
-                      <ClockIcon className="h-3.5 w-3.5 text-white opacity-90" />
-                      <span className="text-sm font-semibold tracking-tight">{time}</span>
-                    </div>
-                    <div className="text-[11px] text-white/90 ml-5 leading-tight">
-                      {days.join(", ")}
-                    </div>
-                  </li>
-                ))}
-              </ul>
-            </div>
+  // 📱 Touch: long-press to start drag, release to drop
+  onTouchStart={(e) => {
+    const el = e.currentTarget;
+    clearTimeout(el.longPressTimer);
+    const touch = e.touches[0];
+    el.startX = touch.clientX;
+    el.startY = touch.clientY;
 
-            {g.description && (
-              <div className="text-right text-[10px] text-white/80 italic truncate">
-                {g.description}
-              </div>
-            )}
+    el.longPressTimer = setTimeout(() => {
+      const groupData = {
+        id: g.id,
+        name: g.name,
+        schedule: g.schedule || {},
+        gradient,
+      };
+      setDraggedGroup(groupData);
+      setDragPreview({
+        x: touch.clientX,
+        y: touch.clientY,
+        group: groupData,
+        visible: true,
+      });
+      el.classList.add(
+        "ring-4",
+        "ring-white",
+        "ring-offset-2",
+        "ring-offset-indigo-400"
+      );
+      navigator.vibrate?.(40);
+    }, 400);
+  }}
+
+  onTouchMove={(e) => {
+    const touch = e.touches[0];
+    const el = e.currentTarget;
+
+    // cancel if user scrolls instead of long-pressing
+    const dx = Math.abs(touch.clientX - el.startX);
+    const dy = Math.abs(touch.clientY - el.startY);
+    if (dx > 10 || dy > 10) clearTimeout(el.longPressTimer);
+
+    // update floating preview position
+    if (dragPreview?.visible) {
+      setDragPreview((prev) => ({
+        ...prev,
+        x: touch.clientX,
+        y: touch.clientY,
+      }));
+    }
+  }}
+
+  onTouchEnd={(e) => {
+    clearTimeout(e.currentTarget.longPressTimer);
+    const touch = e.changedTouches[0];
+
+    if (draggedGroup) {
+      const dropTarget = document.elementFromPoint(
+        touch.clientX,
+        touch.clientY
+      );
+
+      if (dropTarget && dropTarget.closest("td[data-group-cell='true']")) {
+        const td = dropTarget.closest("td[data-group-cell='true']");
+        const empId = td.getAttribute("data-employee-id");
+
+        // Animate drop ghost toward cell center
+        const rect = td.getBoundingClientRect();
+        setDragPreview((prev) => ({
+          ...prev,
+          x: rect.left + rect.width / 2,
+          y: rect.top + rect.height / 2,
+        }));
+
+        // Assign after animation delay
+        setTimeout(async () => {
+          await assignGroup(empId, draggedGroup.id);
+          const updatedMappings = await fetch(
+            `${API_BASE}/shift-groups/employee-groups/`
+          ).then((r) => r.json());
+          setEmployeeGroups(updatedMappings);
+
+          setFlashCell(empId);
+          setTimeout(() => setFlashCell(null), 700);
+
+          setDraggedGroup(null);
+          setDragPreview(null);
+        }, 180);
+      } else {
+        // Cancel if dropped elsewhere
+        setDragPreview(null);
+        setDraggedGroup(null);
+      }
+    }
+
+    e.currentTarget.classList.remove(
+      "ring-4",
+      "ring-white",
+      "ring-offset-2",
+      "ring-offset-indigo-400"
+    );
+  }}
+
+  className={`flex-shrink-0 cursor-grab active:cursor-grabbing
+             bg-gradient-to-br ${gradient} text-white shadow-md
+             rounded-lg sm:rounded-xl p-3 sm:p-4 flex flex-col justify-between
+             transition-all duration-300 ease-out
+             hover:scale-[1.05] hover:shadow-[0_0_12px_rgba(255,255,255,0.5)]
+             ${
+               draggedGroup?.id === g.id
+                 ? "ring-4 ring-white ring-offset-2 ring-offset-indigo-400 scale-[1.07]"
+                 : ""
+             }`}
+  style={{
+    width: "180px",
+    minWidth: "170px",
+    maxWidth: "210px",
+    WebkitUserSelect: "none",
+    userSelect: "none",
+    touchAction: "pan-x pan-y pinch-zoom", // keeps scrolling smooth
+  }}
+>
+  <div>
+    <h5 className="text-base sm:text-lg font-bold mb-1 tracking-wide drop-shadow-sm truncate">
+      {g.name}
+    </h5>
+
+    <ul className="text-[11px] sm:text-xs space-y-1 font-medium mt-1">
+      {Object.entries(grouped).map(([time, days]) => (
+        <li key={time} className="drop-shadow-sm">
+          <div className="flex items-center gap-1">
+            <ClockIcon className="h-3 w-3 sm:h-3.5 sm:w-3.5 text-white opacity-90" />
+            <span className="text-xs sm:text-sm font-semibold tracking-tight truncate">
+              {time}
+            </span>
           </div>
-        );
-      })
-    )}
+          <div className="text-[10px] sm:text-[11px] text-white/90 ml-5 leading-tight truncate">
+            {days.join(", ")}
+          </div>
+        </li>
+      ))}
+    </ul>
+  </div>
+
+  {g.description && (
+    <div className="text-right text-[9px] sm:text-[10px] text-white/80 italic truncate">
+      {g.description}
+    </div>
+  )}
+</div>
+
+
+            );
+          })
+        )}
+      </div>
+    </div>
   </div>
 </div>
 
       {/* Filters + Search + Today (only weekly) */}
       <div className="max-w-6xl mx-auto px-6 mb-4">
-        <div className="bg-white shadow rounded-lg p-4 flex flex-wrap gap-4 items-center justify-between">
+        <div className="bg-white shadow rounded-lg p-4 flex flex-col sm:flex-wrap sm:flex-row gap-4 items-start sm:items-center justify-between">
           <div className="flex items-center gap-2">
             <label className="font-semibold">View Type:</label>
             <select
@@ -583,103 +734,123 @@ const copyShiftToCell = async (employeeId, date_, start_time, end_time) => {
 
       {/* Monthly summary */}
       {viewType === "monthly" && (
-        <div className="max-w-6xl mx-auto px-6 mb-6">
-          <table className="w-full border border-gray-300 border-collapse bg-white shadow rounded-lg overflow-hidden">
-            <thead>
-              <tr className="bg-indigo-500 text-white">
-                <th className="p-3 border border-gray-300">Employee ID</th>
-                <th className="p-3 border border-gray-300">Name</th>
-                <th className="p-3 border border-gray-300">Department</th>
-                <th className="p-3 border border-gray-300">Total Shifts</th>
-                <th className="p-3 border border-gray-300">Total Hours</th>
-              </tr>
-            </thead>
-            <tbody>
-              {filteredMonthlySummary.map((emp, i) => (
-                <tr key={i} className="text-center">
-                  <td className="p-3 border border-gray-300">{emp.employee_id}</td>
-                  <td className="p-3 border border-gray-300">{emp.name}</td>
-                  <td className="p-3 border border-gray-300">{emp.department}</td>
-                  <td className="p-3 border border-gray-300">{emp.totalShifts}</td>
-                  <td className="p-3 border border-gray-300">{emp.totalHours}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+  <div className="max-w-6xl mx-auto px-3 sm:px-6 mb-6">
+    {/* Responsive Table */}
+    <div className="overflow-x-auto rounded-lg shadow bg-white">
+      <table className="min-w-full border border-gray-300 border-collapse text-[10px] sm:text-sm md:text-base">
+        <thead className="bg-indigo-500 text-white sticky top-0 z-10">
+          <tr>
+            <th className="p-2 sm:p-3 border border-gray-300 whitespace-nowrap">Employee ID</th>
+            <th className="p-2 sm:p-3 border border-gray-300 whitespace-nowrap">Name</th>
+            <th className="p-2 sm:p-3 border border-gray-300 whitespace-nowrap">Department</th>
+            <th className="p-2 sm:p-3 border border-gray-300 whitespace-nowrap">Total Shifts</th>
+            <th className="p-2 sm:p-3 border border-gray-300 whitespace-nowrap">Total Hours</th>
+          </tr>
+        </thead>
+        <tbody>
+          {filteredMonthlySummary.map((emp, i) => (
+            <tr
+              key={i}
+              className="text-center even:bg-gray-50 hover:bg-indigo-50 transition-all duration-150"
+            >
+              <td className="p-1.5 sm:p-2 md:p-3 border border-gray-300 truncate max-w-[80px] sm:max-w-none">
+                {emp.employee_id}
+              </td>
+              <td className="p-1.5 sm:p-2 md:p-3 border border-gray-300 truncate max-w-[100px] sm:max-w-none">
+                {emp.name}
+              </td>
+              <td className="p-1.5 sm:p-2 md:p-3 border border-gray-300 truncate max-w-[100px] sm:max-w-none">
+                {emp.department}
+              </td>
+              <td className="p-1.5 sm:p-2 md:p-3 border border-gray-300">{emp.totalShifts}</td>
+              <td className="p-1.5 sm:p-2 md:p-3 border border-gray-300">{emp.totalHours}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
 
-          {/* Monthly navigation */}
-          <div className="flex justify-between items-center mt-6">
-            <button
-              onClick={() => {
-                if (currentMonth === 0) {
-                  setCurrentMonth(11);
-                  setCurrentYear(currentYear - 1);
-                } else {
-                  setCurrentMonth(currentMonth - 1);
-                }
-              }}
-              className="flex items-center gap-2 px-4 py-2 bg-indigo-500 text-white rounded shadow hover:bg-indigo-600"
-            >
-              <ChevronLeftIcon className="h-5 w-5" /> Previous Month
-            </button>
-            <button
-              onClick={() => {
-                if (currentMonth === 11) {
-                  setCurrentMonth(0);
-                  setCurrentYear(currentYear + 1);
-                } else {
-                  setCurrentMonth(currentMonth + 1);
-                }
-              }}
-              className="flex items-center gap-2 px-4 py-2 bg-indigo-500 text-white rounded shadow hover:bg-indigo-600"
-            >
-              Next Month <ChevronRightIcon className="h-5 w-5" />
-            </button>
-          </div>
-        </div>
-      )}
+    {/* Monthly navigation */}
+    <div className="flex flex-wrap justify-between items-center mt-6 gap-2 sm:gap-4 px-1 sm:px-0">
+      <button
+        onClick={() => {
+          if (currentMonth === 0) {
+            setCurrentMonth(11);
+            setCurrentYear(currentYear - 1);
+          } else {
+            setCurrentMonth(currentMonth - 1);
+          }
+        }}
+        className="flex items-center justify-center gap-1 sm:gap-2 
+                   px-3 py-1.5 sm:px-5 sm:py-2.5 
+                   text-xs sm:text-sm md:text-base 
+                   bg-indigo-500 text-white rounded shadow 
+                   hover:bg-indigo-600 transition-all duration-200"
+      >
+        <ChevronLeftIcon className="h-4 w-4 sm:h-5 sm:w-5" /> Previous
+      </button>
+
+      <button
+        onClick={() => {
+          if (currentMonth === 11) {
+            setCurrentMonth(0);
+            setCurrentYear(currentYear + 1);
+          } else {
+            setCurrentMonth(currentMonth + 1);
+          }
+        }}
+        className="flex items-center justify-center gap-1 sm:gap-2 
+                   px-3 py-1.5 sm:px-5 sm:py-2.5 
+                   text-xs sm:text-sm md:text-base 
+                   bg-indigo-500 text-white rounded shadow 
+                   hover:bg-indigo-600 transition-all duration-200"
+      >
+        Next <ChevronRightIcon className="h-4 w-4 sm:h-5 sm:w-5" />
+      </button>
+    </div>
+  </div>
+)}
 
 {/* Weekly table */}
 {viewType === "weekly" && (
-  <div className="max-w-7xl mx-auto px-6 mb-8 flex-grow">
-    {/* Scrollable container */}
-    <div
-      ref={(el) => {
-        if (!el) return;
-        // Prevent page scroll when inner scroll is possible
-        const handler = (e) => {
-          const target = el.querySelector(".inner-scroll");
-          if (!target) return;
-          const scrollTop = target.scrollTop;
-          const scrollHeight = target.scrollHeight;
-          const height = target.clientHeight;
-          const delta = e.deltaY;
-
-          const atTop = scrollTop === 0;
-          const atBottom = scrollTop + height >= scrollHeight - 1;
-
-          // Only stop propagation if we can scroll inside
-          if (
-            (delta < 0 && !atTop) || // scrolling up, not at top
-            (delta > 0 && !atBottom) // scrolling down, not at bottom
-          ) {
-            e.stopPropagation();
-            e.preventDefault();
-            target.scrollTop += delta;
-          }
-        };
-
-        // attach once
-        el.addEventListener("wheel", handler, { passive: false });
-        return () => el.removeEventListener("wheel", handler);
-      }}
-      className="border border-gray-300 rounded-lg shadow-lg bg-white relative"
-      style={{ height: "430px" }} // ~4 rows visible
-    >
-      <div
-        className="inner-scroll overflow-y-auto overflow-x-auto force-scrollbar"
-        style={{ height: "100%", paddingRight: "10px" }}
-      >
+  <div className="w-full max-w-7xl mx-auto px-2 sm:px-4 md:px-6 mb-8 flex-grow overflow-x-hidden">
+  {/* Scroll container */}
+<div
+  ref={(el) => {
+    if (!el) return;
+    const handler = (e) => {
+      const target = el.querySelector(".inner-scroll");
+      if (!target) return;
+      const scrollTop = target.scrollTop;
+      const scrollHeight = target.scrollHeight;
+      const height = target.clientHeight;
+      const delta = e.deltaY;
+      const atTop = scrollTop === 0;
+      const atBottom = scrollTop + height >= scrollHeight - 1;
+      if ((delta < 0 && !atTop) || (delta > 0 && !atBottom)) {
+        e.stopPropagation();
+        e.preventDefault();
+        target.scrollTop += delta;
+      }
+    };
+    el.addEventListener("wheel", handler, { passive: false });
+    return () => el.removeEventListener("wheel", handler);
+  }}
+className="border border-gray-300 rounded-lg shadow-lg bg-white relative overflow-x-auto overflow-y-auto max-sm:overflow-x-auto"
+style={{ height: "430px", overflow: "hidden", maxHeight: "75vh" }}
+>
+  {/* This part scrolls — not the page */}
+  <div
+    className="inner-scroll overflow-y-auto overflow-x-auto force-scrollbar max-sm:px-2"
+    style={{
+      height: "100%",
+      paddingRight: "10px",
+      WebkitOverflowScrolling: "touch",
+      overscrollBehavior: "contain", // stops page from following horizontal drag
+    }}
+  >
+      <div className="overflow-x-auto w-full">
+        <table className="w-full border-collapse text-[10px] sm:text-[11px] md:text-sm lg:text-base">
         <style>{`
           /* Custom always-visible scrollbar */
           .force-scrollbar::-webkit-scrollbar {
@@ -705,19 +876,21 @@ const copyShiftToCell = async (employeeId, date_, start_time, end_time) => {
   background-color: #c7d2fe !important; /* Indigo-200 */
   box-shadow: inset 0 0 0 2px #4f46e5;
 }
+    table {
+    max-width: 100%;
+    table-layout: auto;
+  }
         `}</style>
-
-        <table className="w-full border-collapse text-base">
-          <thead className="sticky top-0 bg-indigo-500 text-white shadow z-10">
+          <thead className="sticky top-0 bg-indigo-600 text-white shadow-md z-[20]">
             <tr>
-              <th className="p-4 border border-gray-300">Employee ID</th>
-              <th className="p-4 border border-gray-300">Name</th>
-              <th className="p-4 border border-gray-300">Department</th>
-              <th className="p-4 border border-gray-300">Group</th>
+              <th className="p-2 sm:p-3 text-xs sm:text-sm border border-gray-300">Employee ID</th>
+              <th className="p-2 sm:p-3 text-xs sm:text-smborder border-gray-300">Name</th>
+              <th className="p-2 sm:p-3 text-xs sm:text-sm border border-gray-300">Department</th>
+              <th className="p-2 sm:p-3 text-xs sm:text-sm border border-gray-300">Group</th>
               {weekDates.map((d, i) => (
                 <th
                   key={i}
-                  className={`p-4 border border-gray-300 text-center ${
+                  className={`p-2 sm:p-2.5 md:p-3 lg:p-4 border border-gray-300 text-center ${
                     d.getDay() === 0 || d.getDay() === 6 ? "bg-red-600" : ""
                   } ${
                     formatDate(d) === formatDate(today)
@@ -741,13 +914,18 @@ const copyShiftToCell = async (employeeId, date_, start_time, end_time) => {
                 key={i}
                 className="text-center even:bg-gray-50 transition-all duration-150"
               >
-                <td className="p-4 border border-gray-300">{emp.employee_id}</td>
-                <td className="p-4 border border-gray-300">{emp.name}</td>
-                <td className="p-4 border border-gray-300">{emp.department}</td>
+                <td className="p-1.5 sm:p-2 md:p-2.5 lg:p-4 border border-gray-300 align-middle leading-tight">{emp.employee_id}</td>
+                <td className="p-1.5 sm:p-2 md:p-2.5 lg:p-4 border border-gray-300 align-middle leading-tight">{emp.name}</td>
+                <td className="p-1.5 sm:p-2 md:p-2.5 lg:p-4 border border-gray-300 align-middle leading-tight">{emp.department}</td>
 
 {/* Group cell: supports both Excel-style fill down and drag-drop from group box */}
 <td
-  className={`relative p-4 border border-gray-300 text-center select-none transition-all duration-200
+  data-group-cell="true"
+  data-employee-id={emp.employee_id}
+  className={`relative border border-gray-300 text-center select-none transition-all duration-200
+    p-1.5 sm:p-2 md:p-2.5 lg:p-4
+    w-[110px] sm:w-[130px] md:w-[150px] lg:w-[170px]
+    min-w-[110px] sm:min-w-[130px] md:min-w-[150px] lg:min-w-[170px]
     ${
       draggedGroup
         ? "border-dashed border-2 border-indigo-400 bg-indigo-50"
@@ -765,31 +943,26 @@ const copyShiftToCell = async (employeeId, date_, start_time, end_time) => {
   onMouseEnter={() => {
     if (isFillingGroup) setFillHoverIndex(i);
   }}
-  
-  // Drop from group info box
+
+  // Desktop drag-drop
   onDragOver={(e) => e.preventDefault()}
   onDrop={async () => {
     if (draggedGroup) {
       await assignGroup(emp.employee_id, draggedGroup.id);
-      const updatedMappings = await fetch(
-        `${API_BASE}/shift-groups/employee-groups/`
-      ).then((r) => r.json());
+      const updatedMappings = await fetch(`${API_BASE}/shift-groups/employee-groups/`).then((r) => r.json());
       setEmployeeGroups(updatedMappings);
       setDraggedGroup(null);
-
-      // visual flash
       setFlashCell(emp.employee_id);
       setTimeout(() => setFlashCell(null), 700);
     }
   }}
-  
+
   // Excel fill release logic
   onMouseUp={async () => {
     if (isFillingGroup && fillStartIndex !== null) {
       const start = Math.min(fillStartIndex, fillHoverIndex);
       const end = Math.max(fillStartIndex, fillHoverIndex);
 
-      // find source employee's group
       const sourceEmp = filteredWeeklyShifts[fillStartIndex];
       const sourceGroup = employeeGroups.find(
         (eg) => eg.employee_id === sourceEmp.employee_id
@@ -801,9 +974,7 @@ const copyShiftToCell = async (employeeId, date_, start_time, end_time) => {
           await assignGroup(targetEmp.employee_id, sourceGroup);
         }
 
-        const updatedMappings = await fetch(
-          `${API_BASE}/shift-groups/employee-groups/`
-        ).then((r) => r.json());
+        const updatedMappings = await fetch(`${API_BASE}/shift-groups/employee-groups/`).then((r) => r.json());
         setEmployeeGroups(updatedMappings);
       }
 
@@ -815,7 +986,7 @@ const copyShiftToCell = async (employeeId, date_, start_time, end_time) => {
 >
   {/* Select dropdown for group */}
   <select
-    className={`border rounded px-2 py-1 text-sm w-full transition-all duration-200
+    className={`border rounded px-1.5 py-0.5 sm:px-2 sm:py-1 text-[11px] sm:text-sm w-full transition-all duration-200
       ${flashCell === emp.employee_id ? "bg-green-100" : "bg-white"}`}
     value={
       employeeGroups.find((eg) => eg.employee_id === emp.employee_id)
@@ -823,9 +994,7 @@ const copyShiftToCell = async (employeeId, date_, start_time, end_time) => {
     }
     onChange={async (e) => {
       await assignGroup(emp.employee_id, e.target.value);
-      const updatedMappings = await fetch(
-        `${API_BASE}/shift-groups/employee-groups/`
-      ).then((r) => r.json());
+      const updatedMappings = await fetch(`${API_BASE}/shift-groups/employee-groups/`).then((r) => r.json());
       setEmployeeGroups(updatedMappings);
       setFlashCell(emp.employee_id);
       setTimeout(() => setFlashCell(null), 700);
@@ -859,7 +1028,7 @@ const copyShiftToCell = async (employeeId, date_, start_time, end_time) => {
   return (
     <td
       key={j}
-      className={`relative p-4 border border-gray-300 text-center select-none transition
+      className={`relative p-2 sm:p-2.5 md:p-3 lg:p-4 border border-gray-300 text-center select-none transition
         ${new Date(s.date).getDay() === 0 || new Date(s.date).getDay() === 6 ? "bg-red-100" : ""}
         ${s.date === formatDate(new Date()) ? "bg-yellow-100 font-bold" : ""}
         ${isHighlighted ? "shift-fill-highlight" : ""}
@@ -943,44 +1112,59 @@ const copyShiftToCell = async (employeeId, date_, start_time, end_time) => {
             ))}
           </tbody>
         </table>
+        </div>  
       </div>
     </div>
 
     {/* Weekly navigation */}
-    <div className="flex justify-between items-center mt-6">
-      <button
-        onClick={() =>
-          setCurrentWeekStart(
-            new Date(currentWeekStart.setDate(currentWeekStart.getDate() - 7))
-          )
-        }
-        className="flex items-center gap-2 px-6 py-3 bg-indigo-500 text-white rounded shadow hover:bg-indigo-600"
-      >
-        <ChevronLeftIcon className="h-5 w-5" /> Previous Week
-      </button>
-      <button
-        onClick={() => setCurrentWeekStart(getStartOfWeek(new Date()))}
-        className="flex items-center gap-2 px-6 py-3 bg-green-500 text-white rounded shadow hover:bg-green-600"
-      >
-        Today
-      </button>
-      <button
-        onClick={() =>
-          setCurrentWeekStart(
-            new Date(currentWeekStart.setDate(currentWeekStart.getDate() + 7))
-          )
-        }
-        className="flex items-center gap-2 px-6 py-3 bg-indigo-500 text-white rounded shadow hover:bg-indigo-600"
-      >
-        Next Week <ChevronRightIcon className="h-5 w-5" />
-      </button>
-    </div>
+ <div className="flex flex-wrap justify-between items-center mt-6 gap-2 sm:gap-4 px-2 sm:px-0">
+  <button
+    onClick={() =>
+      setCurrentWeekStart(
+        new Date(currentWeekStart.setDate(currentWeekStart.getDate() - 7))
+      )
+    }
+    className="flex items-center justify-center gap-1 sm:gap-2 
+               px-3 py-1.5 sm:px-5 sm:py-2.5 
+               text-xs sm:text-sm md:text-base 
+               bg-indigo-500 text-white rounded shadow 
+               hover:bg-indigo-600 transition-all duration-200"
+  >
+    <ChevronLeftIcon className="h-4 w-4 sm:h-5 sm:w-5" /> Previous
+  </button>
+
+  <button
+    onClick={() => setCurrentWeekStart(getStartOfWeek(new Date()))}
+    className="flex items-center justify-center gap-1 sm:gap-2 
+               px-3 py-1.5 sm:px-5 sm:py-2.5 
+               text-xs sm:text-sm md:text-base 
+               bg-green-500 text-white rounded shadow 
+               hover:bg-green-600 transition-all duration-200"
+  >
+    Today
+  </button>
+
+  <button
+    onClick={() =>
+      setCurrentWeekStart(
+        new Date(currentWeekStart.setDate(currentWeekStart.getDate() + 7))
+      )
+    }
+    className="flex items-center justify-center gap-1 sm:gap-2 
+               px-3 py-1.5 sm:px-5 sm:py-2.5 
+               text-xs sm:text-sm md:text-base 
+               bg-indigo-500 text-white rounded shadow 
+               hover:bg-indigo-600 transition-all duration-200"
+  >
+    Next <ChevronRightIcon className="h-4 w-4 sm:h-5 sm:w-5" />
+  </button>
+</div>
   </div>
 )}
 
 {editShift && (
   <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-    <div className="bg-white rounded-lg shadow-lg p-6 w-96">
+    <div className="bg-white rounded-lg shadow-lg p-2 sm:p-2.5 md:p-3 lg:p-4 sm:p-6 w-[90%] max-w-md mx-auto relative">
       <h3 className="text-xl font-bold mb-4 text-indigo-700">Edit Shift</h3>
       <p>
         <strong>Employee:</strong> {editShift.name} ({editShift.employee_id})
@@ -1065,6 +1249,43 @@ const copyShiftToCell = async (employeeId, date_, start_time, end_time) => {
       </div>
     </div>
     
+    {/* Floating drag preview for touch */}
+{touchDragPreview && (
+  <div
+    className="fixed z-[9999] pointer-events-none select-none shadow-xl rounded-lg text-white font-semibold text-sm px-3 py-2"
+    style={{
+      top: touchDragPreview.y - 30,
+      left: touchDragPreview.x - 80,
+      background: "linear-gradient(to right, #4f46e5, #6366f1)",
+      opacity: 0.85,
+      transform: "scale(1.05)",
+      transition: "transform 0.05s linear",
+    }}
+  >
+    {touchDragPreview.group.name}
+  </div>
+)}
+
+{/* Floating drag preview (mobile ghost) */}
+{dragPreview?.visible && dragPreview.group && (
+  <div
+    className={`fixed z-[9999] pointer-events-none select-none text-white font-semibold text-xs sm:text-sm px-3 py-2 rounded-lg shadow-lg transform transition-transform duration-75 ease-linear`}
+    style={{
+      top: dragPreview.y - 40,
+      left: dragPreview.x - 90,
+      opacity: 0.9,
+      background: dragPreview.group.gradient
+        ? `linear-gradient(to right, var(--tw-gradient-stops))`
+        : "linear-gradient(to right, #4f46e5, #6366f1)",
+      backgroundImage: dragPreview.group.gradient
+        ? `linear-gradient(to right, ${dragPreview.group.gradient.replaceAll(" ", ",")})`
+        : undefined,
+      transform: "scale(1.05)",
+    }}
+  >
+    {dragPreview.group.name}
+  </div>
+)}
   </div>
   
 )}
