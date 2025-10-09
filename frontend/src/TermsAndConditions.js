@@ -8,20 +8,34 @@ function TermsAndConditions() {
   return (
     <div className="flex flex-col min-h-screen bg-gray-50 text-gray-800 leading-relaxed">
       {/* Header */}
-      <div className="w-full flex items-center justify-center px-10 py-4 bg-indigo-300 shadow-md relative">
-        {/* Date & Time */}
-        <div className="absolute left-10 text-blue-800 text-xl font-bold">
-          <HeaderDateTime />
-        </div>
+{/* Midnight Glass Header */}
+<header className="relative w-full bg-gradient-to-r from-slate-800 via-gray-800 to-slate-900 text-white shadow-xl overflow-hidden border-b border-gray-700/30">
+  {/* Frosted glass overlay */}
+  <div className="absolute inset-0 bg-gradient-to-tr from-white/10 via-transparent to-white/5 backdrop-blur-md"></div>
 
-        {/* Title */}
-        <h1
-          onClick={() => navigate("/")}
-          className="text-5xl font-bold text-blue-900 cursor-pointer hover:text-blue-700 transition-colors"
-        >
-          FaceTrack Attendance
-        </h1>
-      </div>
+  {/* Header Content */}
+  <div className="relative z-10 flex flex-col sm:flex-row items-center justify-between px-6 sm:px-10 lg:px-16 py-4 sm:py-5">
+    {/* Left: Logo + Title */}
+    <div
+      onClick={() => navigate("/")}
+      className="flex items-center gap-3 cursor-pointer transition-transform duration-300 hover:scale-105"
+    >
+      <img
+        src={`${process.env.PUBLIC_URL}/favicon.png`}
+        alt="FaceTrack Logo"
+        className="w-10 h-10 sm:w-12 sm:h-12 rounded-full shadow-md border border-white/20 bg-white/10 p-1 object-contain"
+      />
+      <h1 className="text-3xl sm:text-4xl font-extrabold tracking-tight text-white drop-shadow-sm">
+        FaceTrack <span className="font-light text-gray-300 ml-1">Attendance</span>
+      </h1>
+    </div>
+
+    {/* Right: Date & Time */}
+    <div className="text-center text-sm sm:text-base md:text-lg font-semibold text-white tracking-wide drop-shadow-md mt-3 sm:mt-0">
+      <HeaderDateTime />
+    </div>
+  </div>
+</header>
 
       {/* Content */}
       <div className="flex-grow p-10 max-w-5xl mx-auto">
@@ -111,16 +125,22 @@ function TermsAndConditions() {
           </button>
         </div>
 
-        {/* Footer */}
-                {/* Footer */}
-        <footer className="mt-6 text-sm text-gray-500 flex items-center justify-center relative">
-          <div className="absolute left-0">
-            Last updated: 29 Sept 2024
-          </div>
-          <div>
-            © 2025 FaceTrack. All rights reserved - Kartikey Koli - IFNET
-          </div>
-        </footer>
+ {/* Copyright */}
+<footer className="mt-6 text-sm text-gray-500 flex items-center justify-center relative px-4">
+  {/* Desktop (Mac/laptop) version */}
+  <div className="hidden sm:block absolute left-0 text-gray-400">
+    Last updated: 28 Sept 2024
+  </div>
+  <div className="hidden sm:block">
+    © 2025 FaceTrack. All rights reserved - Kartikey Koli - IFNET
+  </div>
+
+  {/* Mobile & iPad version */}
+  <div className="flex flex-col sm:hidden items-center text-center gap-1">
+    <div className="text-gray-400">Last updated: 28 Sept 2024</div>
+    <div>© 2025 FaceTrack. All rights reserved - IFNET</div>
+  </div>
+</footer>
       </div>
     </div>
   );

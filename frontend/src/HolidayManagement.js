@@ -201,37 +201,57 @@ const res = await fetch(`${API_BASE}/holiday/`, {
   return (
     <div className="flex flex-col min-h-screen bg-gradient-to-tr from-gray-100 via-indigo-100 to-blue-200">
       {/* Header */}
-      <div className="w-full flex items-center justify-center px-10 py-4 bg-indigo-300 shadow-md relative">
-        <div className="absolute left-10 text-blue-800 text-xl font-bold">
-          <HeaderDateTime />
-        </div>
-        <h1
-          onClick={() => {
-            localStorage.removeItem("currentAdmin");
-            navigate("/admin-login", { replace: true });
-            navigate("/", { replace: false });
-          }}
-          className="text-5xl font-bold text-blue-900 cursor-pointer hover:text-blue-700 transition-colors"
-        >
-          FaceTrack Attendance
-        </h1>
-        <div className="absolute right-10 flex gap-4">
+{/* Midnight Glass Header */}
+<header className="relative w-full bg-gradient-to-r from-slate-800 via-gray-800 to-slate-900 text-white shadow-xl overflow-hidden border-b border-gray-700/30">
+  {/* Frosted glass overlay */}
+  <div className="absolute inset-0 bg-gradient-to-tr from-white/10 via-transparent to-white/5 backdrop-blur-md"></div>
 
-          {/* Back Button */}
-          <button
-            onClick={() => navigate("/hr-portal")}
-            className="w-40 px-6 py-3 bg-red-500 hover:bg-red-600 hover:scale-105 active:scale-95 transition-transform duration-200 text-white font-bold rounded-lg shadow flex items-center justify-center gap-2"
-          >
-            <ArrowUturnLeftIcon className="h-5 w-5 text-white" />
-            <span>Back</span>
-          </button>
-        </div>
+  {/* Header Content */}
+  <div className="relative z-10 flex flex-col sm:flex-row items-center justify-between px-6 sm:px-10 lg:px-16 py-4 sm:py-5">
+    {/* Left: Logo + Title */}
+    <div
+      onClick={() => {
+        localStorage.removeItem("currentAdmin");
+        navigate("/admin-login", { replace: true });
+        navigate("/", { replace: false });
+      }}
+      className="flex items-center gap-3 cursor-pointer transition-transform duration-300 hover:scale-105"
+    >
+      <img
+        src={`${process.env.PUBLIC_URL}/favicon.png`}
+        alt="FaceTrack Logo"
+        className="w-10 h-10 sm:w-12 sm:h-12 rounded-full shadow-md border border-white/20 bg-white/10 p-1 object-contain"
+      />
+      <h1 className="text-3xl sm:text-4xl font-extrabold tracking-tight text-white drop-shadow-sm">
+        FaceTrack <span className="font-light text-gray-300 ml-1">Attendance</span>
+      </h1>
+    </div>
+
+    {/* Right: Date & Time + Back Button */}
+    <div className="flex flex-col sm:flex-row items-center justify-end gap-2 sm:gap-4 mt-3 sm:mt-0">
+      {/* Date & Time */}
+      <div className="text-center text-sm sm:text-base md:text-lg font-semibold text-white tracking-wide drop-shadow-md order-2 sm:order-1">
+        <HeaderDateTime />
       </div>
+
+      {/* Back Button */}
+      <button
+        onClick={() => navigate("/hr-portal")}
+        className="px-5 sm:px-6 py-2.5 rounded-xl bg-gradient-to-r from-red-500 via-pink-500 to-rose-500 
+                   hover:from-red-600 hover:to-rose-600 text-white font-semibold shadow-lg hover:shadow-xl 
+                   transition-all duration-300 flex items-center gap-2 order-1 sm:order-2"
+      >
+        <ArrowUturnLeftIcon className="h-5 w-5" />
+        Back
+      </button>
+    </div>
+  </div>
+</header>
 
       {/* Page Title with Paid Holidays Button */}
 <div className="flex items-center justify-center relative py-8">
   {/* Centered Title */}
-  <h2 className="text-3xl font-bold text-indigo-700 flex items-center gap-2">
+  <h2 className="text-2xl sm:text-3xl font-bold text-indigo-700 flex items-center gap-2 text-center">
     <CalendarDaysIcon className="h-8 w-8 text-indigo-700" />
     Holiday Management
   </h2>
@@ -239,8 +259,9 @@ const res = await fetch(`${API_BASE}/holiday/`, {
 </div>
 
       {/* Filters Box */}
-      <div className="max-w-6xl w-full mx-auto px-6 mb-6">
-        <div className="flex flex-wrap gap-4 justify-between items-center bg-white p-5 rounded-lg shadow text-lg">
+      <div className="max-w-6xl w-full mx-auto px-4 sm:px-6 mb-6">
+  <div className="flex flex-col sm:flex-wrap sm:flex-row gap-4 justify-center sm:justify-between items-center 
+                  bg-white p-4 sm:p-5 rounded-lg shadow text-base sm:text-lg text-center sm:text-left">
           {/* Search */}
           <div className="flex items-center gap-2">
             <MagnifyingGlassIcon className="h-6 w-6 text-indigo-600" />
@@ -304,8 +325,8 @@ const res = await fetch(`${API_BASE}/holiday/`, {
       </div>
 
       {/* Holidays Table */}
-      <div className="max-w-6xl w-full mx-auto px-6 flex-grow mb-12">
-        <table className="w-full border-collapse bg-white shadow-lg rounded-xl overflow-hidden text-lg">
+      <div className="max-w-6xl w-full mx-auto px-4 sm:px-6 flex-grow mb-12 overflow-x-auto">
+  <table className="min-w-[500px] sm:min-w-[600px] w-full border-collapse bg-white shadow-lg rounded-xl overflow-hidden text-sm sm:text-base md:text-lg">
           <thead>
             <tr className="bg-indigo-500 text-white text-lg">
               <th className="p-4 cursor-pointer" onClick={() => requestSort("date")}>
@@ -348,31 +369,39 @@ const res = await fetch(`${API_BASE}/holiday/`, {
             )}
           </tbody>
         </table>
-
-        {/* Month Navigation */}
-        <div className="flex justify-between items-center mt-6">
-          <button
-            onClick={handlePrevMonth}
-            className="px-4 py-2 rounded-md font-semibold shadow bg-indigo-600 text-white hover:bg-indigo-700"
-          >
-            Previous Month
-          </button>
-          <span className="text-lg font-semibold">
-            {monthNames[month - 1]} {year}
-          </span>
-          <button
-            onClick={handleNextMonth}
-            className="px-4 py-2 rounded-md font-semibold shadow bg-indigo-600 text-white hover:bg-indigo-700"
-          >
-            Next Month
-          </button>
-        </div>
       </div>
+
+{/* Month Navigation */}
+<div className="w-full flex justify-center mt-6 mb-16"> {/* added mb-16 for footer spacing */}
+  <div
+    className="flex justify-between items-center w-[90%] sm:w-[70%] md:w-[60%] 
+               bg-white/80 backdrop-blur-sm rounded-lg shadow-md px-4 py-2 
+               text-sm sm:text-base font-semibold"
+  >
+    <button
+      onClick={handlePrevMonth}
+      className="px-3 sm:px-4 py-1.5 sm:py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-md shadow"
+    >
+      Previous
+    </button>
+
+    <span className="text-center text-indigo-700">
+      {monthNames[month - 1]} {year}
+    </span>
+
+    <button
+      onClick={handleNextMonth}
+      className="px-3 sm:px-4 py-1.5 sm:py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-md shadow"
+    >
+      Next
+    </button>
+  </div>
+</div>
 
       {/* Modals (Add/Edit, Delete, Validation Error) */}
       {isModalOpen && (
         <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-40 z-50">
-          <div className="bg-white p-8 rounded-lg shadow-lg w-[400px] relative">
+          <div className="bg-white p-6 sm:p-8 rounded-lg shadow-lg w-[90%] max-w-[400px] relative mx-2">
             <button
               onClick={() => setIsModalOpen(false)}
               className="absolute top-3 right-3 text-gray-500 hover:text-gray-700"
@@ -417,7 +446,7 @@ const res = await fetch(`${API_BASE}/holiday/`, {
 
       {deleteHoliday && (
         <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-40 z-50">
-          <div className="bg-white p-8 rounded-lg shadow-lg w-[400px] relative text-center">
+          <div className="bg-white p-6 sm:p-8 rounded-lg shadow-lg w-[90%] max-w-[400px] relative text-center mx-4">
             <h3 className="text-2xl font-bold text-red-600 mb-6">Confirm Delete</h3>
             <p className="text-gray-700 mb-6">
               Are you sure you want to delete{" "}

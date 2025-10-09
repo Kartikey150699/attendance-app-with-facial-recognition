@@ -345,34 +345,56 @@ const openApproverModal = async (application) => {
   return (
     <div className="flex flex-col min-h-screen bg-gradient-to-tr from-gray-100 via-indigo-100 to-blue-200">
       {/* Header */}
-      <div className="w-full flex items-center justify-center px-10 py-4 bg-indigo-300 shadow-md relative">
-        <div className="absolute left-10 text-blue-800 text-xl font-bold">
-          <HeaderDateTime />
-        </div>
-        <h1
-          onClick={() => {
-            localStorage.removeItem("currentAdmin");
-            navigate("/admin-login", { replace: true });
-            navigate("/", { replace: false });
-          }}
-          className="text-5xl font-bold text-blue-900 cursor-pointer hover:text-blue-700 transition-colors"
-        >
-          FaceTrack Attendance
-        </h1>
-        <div className="absolute right-10">
-          <button
-            onClick={() => navigate("/hr-portal")}
-            className="w-40 px-6 py-3 bg-red-500 hover:bg-red-600 hover:scale-105 active:scale-95 transition-transform duration-200 text-white font-bold rounded-lg shadow flex items-center justify-center gap-2"
-          >
-            <ArrowUturnLeftIcon className="h-5 w-5 text-white" />
-            <span>Back</span>
-          </button>
-        </div>
+{/* Midnight Glass Header */}
+<header className="relative w-full bg-gradient-to-r from-slate-800 via-gray-800 to-slate-900 text-white shadow-xl overflow-hidden border-b border-gray-700/30">
+  {/* Frosted glass overlay */}
+  <div className="absolute inset-0 bg-gradient-to-tr from-white/10 via-transparent to-white/5 backdrop-blur-md"></div>
+
+  {/* Header Content */}
+  <div className="relative z-10 flex flex-col sm:flex-row items-center justify-between px-6 sm:px-10 lg:px-16 py-4 sm:py-5">
+    {/* Left: Logo + Title */}
+    <div
+      onClick={() => {
+        localStorage.removeItem("currentAdmin");
+        navigate("/admin-login", { replace: true });
+        navigate("/", { replace: false });
+      }}
+      className="flex items-center gap-3 cursor-pointer transition-transform duration-300 hover:scale-105"
+    >
+      <img
+        src={`${process.env.PUBLIC_URL}/favicon.png`}
+        alt="FaceTrack Logo"
+        className="w-10 h-10 sm:w-12 sm:h-12 rounded-full shadow-md border border-white/20 bg-white/10 p-1 object-contain"
+      />
+      <h1 className="text-3xl sm:text-4xl font-extrabold tracking-tight text-white drop-shadow-sm">
+        FaceTrack <span className="font-light text-gray-300 ml-1">Attendance</span>
+      </h1>
+    </div>
+
+    {/* Right: Date & Time + Back Button */}
+    <div className="flex flex-col sm:flex-row items-center justify-end gap-2 sm:gap-4 mt-3 sm:mt-0">
+      {/* Date & Time */}
+      <div className="text-center text-sm sm:text-base md:text-lg font-semibold text-white tracking-wide drop-shadow-md order-2 sm:order-1">
+        <HeaderDateTime />
       </div>
+
+      {/* Back Button */}
+      <button
+        onClick={() => navigate("/hr-portal")}
+        className="px-5 sm:px-6 py-2.5 rounded-xl bg-gradient-to-r from-red-500 via-pink-500 to-rose-500 
+                   hover:from-red-600 hover:to-rose-600 text-white font-semibold shadow-lg hover:shadow-xl 
+                   transition-all duration-300 flex items-center gap-2 order-1 sm:order-2"
+      >
+        <ArrowUturnLeftIcon className="h-5 w-5" />
+        Back
+      </button>
+    </div>
+  </div>
+</header>
 
       {/* Page Title */}
       <div className="flex justify-center py-6">
-        <h2 className="text-3xl font-bold text-indigo-700 flex items-center gap-3">
+        <h2 className="text-2xl sm:text-3xl font-bold text-indigo-700 flex flex-wrap justify-center items-center gap-2 text-center px-4">
           <ClipboardDocumentListIcon className="h-8 w-8 text-indigo-700" />
           Work Application Requests
         </h2>
@@ -380,21 +402,21 @@ const openApproverModal = async (application) => {
 
       {/* Filters */}
       <div className="max-w-7xl w-full mx-auto px-6 mt-4 mb-6">
-        <div className="flex flex-wrap gap-4 justify-between items-center bg-white p-5 rounded-lg shadow text-lg">
+        <div className="flex flex-col sm:flex-wrap sm:flex-row gap-4 justify-between items-center bg-white p-5 rounded-lg shadow text-base sm:text-lg">
           {/* Search */}
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 w-full sm:w-auto">
             <MagnifyingGlassIcon className="h-6 w-6 text-indigo-600" />
             <input
               type="text"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               placeholder="Search applications..."
-              className="px-4 py-2 border rounded-md shadow-sm text-base focus:ring-2 focus:ring-indigo-400"
+              className="px-4 py-2 border rounded-md shadow-sm text-sm sm:text-base w-full sm:w-64 focus:ring-2 focus:ring-indigo-400"
             />
           </div>
 
           {/* Month & Year Selectors */}
-          <div className="flex gap-3">
+          <div className="flex gap-3 w-full sm:w-auto justify-between sm:justify-start">
             <select
               value={month}
               onChange={(e) => setMonth(Number(e.target.value))}
@@ -446,8 +468,9 @@ const openApproverModal = async (application) => {
       </div>
       
       {/* Applications Table */}
-<div className="max-w-7xl w-full mx-auto px-4 mb-12 overflow-x-auto">
-  <table className="w-full border-collapse bg-white shadow rounded-lg text-sm">
+<div className="max-w-7xl w-full mx-auto px-3 sm:px-6 mb-12">
+  <div className="bg-white rounded-xl shadow-lg overflow-x-auto w-full">
+    <table className="min-w-[800px] sm:min-w-full border-collapse text-xs sm:text-sm">
     <thead>
       <tr className="bg-indigo-500 text-white text-xs">
         <th className="px-2 py-2 cursor-pointer" onClick={() => requestSort("created_at")}>
@@ -599,30 +622,38 @@ const openApproverModal = async (application) => {
       )}
     </tbody>
   </table>
-
-  {/* Pagination */}
-  <div className="flex justify-between items-center mt-4 text-sm">
+  </div>
+</div>
+ {/* Bottom Navigation */}
+<div className="w-full flex justify-center mt-6 mb-16">
+  <div
+    className="flex justify-between items-center w-[90%] sm:w-[70%] md:w-[60%]
+               bg-white/80 backdrop-blur-sm rounded-lg shadow-md px-4 py-2
+               text-sm sm:text-base font-semibold"
+  >
     <button
       disabled={currentPage === 1}
       onClick={() => setCurrentPage((prev) => prev - 1)}
-      className={`px-3 py-1 rounded-md font-semibold shadow ${
+      className={`px-3 sm:px-4 py-1.5 sm:py-2 rounded-md shadow font-semibold transition-all duration-200 ${
         currentPage === 1
           ? "bg-gray-300 text-gray-600 cursor-not-allowed"
-          : "bg-indigo-600 text-white hover:bg-indigo-700"
+          : "bg-indigo-600 hover:bg-indigo-700 text-white"
       }`}
     >
       Previous
     </button>
-    <span className="font-medium">
+
+    <span className="text-center text-indigo-700">
       Page {currentPage} of {totalPages || 1}
     </span>
+
     <button
       disabled={currentPage === totalPages || totalPages === 0}
       onClick={() => setCurrentPage((prev) => prev + 1)}
-      className={`px-3 py-1 rounded-md font-semibold shadow ${
+      className={`px-3 sm:px-4 py-1.5 sm:py-2 rounded-md shadow font-semibold transition-all duration-200 ${
         currentPage === totalPages || totalPages === 0
           ? "bg-gray-300 text-gray-600 cursor-not-allowed"
-          : "bg-indigo-600 text-white hover:bg-indigo-700"
+          : "bg-indigo-600 hover:bg-indigo-700 text-white"
       }`}
     >
       Next
@@ -631,20 +662,32 @@ const openApproverModal = async (application) => {
 </div>
 
       {/* Reason Modal */}
-      {selectedReason && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50">
-          <div className="bg-white rounded-lg shadow-xl max-w-lg w-full p-6 relative max-h-[70vh] overflow-y-auto">
-            <button
-              onClick={() => setSelectedReason(null)}
-              className="absolute top-2 right-2 text-gray-500 hover:text-gray-700"
-            >
-              <XMarkIcon className="h-6 w-6" />
-            </button>
-            <h3 className="text-xl font-bold text-indigo-700 mb-4">Full Reason</h3>
-            <p className="text-gray-800 whitespace-pre-line">{selectedReason}</p>
-          </div>
-        </div>
-      )}
+{selectedReason && (
+  <div className="fixed inset-0 bg-black bg-opacity-60 flex justify-center items-center z-50 px-3 sm:px-0">
+    <div
+      className="bg-white rounded-xl shadow-2xl w-[95%] sm:w-[90%] md:max-w-lg p-4 sm:p-6 relative 
+                 max-h-[75vh] overflow-y-auto transition-all duration-300"
+    >
+      {/* Close Button */}
+      <button
+        onClick={() => setSelectedReason(null)}
+        className="absolute top-3 right-3 text-gray-500 hover:text-gray-700"
+      >
+        <XMarkIcon className="h-6 w-6" />
+      </button>
+
+      {/* Title */}
+      <h3 className="text-lg sm:text-xl font-bold text-indigo-700 mb-3 sm:mb-4 text-center">
+        Full Reason
+      </h3>
+
+      {/* Scrollable Text */}
+      <div className="text-gray-800 text-sm sm:text-base whitespace-pre-line leading-relaxed overflow-y-auto">
+        {selectedReason}
+      </div>
+    </div>
+  </div>
+)}
 
       {/* Confirmation Modal */}
       {confirmModal && (
@@ -697,7 +740,7 @@ const openApproverModal = async (application) => {
     {/* Approver Modal (Main List) */}
 {approverModal && (
   <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50">
-    <div className="bg-white rounded-lg shadow-xl max-w-lg w-full p-6 relative">
+    <div className="bg-white rounded-lg shadow-xl w-[95%] sm:w-[90%] md:max-w-lg p-4 sm:p-6 mx-auto relative transition-all duration-300">
       {/* Close */}
       <button
         onClick={() => setApproverModal(null)}
@@ -774,7 +817,9 @@ const openApproverModal = async (application) => {
       );
     })
   ) : (
-    <p className="text-gray-500">No approvers assigned yet.</p>
+ <div className="p-4 text-center bg-yellow-50 text-yellow-700 font-semibold rounded-lg shadow-inner">
+ ⏳ No approvers assigned yet — <span className="font-bold">Pending</span>
+ </div>
   )}
 </ul>
 
@@ -793,7 +838,7 @@ const openApproverModal = async (application) => {
 {/* Add Approver Modal */}
 {addApproverModal && (
   <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50">
-    <div className="bg-white rounded-lg shadow-xl max-w-md w-full p-6 relative">
+    <div className="bg-white rounded-lg shadow-xl w-[90%] sm:max-w-md p-5 sm:p-6 mx-auto relative">
       <button
         onClick={() => setAddApproverModal(false)}
         className="absolute top-2 right-2 text-gray-500 hover:text-gray-700"
@@ -844,7 +889,7 @@ const openApproverModal = async (application) => {
 {/* Edit Approver Modal */}
 {editApproverModal && (
   <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50">
-    <div className="bg-white rounded-lg shadow-xl max-w-md w-full p-6 relative">
+    <div className="bg-white rounded-lg shadow-xl w-[90%] sm:max-w-md p-5 sm:p-6 mx-auto relative">
       <button
         onClick={() => setEditApproverModal(null)}
         className="absolute top-2 right-2 text-gray-500 hover:text-gray-700"
@@ -888,7 +933,7 @@ const openApproverModal = async (application) => {
 {/* Notification Modal */}
 {notification && (
   <div className="fixed inset-0 bg-black bg-opacity-40 flex justify-center items-center z-50">
-    <div className="bg-white rounded-lg shadow-xl max-w-md w-full p-6 text-center">
+    <div className="bg-white rounded-lg shadow-xl w-[90%] sm:max-w-md p-5 sm:p-6 mx-auto text-center">
       <h3
         className={`text-xl font-bold mb-4 ${
           notification.type === "success" ? "text-green-600" : "text-red-600"
@@ -909,7 +954,7 @@ const openApproverModal = async (application) => {
 {/* Confirm Modal */}
 {confirmModal && (
   <div className="fixed inset-0 bg-black bg-opacity-40 flex justify-center items-center z-50">
-    <div className="bg-white rounded-lg shadow-xl max-w-md w-full p-6 text-center">
+    <div className="bg-white rounded-lg shadow-xl w-[90%] sm:w-[80%] md:max-w-md p-5 sm:p-6 mx-auto text-center transition-all duration-300">
       <h3 className="text-xl font-bold text-indigo-700 mb-4">
         {confirmModal.message}
       </h3>

@@ -229,42 +229,55 @@ const res = await fetch(`${API_BASE}/attendance/toggle-auto-train`, {
           </button>
         </div>
 
-        {/* Auto-Train Controls (Single Row) */}
-        <div
-  className="fixed sm:bottom-20 bottom-10 right-3 sm:right-6 z-50
-             flex flex-row items-center gap-3 sm:gap-4 bg-white/95 
-             p-2 sm:p-3 rounded-lg shadow-lg border border-gray-300
-             sm:static sm:mt-8 sm:self-end sm:mr-6 sm:z-0
+{/* Auto-Train Controls (Always Below Buttons) */}
+<div
+  className="w-[90%] sm:w-[85%] md:w-auto max-w-[450px]
+             mx-auto mt-10 flex flex-row flex-wrap items-center justify-between
+             gap-3 sm:gap-4
+             bg-gradient-to-r from-white/20 via-white/10 to-white/20
+             backdrop-blur-md border border-white/30
+             rounded-2xl shadow-[0_4px_30px_rgba(0,0,0,0.1)]
+             px-5 py-3 sm:px-6 sm:py-4
              transition-all duration-500 ease-in-out transform
+             hover:scale-[1.02] hover:shadow-[0_6px_25px_rgba(0,0,0,0.15)]
              animate-[slideUp_0.5s_ease-in-out]"
 >
-          {/* Label */}
-          <span className="text-base font-semibold text-gray-800">
-            {autoTrainEnabled ? "AutoTrain Model (ON)" : "AutoTrain Model (OFF)"}
-          </span>
+  {/* Label */}
+  <span
+    className={`text-base sm:text-lg font-semibold tracking-wide drop-shadow-sm transition-all duration-300 ${
+      autoTrainEnabled ? "text-green-700" : "text-gray-800"
+    }`}
+  >
+    {autoTrainEnabled ? "Auto-Train Model ON" : "Auto-Train Model OFF"}
+  </span>
 
-          {/* Switch */}
-          <button
-            onClick={toggleAutoTrain}
-            className={`relative inline-flex h-6 w-12 items-center rounded-full transition-colors ${
-              autoTrainEnabled ? "bg-green-500" : "bg-gray-400"
-            }`}
-          >
-            <span
-              className={`inline-block h-5 w-5 transform rounded-full bg-white transition-transform ${
-                autoTrainEnabled ? "translate-x-6" : "translate-x-1"
-              }`}
-            />
-          </button>
+  {/* Switch */}
+  <button
+    onClick={toggleAutoTrain}
+    className={`relative inline-flex h-7 w-14 items-center rounded-full transition-all duration-300 shadow-inner
+      ${autoTrainEnabled ? "bg-gradient-to-r from-green-400 to-emerald-600" : "bg-gray-400/80"}
+      hover:scale-105 active:scale-95`}
+  >
+    <span
+      className={`inline-block h-6 w-6 transform rounded-full bg-white shadow-md transition-transform duration-300 ${
+        autoTrainEnabled
+          ? "translate-x-7 shadow-[0_0_10px_rgba(34,197,94,0.8)]"
+          : "translate-x-1"
+      }`}
+    />
+  </button>
 
-          {/* Info Button */}
-          <button
-            onClick={() => setShowAutoTrainInfo(true)}
-            className="px-3 py-1 bg-indigo-500 hover:bg-indigo-600 text-white text-sm font-semibold rounded-md shadow"
-          >
-            What is Auto-Train?
-          </button>
-        </div>
+  {/* Info Button */}
+  <button
+    onClick={() => setShowAutoTrainInfo(true)}
+    className="px-3.5 py-1.5 bg-gradient-to-r from-indigo-600 to-blue-700 
+               hover:from-indigo-700 hover:to-blue-800
+               text-white text-sm font-semibold rounded-md shadow-md 
+               hover:shadow-lg active:scale-95 transition-all duration-300"
+  >
+    What is Auto-Train?
+  </button>
+</div>
 
         {/* Info Modal (Japanese) */}
 {showAutoTrainInfo && (

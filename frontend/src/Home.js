@@ -32,7 +32,6 @@ function Home() {
 
   const webcamRef = useRef(null);
   const navigate = useNavigate(); 
-
   const [displayWidth, setDisplayWidth] = useState(videoWidth);
 
   // Live date/time
