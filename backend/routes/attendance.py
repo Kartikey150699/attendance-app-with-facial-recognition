@@ -306,8 +306,8 @@ async def preview_faces(file: UploadFile = None):
         return {"results": []}
 
     results = []
-    threshold = 0.55
-    fallback_threshold = 0.50
+    threshold = 0.20
+    fallback_threshold = 0.20
 
     for face in faces:
         embedding = face.get("embedding")
