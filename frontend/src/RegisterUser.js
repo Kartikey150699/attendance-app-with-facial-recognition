@@ -35,6 +35,9 @@ function RegisterUser() {
 
   const navigate = useNavigate();
   const webcamRef = useRef(null);
+  const [isCameraActive, setIsCameraActive] = useState(false);
+  const [alignmentMessage, setAlignmentMessage] = useState("");
+  const [alignmentOk, setAlignmentOk] = useState(false);
 
   // Button progress text
   useEffect(() => {
@@ -72,80 +75,157 @@ function RegisterUser() {
     fetchDevices();
   }, []);
 
-  // Submit handler
-  const handleSubmit = async () => {
-    if (isSubmitting) return;
-    if (!name.trim()) {
-      setPopupMessage("⚠️ Please enter name of the user!");
-      setShowPopup(true);
-      return;
+
+  // Alignment detection before registration starts
+const checkAlignment = async () => {
+  if (!webcamRef.current) return false;
+
+  const imageSrc = webcamRef.current.getScreenshot();
+  if (!imageSrc) return false;
+
+  const blob = await (await fetch(imageSrc)).blob();
+  const formData = new FormData();
+  formData.append("file", blob, "preview.jpg");
+
+  try {
+    const res = await fetch(`${API_BASE}/users/preview-align`, {  // 👈 We'll create this new backend route
+      method: "POST",
+      body: formData,
+    });
+    const data = await res.json();
+
+    if (res.ok && data.alignment === "perfect") {
+      setAlignmentMessage("✅ Perfect alignment! Starting registration...");
+      setAlignmentOk(true);
+      return true;
+    } else {
+      setAlignmentMessage(data.message || "⚠️ Adjust your face alignment");
+      setAlignmentOk(false);
+      return false;
     }
-    if (!department.trim()) {
-      setPopupMessage("⚠️ Please enter department of the user!");
-      setShowPopup(true);
-      return;
-    }
-    if (!webcamRef.current) {
-      setPopupMessage("⚠️ Camera not available!");
+  } catch (err) {
+    console.error("Alignment check failed:", err);
+    setAlignmentMessage("⚠️ Alignment check failed. Try again.");
+    return false;
+  }
+};
+
+// Submit handler
+const handleSubmit = async () => {
+  if (isSubmitting) return;
+
+  // Basic form checks
+  if (!name.trim()) {
+    setPopupMessage("⚠️ Please enter name of the user!");
+    setShowPopup(true);
+    return;
+  }
+  if (!department.trim()) {
+    setPopupMessage("⚠️ Please enter department of the user!");
+    setShowPopup(true);
+    return;
+  }
+  if (!webcamRef.current) {
+    setPopupMessage("⚠️ Camera not available!");
+    setShowPopup(true);
+    return;
+  }
+
+  // Step 1️⃣: Activate camera & check alignment
+  setIsCameraActive(true);
+  setAlignmentMessage("🔍 Checking face alignment... Please stay still.");
+
+  try {
+    // Capture a single frame for alignment test
+    const imageSrc = webcamRef.current.getScreenshot();
+    if (!imageSrc) {
+      setPopupMessage("⚠️ Could not capture image for alignment check.");
       setShowPopup(true);
       return;
     }
 
+    const blob = await (await fetch(imageSrc)).blob();
+    const alignForm = new FormData();
+    alignForm.append("file", blob, "align_check.jpg");
+
+    const alignResponse = await fetch(`${API_BASE}/users/preview-align`, {
+      method: "POST",
+      body: alignForm,
+    });
+
+    const alignData = await alignResponse.json();
+
+    if (!alignResponse.ok || alignData.alignment !== "perfect") {
+      setPopupMessage(`⚠️ ${alignData.message || "Face not properly aligned. Please try again."}`);
+      setShowPopup(true);
+      setIsCameraActive(false);
+      setAlignmentMessage("");
+      return;
+    }
+
+    // If alignment is good
+    setAlignmentMessage("✅ Perfect alignment! Starting registration...");
+    setAlignmentOk(true);
+
+    // Step 2️⃣: Start registration capture
     setIsSubmitting(true);
     setFrameCount(0);
 
-    try {
-      const formData = new FormData();
-      formData.append("name", name);
-      formData.append("department", department);
+    const formData = new FormData();
+    formData.append("name", name);
+    formData.append("department", department);
 
-      for (let i = 0; i < 10; i++) {
-        const imageSrc = webcamRef.current.getScreenshot();
-        if (imageSrc) {
-          const blob = await (await fetch(imageSrc)).blob();
-          formData.append("files", blob, `frame_${i}.jpg`);
-          setFrameCount(i + 1);
-        }
-        await new Promise((resolve) => setTimeout(resolve, 300));
+    for (let i = 0; i < 10; i++) {
+      const imageSrc = webcamRef.current.getScreenshot();
+      if (imageSrc) {
+        const blob = await (await fetch(imageSrc)).blob();
+        formData.append("files", blob, `frame_${i}.jpg`);
+        setFrameCount(i + 1);
       }
-
-      const response = await fetch(`${API_BASE}/users/register`, {
-        method: "POST",
-        body: formData,
-      });
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        if (data.detail) {
-          setPopupMessage(`❌ ${data.detail}`);
-        } else if (data.error) {
-          setPopupMessage(`❌ ${data.error}`);
-        } else {
-          setPopupMessage("❌ Registration failed.");
-        }
-        setIsSubmitting(false);
-      } else {
-        setRegisteredData({
-          employee_id: data.employee_id,
-          name: data.name || name,
-          department: data.department || department,
-        });
-        setPopupMessage("✅ Registration successful!");
-      }
-
-      setShowPopup(true);
-      setName("");
-      setDepartment("");
-    } catch (error) {
-      console.error("❌ Error registering user:", error);
-      setPopupMessage("❌ Failed to register user.");
-      setShowPopup(true);
-      setIsSubmitting(false);
-      setName("");
-      setDepartment("");
+      await new Promise((resolve) => setTimeout(resolve, 300));
     }
-  };
+
+    const response = await fetch(`${API_BASE}/users/register`, {
+      method: "POST",
+      body: formData,
+    });
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      if (data.detail) {
+        setPopupMessage(`❌ ${data.detail}`);
+      } else if (data.error) {
+        setPopupMessage(`❌ ${data.error}`);
+      } else {
+        setPopupMessage("❌ Registration failed.");
+      }
+      setIsSubmitting(false);
+      setIsCameraActive(false);
+      setAlignmentMessage("");
+    } else {
+      setRegisteredData({
+        employee_id: data.employee_id,
+        name: data.name || name,
+        department: data.department || department,
+      });
+      setPopupMessage("✅ Registration successful!");
+    }
+
+    setShowPopup(true);
+    setName("");
+    setDepartment("");
+  } catch (error) {
+    console.error("❌ Error registering user:", error);
+    setPopupMessage("❌ Failed to register user.");
+    setShowPopup(true);
+    setIsSubmitting(false);
+    setIsCameraActive(false);
+    setAlignmentMessage("");
+    setName("");
+    setDepartment("");
+  }
+};
 
   // Popup OK handler
   const handlePopupOk = () => {

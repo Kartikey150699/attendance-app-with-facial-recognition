@@ -94,10 +94,34 @@ def calculate_total_work(record: Attendance):
 def detect_faces(tmp_path):
     faces = []
     try:
+        # Step 1: Preprocess image (lighting normalization)
+        img = cv2.imread(tmp_path)
+        if img is not None:
+            img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+
+            # Slight brightness & contrast boost
+            img = cv2.convertScaleAbs(img, alpha=1.2, beta=10)
+
+            # Optional: CLAHE (Adaptive histogram equalization) — helps in uneven lighting
+            lab = cv2.cvtColor(img, cv2.COLOR_RGB2LAB)
+            l, a, b = cv2.split(lab)
+            clahe = cv2.createCLAHE(clipLimit=2.0, tileGridSize=(8, 8))
+            l = clahe.apply(l)
+            lab = cv2.merge((l, a, b))
+            img = cv2.cvtColor(lab, cv2.COLOR_LAB2RGB)
+
+            # Save preprocessed image temporarily
+            normalized_path = tmp_path.replace(".jpg", "_norm.jpg")
+            cv2.imwrite(normalized_path, cv2.cvtColor(img, cv2.COLOR_RGB2BGR))
+            use_path = normalized_path
+        else:
+            use_path = tmp_path
+
+        # Step 2: Extract embeddings using DeepFace (ArcFace + MTCNN)
         reps = DeepFace.represent(
-            img_path=tmp_path,
+            img_path=use_path,
             model_name="ArcFace",
-            detector_backend="mtcnn", 
+            detector_backend="mtcnn",
             enforce_detection=False
         )
 
@@ -110,9 +134,11 @@ def detect_faces(tmp_path):
             w, h = box.get("w", 0), box.get("h", 0)
             confidence = rep.get("confidence", 1.0)
 
+            # Step 3: Basic filtering
             if w < 50 or h < 50:
                 continue
-            if w / (h + 1e-6) < 0.6 or w / (h + 1e-6) > 1.6:
+            ratio = w / (h + 1e-6)
+            if ratio < 0.6 or ratio > 1.6:
                 continue
             if confidence < 0.90:
                 continue
@@ -129,7 +155,7 @@ def detect_faces(tmp_path):
     except Exception as e:
         print("⚠️ MTCNN failed:", e)
 
-    # Fallback OpenCV Haar
+    # Step 4: Fallback to OpenCV Haar if DeepFace fails
     if not faces:
         try:
             img = cv2.imread(tmp_path)
@@ -285,7 +311,7 @@ def find_best_match(embedding, threshold, fallback_threshold=0.0):
         return None, best_score, "unknown"
 
 # -------------------------
-# Preview API s
+# Preview API
 # -------------------------
 @router.post("/preview")
 async def preview_faces(file: UploadFile = None):
@@ -318,81 +344,82 @@ async def preview_faces(file: UploadFile = None):
         )
 
         # -------------------------
-        # Gender + Age detection (for preview only, not stored)
+        # Gender + Age detection (disabled for speed)
         # -------------------------
         gender = "unknown"
         age = "N/A"
+        confidence = 0.0  # ✅ initialize safely
+
         try:
             x, y, w, h = box.get("x"), box.get("y"), box.get("w"), box.get("h")
             img = cv2.imread(tmp_path)
-            cropped_face = img[y:y+h, x:x+w]
+            cropped_face = img[y:y + h, x:x + w]
 
-            # Temporarily disable age and gender analysis for speed
-            # Normal DeepFace analyze (no preloaded MODELS)
+            # Temporarily disable DeepFace analyze (too slow)
             analyze_info = []
-            #analyze_info = DeepFace.analyze(
-             #   cropped_face,
-             #   actions=["age", "gender"],
-             #   enforce_detection=False
-            #)
+            # analyze_info = DeepFace.analyze(
+            #     cropped_face,
+            #     actions=["age", "gender"],
+            #     enforce_detection=False
+            # )
 
-            # Gender
-            dominant = analyze_info[0].get("dominant_gender", "unknown")
-            gender_probs = analyze_info[0].get("gender", {})
-            confidence = 0
-            if dominant in gender_probs:
-                confidence = gender_probs[dominant]
-            gender = f"{dominant.capitalize()} ({confidence:.0f}%)"
+            # Gender (disabled, placeholder kept for structure)
+            if analyze_info:
+                dominant = analyze_info[0].get("dominant_gender", "unknown")
+                gender_probs = analyze_info[0].get("gender", {})
+                if dominant in gender_probs:
+                    confidence = gender_probs[dominant]
+                gender = f"{dominant.capitalize()} ({confidence:.0f}%)"
 
-            # Fast Hybrid Age Estimation (Optimized)
-            raw_age = analyze_info[0].get("age", "N/A")
-            if raw_age != "N/A":
-                try:
-                    raw_age = int(raw_age)
+                # Fast Age Estimation (optional)
+                raw_age = analyze_info[0].get("age", "N/A")
+                if raw_age != "N/A":
+                    try:
+                        raw_age = int(raw_age)
+                        gray = cv2.cvtColor(cropped_face, cv2.COLOR_BGR2GRAY)
+                        _, stddev = cv2.meanStdDev(gray)
+                        blur_metric = stddev[0][0]
+                        gender_pred = analyze_info[0].get("dominant_gender", "unknown").lower()
 
-                    # --- Step 1: Lightweight texture sharpness (meanStdDev, much faster) ---
-                    gray = cv2.cvtColor(cropped_face, cv2.COLOR_BGR2GRAY)
-                    _, stddev = cv2.meanStdDev(gray)
-                    blur_metric = stddev[0][0]  # higher = more detail
+                        # Texture correction
+                        if blur_metric < 35:
+                            texture_correction = -3
+                        elif blur_metric < 60:
+                            texture_correction = -2
+                        else:
+                            texture_correction = -1
 
-                    # --- Step 2: Gender & texture correction ---
-                    gender_pred = analyze_info[0].get("dominant_gender", "unknown").lower()
+                        gender_correction = -1 if gender_pred == "female" else -2
 
-                    if blur_metric < 35:
-                        texture_correction = -3
-                    elif blur_metric < 60:
-                        texture_correction = -2
-                    else:
-                        texture_correction = -1
+                        # Base adaptive correction
+                        if raw_age <= 20:
+                            base = -1
+                        elif 21 <= raw_age <= 30:
+                            base = -2
+                        elif 31 <= raw_age <= 45:
+                            base = -3
+                        elif 46 <= raw_age <= 60:
+                            base = -4
+                        else:
+                            base = -5
 
-                    gender_correction = -1 if gender_pred == "female" else -2  # beard/skin bias
-
-                    # --- Step 3: Base adaptive correction by predicted age ---
-                    if raw_age <= 20:
-                        base = -1
-                    elif 21 <= raw_age <= 30:
-                        base = -2
-                    elif 31 <= raw_age <= 45:
-                        base = -3
-                    elif 46 <= raw_age <= 60:
-                        base = -4
-                    else:
-                        base = -5
-
-                    # --- Step 4: Combine all corrections ---
-                    adjusted_age = raw_age + base + texture_correction + gender_correction
-                    age = max(adjusted_age, 1)
-
-                except Exception as e:
-                    print("⚠️ Fast hybrid age smoothing failed:", e)
-                    age = raw_age
-            else:
-                age = "N/A"
-
+                        adjusted_age = raw_age + base + texture_correction + gender_correction
+                        age = max(adjusted_age, 1)
+                    except Exception as e:
+                        print("⚠️ Fast hybrid age smoothing failed:", e)
+                        age = raw_age
         except Exception as e:
             print("⚠️ Gender/Age detection skipped:", e)
-            gender = "unknown"
-            age = "N/A"
+
+        # -------------------------
+        # Compute recognition confidence %
+        # -------------------------
+        recognition_confidence = (
+            ((best_score - fallback_threshold) / (1 - fallback_threshold)) * 100
+            if best_score > fallback_threshold
+            else 0.0
+        )
+        recognition_confidence = round(max(0, min(recognition_confidence, 100)), 2)
 
         # -------------------------
         # Append recognition results
@@ -403,6 +430,7 @@ async def preview_faces(file: UploadFile = None):
                 "employee_id": f"IFNT{best_match['id']:03d}",
                 "box": [box.get("x"), box.get("y"), box.get("w"), box.get("h")],
                 "status": "preview",
+                "confidence": recognition_confidence,  # include only for match/maybe
                 "gender": gender,
                 "age": age
             })
@@ -412,6 +440,7 @@ async def preview_faces(file: UploadFile = None):
                 "employee_id": f"IFNT{best_match['id']:03d}",
                 "box": [box.get("x"), box.get("y"), box.get("w"), box.get("h")],
                 "status": "maybe_match",
+                "confidence": recognition_confidence,  
                 "gender": gender,
                 "age": age
             })
@@ -425,14 +454,8 @@ async def preview_faces(file: UploadFile = None):
                 "age": age
             })
 
-    duration = time.time() - start_time  # end timer
-
-    # Terminal Logs with detected faces
-    gender_age_summary = ", ".join([
-        f"{f.get('gender', 'unknown')} | Age: {f.get('age', 'N/A')}"
-        for f in results
-    ]) or "unknown"
-    print(f"Recognition completed in {duration:.3f} seconds | Faces detected: {len(faces)} | {gender_age_summary}")
+    duration = time.time() - start_time
+    print(f"⚡ Recognition completed in {duration:.3f}s | Faces: {len(faces)}")
 
     return {"results": results}
 
@@ -516,89 +539,77 @@ async def mark_attendance(
     results = []
     today = date.today()
     action = action.lower().strip()
-    threshold = 0.65
-    fallback_threshold = 0.60
-    aging_update_threshold = 0.80
+    threshold = 0.70
+    fallback_threshold = 0.65
+    aging_update_threshold = 0.90
 
     for face in faces:
         embedding = face.get("embedding")
         box = face.get("facial_area", {})
 
         # -------------------------
-        # Gender + Age detection (for preview only, not stored)
+        # Gender + Age detection (for preview only)
         # -------------------------
         gender = "unknown"
         age = "N/A"
+        confidence = 0.0  # Safe initialization
+
         try:
             x, y, w, h = box.get("x"), box.get("y"), box.get("w"), box.get("h")
             img = cv2.imread(tmp_path)
-            cropped_face = img[y:y+h, x:x+w]
+            cropped_face = img[y:y + h, x:x + w]
 
-            # Temporarily disable age and gender analysis for speed
-            # Normal DeepFace analyze (no preloaded models)
+            # DeepFace analyze temporarily disabled
             analyze_info = []
-            #analyze_info = DeepFace.analyze(
-            #    cropped_face,
-            #    actions=["age", "gender"],
-             #   enforce_detection=False
-            #)
+            # analyze_info = DeepFace.analyze(
+            #     cropped_face,
+            #     actions=["age", "gender"],
+            #     enforce_detection=False
+            # )
 
-            dominant = analyze_info[0].get("dominant_gender", "unknown")
-            gender_probs = analyze_info[0].get("gender", {})
-            confidence = 0
-            if dominant in gender_probs:
-                confidence = gender_probs[dominant]
-            gender = f"{dominant.capitalize()} ({confidence:.0f}%)"
+            if analyze_info:
+                dominant = analyze_info[0].get("dominant_gender", "unknown")
+                gender_probs = analyze_info[0].get("gender", {})
+                if dominant in gender_probs:
+                    confidence = gender_probs[dominant]
+                gender = f"{dominant.capitalize()} ({confidence:.0f}%)"
 
-            # Fast Hybrid Age Estimation (Optimized)
-            raw_age = analyze_info[0].get("age", "N/A")
-            if raw_age != "N/A":
-                try:
-                    raw_age = int(raw_age)
+                raw_age = analyze_info[0].get("age", "N/A")
+                if raw_age != "N/A":
+                    try:
+                        raw_age = int(raw_age)
+                        gray = cv2.cvtColor(cropped_face, cv2.COLOR_BGR2GRAY)
+                        _, stddev = cv2.meanStdDev(gray)
+                        blur_metric = stddev[0][0]
+                        gender_pred = analyze_info[0].get("dominant_gender", "unknown").lower()
 
-                    # --- Step 1: Lightweight texture sharpness (meanStdDev, faster) ---
-                    gray = cv2.cvtColor(cropped_face, cv2.COLOR_BGR2GRAY)
-                    _, stddev = cv2.meanStdDev(gray)
-                    blur_metric = stddev[0][0]  # higher = more detail, less blur
+                        if blur_metric < 35:
+                            texture_correction = -3
+                        elif blur_metric < 60:
+                            texture_correction = -2
+                        else:
+                            texture_correction = -1
 
-                    # --- Step 2: Gender & texture-based correction ---
-                    gender_pred = analyze_info[0].get("dominant_gender", "unknown").lower()
+                        gender_correction = -1 if gender_pred == "female" else -2
 
-                    if blur_metric < 35:
-                        texture_correction = -3
-                    elif blur_metric < 60:
-                        texture_correction = -2
-                    else:
-                        texture_correction = -1
+                        if raw_age <= 20:
+                            base = -1
+                        elif 21 <= raw_age <= 30:
+                            base = -2
+                        elif 31 <= raw_age <= 45:
+                            base = -3
+                        elif 46 <= raw_age <= 60:
+                            base = -4
+                        else:
+                            base = -5
 
-                    gender_correction = -1 if gender_pred == "female" else -2  # beard/skin bias
-
-                    # --- Step 3: Base adaptive correction by predicted age ---
-                    if raw_age <= 20:
-                        base = -1
-                    elif 21 <= raw_age <= 30:
-                        base = -2
-                    elif 31 <= raw_age <= 45:
-                        base = -3
-                    elif 46 <= raw_age <= 60:
-                        base = -4
-                    else:
-                        base = -5
-
-                    # --- Step 4: Combine all corrections ---
-                    adjusted_age = raw_age + base + texture_correction + gender_correction
-                    age = max(adjusted_age, 1)
-
-                except Exception as e:
-                    print("⚠️ Fast hybrid age smoothing failed:", e)
-                    age = raw_age
-            else:
-                age = "N/A"
-
+                        adjusted_age = raw_age + base + texture_correction + gender_correction
+                        age = max(adjusted_age, 1)
+                    except Exception as e:
+                        print("⚠️ Fast hybrid age smoothing failed:", e)
+                        age = raw_age
         except Exception as e:
             print("⚠️ Gender/Age detection skipped:", e)
-            gender = "unknown"
-            age = "N/A"
 
         # -------------------------
         # Work Application Login Flow (STRICT ID VALIDATION)
@@ -615,13 +626,14 @@ async def mark_attendance(
                 })
                 continue
 
-            # Strict format check: must be IFNT followed by exactly 3 digits
             user = None
             if employee_id.startswith("IFNT"):
                 numeric_part = employee_id[4:]
                 if numeric_part.isdigit() and len(numeric_part) == 3:
                     expected_id = int(numeric_part)
-                    db_user = db.query(User).filter(User.id == expected_id, User.is_active == True).first()
+                    db_user = db.query(User).filter(
+                        User.id == expected_id, User.is_active == True
+                    ).first()
                     if db_user and employee_id == f"IFNT{db_user.id:03d}":
                         user = db_user
 
@@ -640,27 +652,33 @@ async def mark_attendance(
             if isinstance(stored_embeddings[0], (int, float)):
                 stored_embeddings = [stored_embeddings]
 
-            matched = any(cosine_similarity(embedding, stored_emb) >= threshold for stored_emb in stored_embeddings)
+            best_score = max(cosine_similarity(embedding, emb) for emb in stored_embeddings)
+            matched = best_score >= threshold
             status = "logged_in" if matched else "face_mismatch"
 
-            # safeguard - update embedding ONLY if AutoTrain ON and strong confirmed match
-            if AUTO_TRAIN_ENABLED and status == "logged_in":
-                best_score = max(cosine_similarity(embedding, stored_emb) for stored_emb in stored_embeddings)
-                if best_score >= aging_update_threshold:
-                    stored_embeddings.append(embedding)
-                    # keep only last 20 embeddings
-                    if len(stored_embeddings) > 20:
-                        stored_embeddings = stored_embeddings[-20:]
-                    user.embedding = json.dumps(stored_embeddings)
-                    db.commit()
-                    refresh_embeddings()
-                    print(f"Embedding updated for {user.name} due to aging consistency")
+            # Auto-train safeguard
+            if AUTO_TRAIN_ENABLED and status == "logged_in" and best_score >= aging_update_threshold:
+                stored_embeddings.append(embedding)
+                if len(stored_embeddings) > 20:
+                    stored_embeddings = stored_embeddings[-20:]
+                user.embedding = json.dumps(stored_embeddings)
+                db.commit()
+                refresh_embeddings()
+                print(f"Embedding updated for {user.name} due to aging consistency")
+
+            recognition_confidence = (
+                ((best_score - fallback_threshold) / (1 - fallback_threshold)) * 100
+                if best_score > fallback_threshold
+                else 0.0
+            )
+            recognition_confidence = round(max(0, min(recognition_confidence, 100)), 2)
 
             results.append({
                 "name": user.name,
                 "employee_id": employee_id,
                 "box": [box.get("x"), box.get("y"), box.get("w"), box.get("h")],
                 "status": status,
+                "confidence": recognition_confidence,
                 "gender": gender,
                 "age": age
             })
@@ -670,6 +688,13 @@ async def mark_attendance(
         # Normal Attendance Flow
         # -------------------------
         best_match, best_score, status = find_best_match(embedding, threshold, fallback_threshold)
+
+        recognition_confidence = (
+            ((best_score - fallback_threshold) / (1 - fallback_threshold)) * 100
+            if best_score > fallback_threshold
+            else 0.0
+        )
+        recognition_confidence = round(max(0, min(recognition_confidence, 100)), 2)
 
         if status == "match":
             record = db.query(Attendance).filter(
@@ -687,6 +712,7 @@ async def mark_attendance(
 
             now_jst = datetime.now(JST)
 
+            # Attendance Logic
             if action == "checkin":
                 if record.check_out:
                     status = "already_checked_out"
@@ -732,14 +758,13 @@ async def mark_attendance(
                     record.check_out = now_jst
                     status = "checked_out"
                     calculate_total_work(record)
-
             else:
                 status = "invalid_action"
 
             db.commit()
             db.refresh(record)
 
-            # safeguard - update embeddings ONLY if AutoTrain ON and strong confirmed match
+            # Optional auto-train
             user = db.query(User).filter(User.id == best_match["id"]).first()
             if AUTO_TRAIN_ENABLED and user and best_score >= aging_update_threshold:
                 stored_embeddings = json.loads(user.embedding)
@@ -759,18 +784,19 @@ async def mark_attendance(
                 "employee_id": f"IFNT{best_match['id']:03d}",
                 "box": [box.get("x"), box.get("y"), box.get("w"), box.get("h")],
                 "status": status,
+                "confidence": recognition_confidence,  # unified confidence
                 "total_work": record.total_work,
                 "gender": gender,
                 "age": age
             })
 
         elif status == "maybe":
-            # safeguard: no update allowed for "maybe"
             results.append({
                 "name": best_match["name"],
                 "employee_id": f"IFNT{best_match['id']:03d}",
                 "box": [box.get("x"), box.get("y"), box.get("w"), box.get("h")],
                 "status": "maybe_match",
+                "confidence": recognition_confidence,
                 "gender": gender,
                 "age": age
             })

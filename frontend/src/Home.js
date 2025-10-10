@@ -74,6 +74,7 @@ const handleBackendResponse = useCallback(
         box: face.box,
         gender: face.gender, 
         age: face.age,
+        confidence: face.confidence,
       }));
 
       // Always update faces (so preview shows boxes too)
@@ -358,29 +359,37 @@ className="relative border border-white/10 rounded-2xl shadow-[0_0_25px_rgba(56,
   />
 
   {/* Face Boxes inside the same container */}
-{faces.map((face, index) => {
-  return (
-    <div
-      key={index}
-      className={`absolute border-4 ${getBoxColor(face.status)} rounded-lg transition-all duration-200 ease-linear`}
-      style={{
-        top: `${face.box[1]}px`,
-        left: `${displayWidth - face.box[0] - face.box[2]}px`,
-        width: `${face.box[2]}px`,
-        height: `${face.box[3]}px`,
-      }}
-    >
-      {/* Only show name/status below face box */}
-      <div className="absolute bottom-0 left-0 right-0 flex justify-center">
-        <span className="bg-black text-white px-2 py-1 rounded-b-lg font-bold whitespace-nowrap shadow">
-          {face.status === "spoof"
-            ? "Photo Detected – Not Allowed"
-            : face.name}
-        </span>
-      </div>
+{faces.map((face, index) => (
+  <div
+    key={index}
+    className={`absolute border-4 ${getBoxColor(face.status)} rounded-lg transition-all duration-200 ease-linear`}
+    style={{
+      top: `${face.box[1]}px`,
+      left: `${displayWidth - face.box[0] - face.box[2]}px`,
+      width: `${face.box[2]}px`,
+      height: `${face.box[3]}px`,
+    }}
+  >
+    {/* Confidence on top (only for valid matches) */}
+    {face.confidence !== undefined &&
+      face.confidence > 0 &&
+      face.status !== "unknown" &&
+      face.status !== "maybe_match" && (
+        <div className="absolute -top-6 left-1/2 -translate-x-1/2 bg-black/80 text-white text-xs sm:text-sm px-2 py-0.5 rounded-md font-semibold shadow whitespace-nowrap">
+          Match: {face.confidence.toFixed(1)}%
+        </div>
+      )}
+
+    {/* Name below the face box */}
+    <div className="absolute bottom-0 left-0 right-0 flex justify-center">
+      <span className="bg-black/80 text-white px-2 py-1 rounded-b-lg font-bold whitespace-nowrap shadow">
+        {face.status === "spoof"
+          ? "Photo Detected – Not Allowed"
+          : face.name}
+      </span>
     </div>
-  );
-})}
+  </div>
+))}
 </div>
                 {/* Buttons under Camera */}
                 <div className="flex flex-wrap gap-3 sm:gap-4 mt-4 mb-4 justify-center px-2">
