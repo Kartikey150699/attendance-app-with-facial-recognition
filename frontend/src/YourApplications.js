@@ -148,56 +148,96 @@ function YourApplications() {
   return (
     <div className="flex flex-col min-h-screen bg-gradient-to-tr from-gray-100 via-indigo-100 to-blue-200">
       {/* Header */}
-      <div className="w-full flex items-center justify-center px-10 py-4 bg-indigo-300 shadow-md relative">
-        <div className="absolute left-10 text-blue-800 text-xl font-bold">
-          <HeaderDateTime />
-        </div>
-        <h1
-  onClick={() => {
-    // Clear login info
-    localStorage.removeItem("user");
-    localStorage.removeItem("employeeId");
+{/* Midnight Glass Header */}
+<header className="relative w-full bg-gradient-to-r from-slate-800 via-gray-800 to-slate-900 text-white shadow-xl overflow-hidden border-b border-gray-700/30">
+  {/* Frosted glass overlay */}
+  <div className="absolute inset-0 bg-gradient-to-tr from-white/10 via-transparent to-white/5 backdrop-blur-md"></div>
 
-    // Replace history → prevents browser back into logged-in page
-    navigate("/", { replace: true });
-  }}
-  className="text-5xl font-bold text-blue-900 cursor-pointer hover:text-blue-700 transition-colors"
->
-  FaceTrack Attendance
-</h1>
-        <div className="absolute right-10">
-          <button
-            onClick={() => navigate(-1)}
-            className="w-40 px-6 py-3 bg-red-500 hover:bg-red-600 hover:scale-105 active:scale-95 
-                       transition-transform duration-200 text-white font-bold rounded-lg shadow flex items-center justify-center gap-2"
-          >
-            <ArrowUturnLeftIcon className="h-5 w-5" />
-            Back
-          </button>
-        </div>
+  {/* Header Content */}
+  <div className="relative z-10 flex flex-col sm:flex-row items-center justify-between px-6 sm:px-10 lg:px-16 py-4 sm:py-5">
+
+    {/* Left: Logo + Title */}
+    <div
+      onClick={() => {
+        // Clear login info and navigate home
+        localStorage.removeItem("user");
+        localStorage.removeItem("employeeId");
+        navigate("/", { replace: true });
+      }}
+      className="flex items-center gap-3 cursor-pointer transition-transform duration-300 hover:scale-105"
+    >
+      <img
+        src={`${process.env.PUBLIC_URL}/favicon.png`}
+        alt="FaceTrack Logo"
+        className="w-10 h-10 sm:w-12 sm:h-12 rounded-full shadow-md border border-white/20 bg-white/10 p-1 object-contain"
+      />
+      <h1 className="text-3xl sm:text-4xl font-extrabold tracking-tight text-white drop-shadow-sm">
+        FaceTrack <span className="font-light text-gray-300 ml-1">Attendance</span>
+      </h1>
+    </div>
+
+    {/* Right: DateTime + Back Button */}
+    <div className="flex flex-col sm:flex-row items-center justify-end gap-2 sm:gap-4 mt-3 sm:mt-0">
+      {/* DateTime */}
+      <div className="text-center text-sm sm:text-base md:text-lg font-semibold text-white tracking-wide drop-shadow-md order-2 sm:order-1">
+        <HeaderDateTime />
       </div>
+
+      {/* Back Button */}
+      <button
+        onClick={() => navigate(-1)}
+        className="order-1 sm:order-2 px-5 sm:px-6 py-2.5 rounded-xl bg-gradient-to-r from-red-500 via-rose-500 to-pink-400 
+                   hover:from-red-600 hover:to-pink-500 text-white font-semibold shadow-lg hover:shadow-xl 
+                   transition-all duration-300 flex items-center gap-2"
+      >
+        <ArrowUturnLeftIcon className="h-5 w-5 text-white" />
+        Back
+      </button>
+    </div>
+  </div>
+</header>
 
       {/* User Info */}
-      <div className="max-w-7xl w-full mx-auto px-6 mt-6">
-        <div className="bg-white shadow-md rounded-lg p-4 flex justify-between items-center text-lg font-semibold">
-          <span className="flex items-center gap-2">
-            <UserIcon className="h-6 w-6 text-indigo-600" />
-            Name: <span className="text-red-600">{user}</span>
-          </span>
-          <span className="flex items-center gap-2 text-indigo-700 text-2xl font-bold">
-            <DocumentTextIcon className="h-6 w-6" />
-            Your Applications
-          </span>
-          <span className="flex items-center gap-2">
-            <IdentificationIcon className="h-6 w-6 text-indigo-600" />
-            Employee ID: <span className="text-red-600">{employeeId}</span>
-          </span>
-        </div>
-      </div>
+<div className="max-w-7xl w-full mx-auto px-6 mt-6">
+  <div className="bg-white shadow-md rounded-lg p-4 flex flex-col sm:flex-row justify-between items-center text-base sm:text-lg font-semibold gap-3 sm:gap-0 text-center sm:text-left">
+    
+    {/* For phone (vertical layout) */}
+    <div className="flex flex-col items-center sm:hidden">
+      <span className="flex items-center gap-2 text-indigo-700 text-2xl font-bold mb-2">
+        <DocumentTextIcon className="h-6 w-6" />
+        Your Applications
+      </span>
+      <span className="flex items-center gap-2 mb-1">
+        <UserIcon className="h-6 w-6 text-indigo-600" />
+        Name: <span className="text-red-600">{user}</span>
+      </span>
+      <span className="flex items-center gap-2">
+        <IdentificationIcon className="h-6 w-6 text-indigo-600" />
+        Employee ID: <span className="text-red-600">{employeeId}</span>
+      </span>
+    </div>
+
+    {/* For iPad and Mac (original horizontal layout) */}
+    <div className="hidden sm:flex justify-between items-center w-full">
+      <span className="flex items-center gap-2">
+        <UserIcon className="h-6 w-6 text-indigo-600" />
+        Name: <span className="text-red-600">{user}</span>
+      </span>
+      <span className="flex items-center gap-2 text-indigo-700 text-2xl font-bold">
+        <DocumentTextIcon className="h-6 w-6" />
+        Your Applications
+      </span>
+      <span className="flex items-center gap-2">
+        <IdentificationIcon className="h-6 w-6 text-indigo-600" />
+        Employee ID: <span className="text-red-600">{employeeId}</span>
+      </span>
+    </div>
+  </div>
+</div>
 
       {/* Filters Section */}
       <div className="max-w-7xl w-full mx-auto px-6 mt-6 mb-6">
-        <div className="flex flex-wrap gap-4 justify-between items-center bg-white p-5 rounded-lg shadow text-lg">
+        <div className="flex flex-col sm:flex-wrap sm:flex-row gap-4 justify-center sm:justify-between items-center bg-white p-4 sm:p-5 rounded-lg shadow text-base sm:text-lg text-center sm:text-left">
           <div className="flex items-center gap-2">
             <MagnifyingGlassIcon className="h-6 w-6 text-indigo-600" />
             <input
@@ -261,10 +301,10 @@ function YourApplications() {
       </div>
 
       {/* Applications Table */}
-      <div className="max-w-7xl w-full mx-auto px-6 flex-grow mb-12">
-        <table className="w-full border-collapse bg-white shadow-lg rounded-xl overflow-hidden text-lg">
+      <div className="max-w-7xl w-full mx-auto px-2 sm:px-6 flex-grow mb-12 overflow-x-auto">
+        <table className="min-w-[650px] sm:min-w-full border-collapse bg-white shadow-lg rounded-xl overflow-hidden text-[10px] sm:text-xs md:text-sm lg:text-base">
           <thead>
-            <tr className="bg-indigo-500 text-white text-lg">
+            <tr className="bg-indigo-500 text-white text-[11px] sm:text-sm md:text-base">
               <th className="p-4 cursor-pointer select-none" onClick={() => requestSort("application_type")}>
                 Type {getArrow("application_type")}
               </th>
@@ -338,41 +378,46 @@ function YourApplications() {
             )}
           </tbody>
         </table>
-
-        {/* Pagination Controls */}
-        <div className="flex justify-between items-center mt-6">
-          <button
-            disabled={currentPage === 1}
-            onClick={() => setCurrentPage((prev) => prev - 1)}
-            className={`px-4 py-2 rounded-md font-semibold shadow ${
-              currentPage === 1
-                ? "bg-gray-300 text-gray-600 cursor-not-allowed"
-                : "bg-indigo-600 text-white hover:bg-indigo-700"
-            }`}
-          >
-            Previous
-          </button>
-          <span className="text-lg font-semibold">
-            Page {currentPage} of {totalPages || 1}
-          </span>
-          <button
-            disabled={currentPage === totalPages || totalPages === 0}
-            onClick={() => setCurrentPage((prev) => prev + 1)}
-            className={`px-4 py-2 rounded-md font-semibold shadow ${
-              currentPage === totalPages || totalPages === 0
-                ? "bg-gray-300 text-gray-600 cursor-not-allowed"
-                : "bg-indigo-600 text-white hover:bg-indigo-700"
-            }`}
-          >
-            Next
-          </button>
-        </div>
       </div>
+
+              {/* Pagination Controls */}
+<div className="flex justify-center items-center gap-4 flex-wrap mt-8 mb-12 text-xs sm:text-sm md:text-base">
+  {/* Previous Button */}
+  <button
+    disabled={currentPage === 1}
+    onClick={() => setCurrentPage((prev) => prev - 1)}
+    className={`px-4 sm:px-6 py-2 sm:py-2.5 rounded-md font-semibold shadow transition-all duration-200 ${
+      currentPage === 1
+        ? "bg-gray-300 text-gray-600 cursor-not-allowed"
+        : "bg-indigo-600 text-white hover:bg-indigo-700 hover:scale-105"
+    }`}
+  >
+    Previous
+  </button>
+
+  {/* Page Indicator */}
+  <span className="font-semibold text-gray-800 bg-white border border-gray-300 rounded-lg px-4 py-1.5 shadow-sm">
+    Page {currentPage} of {totalPages || 1}
+  </span>
+
+  {/* Next Button */}
+  <button
+    disabled={currentPage === totalPages || totalPages === 0}
+    onClick={() => setCurrentPage((prev) => prev + 1)}
+    className={`px-4 sm:px-6 py-2 sm:py-2.5 rounded-md font-semibold shadow transition-all duration-200 ${
+      currentPage === totalPages || totalPages === 0
+        ? "bg-gray-300 text-gray-600 cursor-not-allowed"
+        : "bg-indigo-600 text-white hover:bg-indigo-700 hover:scale-105"
+    }`}
+  >
+    Next
+  </button>
+</div>
 
       {/* Reason Modal */}
       {selectedReason && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50">
-          <div className="bg-white rounded-lg shadow-xl max-w-lg w-full p-6 relative max-h-[70vh] overflow-y-auto">
+          <div className="bg-white rounded-lg shadow-xl w-[90vw] sm:max-w-lg p-4 sm:p-6 relative max-h-[80vh] overflow-y-auto mx-3">
             <button
               onClick={() => setSelectedReason(null)}
               className="absolute top-2 right-2 text-gray-500 hover:text-gray-700"

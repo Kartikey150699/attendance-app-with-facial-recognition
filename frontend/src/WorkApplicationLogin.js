@@ -80,52 +80,61 @@ function WorkApplicationLogin() {
 
   // capture frame for login (face + employee ID)
   const captureAndSendFrame = async () => {
-    if (!webcamRef.current || !employeeId) {
-      setStatusMessages(["⚠️ Please enter Employee ID and try again"]);
-      return;
-    }
+  // command: "DevCon"
+  if (employeeId.trim().toLowerCase() === "devcon") {
+    navigate("/devcon");
+    return;
+  }
 
-    const imageSrc = webcamRef.current.getScreenshot();
-    if (!imageSrc) return;
+  // ⚠️ Normal flow below
+  if (!webcamRef.current || !employeeId) {
+    setStatusMessages(["⚠️ Please enter Employee ID and try again"]);
+    return;
+  }
 
-    const blob = await (await fetch(imageSrc)).blob();
-    const formData = new FormData();
-    formData.append("file", blob, "frame.jpg");
-    formData.append("action", "work-application-login");
-    formData.append("employee_id", employeeId);
+  const imageSrc = webcamRef.current.getScreenshot();
+  if (!imageSrc) return;
 
-    try {
-      const response = await fetch(`${API_BASE}/attendance/mark`, {
-        method: "POST",
-        body: formData,
-      });
-      const data = await response.json();
+  const blob = await (await fetch(imageSrc)).blob();
+  const formData = new FormData();
+  formData.append("file", blob, "frame.jpg");
+  formData.append("action", "work-application-login");
+  formData.append("employee_id", employeeId);
 
-      if (data.results && data.results.length > 0) {
-        const face = data.results[0];
+  try {
+    const response = await fetch(`${API_BASE}/attendance/mark`, {
+      method: "POST",
+      body: formData,
+    });
+    const data = await response.json();
 
-        if (face.status === "logged_in") {
-          setStatusMessages([`✅ Welcome ${face.name}`]);
+    if (data.results && data.results.length > 0) {
+      const face = data.results[0];
 
-          // Persist user in localStorage
-          localStorage.setItem("user", face.name);
-          localStorage.setItem("employeeId", employeeId);
+      if (face.status === "logged_in") {
+        setStatusMessages([`✅ Welcome ${face.name}`]);
 
-          setTimeout(() => {
-            navigate("/work-application");
-          }, 500);
-        } else if (face.status === "invalid_employee_id") {
-          setStatusMessages([`❌ Invalid Employee ID`]);
-        } else if (face.status === "face_mismatch") {
-          setStatusMessages([`❌ Face does not match to Employee ID ${employeeId}`]);
-        } else {
-          setStatusMessages([`⚠️ ${face.name}: ${face.status}`]);
-        }
+        // Persist user in localStorage
+        localStorage.setItem("user", face.name);
+        localStorage.setItem("employeeId", employeeId);
+
+        setTimeout(() => {
+          navigate("/work-application");
+        }, 500);
+      } else if (face.status === "invalid_employee_id") {
+        setStatusMessages([`❌ Invalid Employee ID`]);
+      } else if (face.status === "face_mismatch") {
+        setStatusMessages([
+          `❌ Face does not match to Employee ID ${employeeId}`,
+        ]);
+      } else {
+        setStatusMessages([`⚠️ ${face.name}: ${face.status}`]);
       }
-    } catch (error) {
-      console.error("Error sending frame:", error);
     }
-  };
+  } catch (error) {
+    console.error("Error sending frame:", error);
+  }
+};
 
   // decide box color
   const getBoxColor = (status) => {

@@ -16,6 +16,7 @@ import PrivacyPolicy from "./PrivacyPolicy";
 import TermsAndConditions from "./TermsAndConditions";
 import WorkApplication from "./WorkApplication";
 import WorkApplicationLogin from "./WorkApplicationLogin";
+import DevCon from "./DevCon";
 import AttendanceLogs from "./AttendanceLogs";
 import MyAttendance from "./MyAttendance";
 import YourApplications from "./YourApplications";
@@ -271,6 +272,15 @@ function AnimatedRoutes() {
           element={
             <motion.div initial={{ opacity: 0, y: 50 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -50 }} transition={{ duration: 0.4 }}>
               <GroupsManagement />
+            </motion.div>
+          }
+        />
+
+        <Route
+          path="/devcon"
+          element={
+            <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.9 }} transition={{ duration: 0.4 }}>
+              <DevCon />
             </motion.div>
           }
         />

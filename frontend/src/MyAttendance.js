@@ -70,7 +70,7 @@ useEffect(() => {
   fetchAttendance(selectedMonth, selectedYear);
 }, [fetchAttendance, selectedMonth, selectedYear]); // now valid
 
-  // Overtime (>8h)
+  // Overtime per day (>8h)
   const calculateOvertime = (totalWork) => {
     if (!totalWork || totalWork === "-") return "-";
     const [h, m] = totalWork.split("h");
@@ -121,30 +121,52 @@ const getDecidedShift = (empId, dateStr) => {
   return (
     <div className="flex flex-col min-h-screen bg-gradient-to-tr from-gray-100 via-indigo-100 to-blue-200">
       {/* Header */}
-      <div className="w-full flex items-center justify-center px-10 py-4 bg-indigo-300 shadow-md relative">
-        <div className="absolute left-10 text-blue-800 text-xl font-bold">
-          <HeaderDateTime />
-        </div>
-        <h1
-          onClick={() => navigate("/", { replace: true })}
-          className="text-5xl font-bold text-blue-900 cursor-pointer hover:text-blue-700 transition-colors"
-        >
-          FaceTrack Attendance
-        </h1>
-        <div className="absolute right-10">
-          <button
-            onClick={() => navigate("/work-application", { replace: true })}
-            className="w-40 px-6 py-3 bg-red-500 hover:bg-red-600 hover:scale-105 
-                       active:scale-95 transition-transform duration-200 text-white font-bold rounded-lg shadow flex items-center justify-center gap-2"
-          >
-            <ArrowUturnLeftIcon className="h-5 w-5 text-white" />
-            Back
-          </button>
-        </div>
+{/* Midnight Glass Header */}
+<header className="relative w-full bg-gradient-to-r from-slate-800 via-gray-800 to-slate-900 text-white shadow-xl overflow-hidden border-b border-gray-700/30">
+  {/* Frosted glass overlay */}
+  <div className="absolute inset-0 bg-gradient-to-tr from-white/10 via-transparent to-white/5 backdrop-blur-md"></div>
+
+  {/* Header Content */}
+  <div className="relative z-10 flex flex-col sm:flex-row items-center justify-between px-6 sm:px-10 lg:px-16 py-4 sm:py-5">
+    
+    {/* Left: Logo + Title */}
+    <div
+      onClick={() => navigate("/", { replace: true })}
+      className="flex items-center gap-3 cursor-pointer transition-transform duration-300 hover:scale-105"
+    >
+      <img
+        src={`${process.env.PUBLIC_URL}/favicon.png`}
+        alt="FaceTrack Logo"
+        className="w-10 h-10 sm:w-12 sm:h-12 rounded-full shadow-md border border-white/20 bg-white/10 p-1 object-contain"
+      />
+      <h1 className="text-3xl sm:text-4xl font-extrabold tracking-tight text-white drop-shadow-sm">
+        FaceTrack <span className="font-light text-gray-300 ml-1">Attendance</span>
+      </h1>
+    </div>
+
+    {/* Right: DateTime + Back Button */}
+    <div className="flex flex-col sm:flex-row items-center justify-end gap-2 sm:gap-4 mt-3 sm:mt-0">
+      {/* DateTime */}
+      <div className="text-center text-sm sm:text-base md:text-lg font-semibold text-white tracking-wide drop-shadow-md order-2 sm:order-1">
+        <HeaderDateTime />
       </div>
 
+      {/* Back Button */}
+      <button
+        onClick={() => navigate("/work-application", { replace: true })}
+        className="order-1 sm:order-2 px-5 sm:px-6 py-2.5 rounded-xl bg-gradient-to-r from-red-500 via-rose-500 to-pink-400 
+                   hover:from-red-600 hover:to-pink-500 text-white font-semibold shadow-lg hover:shadow-xl 
+                   transition-all duration-300 flex items-center gap-2"
+      >
+        <ArrowUturnLeftIcon className="h-5 w-5 text-white" />
+        Back
+      </button>
+    </div>
+  </div>
+</header>
+
       {/* Page Title */}
-      <h2 className="text-3xl font-bold text-indigo-700 text-center mt-8 mb-6 flex items-center justify-center gap-2">
+      <h2 className="text-2xl sm:text-3xl font-bold text-indigo-700 text-center mt-6 sm:mt-8 mb-4 sm:mb-6 flex items-center justify-center gap-2">
         <ClipboardDocumentCheckIcon className="h-8 w-8 text-indigo-700" /> 
         My Attendance Records
       </h2>
@@ -153,7 +175,7 @@ const getDecidedShift = (empId, dateStr) => {
       <div className="flex justify-center px-6 mb-12">
         <div className="bg-white p-6 rounded-lg shadow-lg w-full max-w-5xl border border-indigo-200">
           {/* User Info */}
-          <div className="flex justify-between items-center mb-6">
+          <div className="flex flex-col sm:flex-row justify-between items-center text-center sm:text-left gap-2 sm:gap-0 mb-6">
             <p className="text-lg text-gray-800">
               <b>Name:</b>{" "}
               <span className="text-indigo-700 font-semibold">{user}</span>
@@ -165,7 +187,7 @@ const getDecidedShift = (empId, dateStr) => {
           </div>
 
           {/* Filters */}
-          <div className="flex gap-4 mb-6">
+          <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 mb-6 items-center justify-center sm:justify-start">
             <select
               value={selectedMonth}
               onChange={(e) => setSelectedMonth(parseInt(e.target.value))}
@@ -196,9 +218,10 @@ const getDecidedShift = (empId, dateStr) => {
           {loading ? (
             <p className="text-center text-gray-600">Loading...</p>
           ) : (
-            <table className="w-full border-collapse text-sm">
-              <thead>
-                <tr className="bg-gray-200 text-center">
+            <div className="overflow-x-auto">
+  <table className="min-w-[700px] sm:min-w-full border-collapse text-xs sm:text-sm">
+              <thead className="sticky top-0 bg-gray-100 sm:bg-gray-200 z-30 shadow-md border-b border-gray-300">
+                <tr className="bg-gray-200 text-center text-xs sm:text-sm md:text-base">
                   <th className="p-2 border">Date</th>
                   <th className="p-2 border">Decided Shift</th>
                   <th className="p-2 border">Check-in</th>
@@ -285,6 +308,7 @@ const getDecidedShift = (empId, dateStr) => {
   })}
 </tbody>
             </table>
+            </div>
           )}
         </div>
       </div>

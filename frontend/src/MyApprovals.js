@@ -104,76 +104,105 @@ function MyApprovals() {
   return (
     <div className="flex flex-col min-h-screen bg-gradient-to-tr from-gray-100 via-indigo-100 to-blue-200 overflow-x-hidden">
       {/* Header */}
-      <div className="w-full flex items-center justify-center px-10 py-4 bg-indigo-300 shadow-md relative">
-        <div className="absolute left-10 text-blue-800 text-xl font-bold">
-          <HeaderDateTime />
-        </div>
-        <h1
-          onClick={() => navigate("/", { replace: true })}
-          className="text-5xl font-bold text-blue-900 cursor-pointer hover:text-blue-700 transition-colors"
-        >
-          FaceTrack Attendance
-        </h1>
-        <div className="absolute right-10 flex gap-3">
-          <button
-            onClick={() => navigate("/work-application")}
-            className="w-40 px-6 py-3 bg-red-500 hover:bg-red-600 hover:scale-105 active:scale-95 transition-transform duration-200 text-white font-bold rounded-lg shadow flex items-center justify-center gap-2"
-          >
-            <ArrowUturnLeftIcon className="h-5 w-5 text-white" />
-            <span>Back</span>
-          </button>
-        </div>
+{/* Midnight Glass Header */}
+<header className="relative w-full bg-gradient-to-r from-slate-800 via-gray-800 to-slate-900 text-white shadow-xl overflow-hidden border-b border-gray-700/30">
+  {/* Frosted overlay for glass effect */}
+  <div className="absolute inset-0 bg-gradient-to-tr from-white/10 via-transparent to-white/5 backdrop-blur-md"></div>
+
+  {/* Header Content */}
+  <div className="relative z-10 flex flex-col sm:flex-row items-center justify-between px-6 sm:px-10 lg:px-16 py-4 sm:py-5">
+    
+    {/* Left: Logo + Title */}
+    <div
+      onClick={() => navigate("/")}
+      className="flex items-center gap-3 cursor-pointer transition-transform duration-300 hover:scale-105"
+    >
+      <img
+        src={`${process.env.PUBLIC_URL}/favicon.png`}
+        alt="FaceTrack Logo"
+        className="w-10 h-10 sm:w-12 sm:h-12 rounded-full shadow-md border border-white/20 bg-white/10 p-1 object-contain"
+      />
+      <h1 className="text-3xl sm:text-4xl font-extrabold tracking-tight text-white drop-shadow-sm">
+        FaceTrack <span className="font-light text-gray-300 ml-1">Attendance</span>
+      </h1>
+    </div>
+
+    {/* Right: Date & Time + Back Button */}
+    <div className="flex flex-col sm:flex-row items-center justify-end gap-2 sm:gap-4 mt-3 sm:mt-0">
+      {/* Date & Time */}
+      <div className="text-center text-sm sm:text-base md:text-lg font-semibold text-white tracking-wide drop-shadow-md order-2 sm:order-1">
+        <HeaderDateTime />
       </div>
 
-      {/* Filters */}
-      <div className="flex justify-end gap-3 px-6 mt-4">
-        <select
-          value={selectedMonth}
-          onChange={(e) => setSelectedMonth(e.target.value)}
-          className="px-3 py-1 border rounded shadow-sm"
-        >
-          {[...Array(12).keys()].map((m) => (
-            <option key={m + 1} value={m + 1}>
-              {new Date(0, m).toLocaleString("default", { month: "long" })}
-            </option>
-          ))}
-        </select>
-        <select
-          value={selectedYear}
-          onChange={(e) => setSelectedYear(e.target.value)}
-          className="px-3 py-1 border rounded shadow-sm"
-        >
-          {[2024, 2025, 2026].map((y) => (
-            <option key={y} value={y}>
-              {y}
-            </option>
-          ))}
-        </select>
-      </div>
+      {/* Back Button */}
+      <button
+        onClick={() => navigate("/work-application")}
+        className="order-1 sm:order-2 px-5 sm:px-6 py-2.5 rounded-xl bg-gradient-to-r from-red-500 via-rose-500 to-pink-400 
+                   hover:from-red-600 hover:to-pink-500 text-white font-semibold shadow-lg hover:shadow-xl 
+                   transition-all duration-300 flex items-center gap-2"
+      >
+        <ArrowUturnLeftIcon className="h-5 w-5 text-white" />
+        Back
+      </button>
+    </div>
+  </div>
+</header>
 
-      {/* Content */}
-      <div className="flex-grow p-6">
-        <h1 className="text-4xl font-bold text-indigo-700 mb-6 flex items-center gap-2">
-          <ClipboardDocumentCheckIcon className="h-7 w-7 text-indigo-600" />
-          My Approvals
-        </h1>
+<div className="flex flex-col items-center justify-center mt-6 text-center px-4">
+  {/* Title */}
+  <h1 className="text-3xl sm:text-4xl font-extrabold text-indigo-700 mb-3 flex items-center gap-2 justify-center">
+    <ClipboardDocumentCheckIcon className="h-7 w-7 text-indigo-600" />
+    My Approvals
+  </h1>
+
+  {/* Filters */}
+  <div className="flex justify-center gap-3 flex-wrap">
+    <select
+      value={selectedMonth}
+      onChange={(e) => setSelectedMonth(e.target.value)}
+      className="px-3 py-1 border rounded shadow-sm text-sm sm:text-base"
+    >
+      {[...Array(12).keys()].map((m) => (
+        <option key={m + 1} value={m + 1}>
+          {new Date(0, m).toLocaleString("default", { month: "long" })}
+        </option>
+      ))}
+    </select>
+
+    <select
+      value={selectedYear}
+      onChange={(e) => setSelectedYear(e.target.value)}
+      className="px-3 py-1 border rounded shadow-sm text-sm sm:text-base"
+    >
+      {[2024, 2025, 2026].map((y) => (
+        <option key={y} value={y}>
+          {y}
+        </option>
+      ))}
+    </select>
+  </div>
+</div>
+
+<div className="flex-grow p-4 sm:p-6">
 
         {filteredApprovals.length === 0 ? (
           <p>No applications for this period.</p>
         ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full bg-white shadow-md rounded-lg overflow-hidden">
+          <div className="overflow-x-auto w-full">
+  <table className="min-w-full bg-white shadow-md rounded-lg overflow-hidden 
+                   text-[10px] sm:text-sm md:text-base 
+                   table-auto border-collapse">
               <thead className="bg-indigo-200 text-indigo-900 text-sm border-b border-black">
                 <tr>
-                  <th className="px-4 py-2 text-left">Employee</th>
-                  <th className="px-4 py-2 text-left">Department</th>
-                  <th className="px-4 py-2 text-left">Submission Date</th>
-                  <th className="px-4 py-2 text-left">Period</th>
-                  <th className="px-4 py-2 text-left">Reason</th>
-                  <th className="px-4 py-2 text-left">Application Type</th>
-                  <th className="px-4 py-2 text-left">Paid Leave</th>
-                  <th className="px-4 py-2 text-left">Level</th>
-                  <th className="px-4 py-2 text-left">Status</th>
+                  <th className="px-2 sm:px-4 py-1.5 sm:py-2 text-left text-[10px] sm:text-sm">Employee</th>
+                  <th className="px-2 sm:px-4 py-1.5 sm:py-2 text-left text-[10px] sm:text-sm">Department</th>
+                  <th className="px-2 sm:px-4 py-1.5 sm:py-2 text-left text-[10px] sm:text-sm">Submission Date</th>
+                  <th className="px-2 sm:px-4 py-1.5 sm:py-2 text-left text-[10px] sm:text-sm">Period</th>
+                  <th className="px-2 sm:px-4 py-1.5 sm:py-2 text-left text-[10px] sm:text-sm">Reason</th>
+                  <th className="px-2 sm:px-4 py-1.5 sm:py-2 text-left text-[10px] sm:text-sm">Application Type</th>
+                  <th className="px-2 sm:px-4 py-1.5 sm:py-2 text-left text-[10px] sm:text-sm">Paid Leave</th>
+                  <th className="px-2 sm:px-4 py-1.5 sm:py-2 text-left text-[10px] sm:text-sm">Level</th>
+                  <th className="px-2 sm:px-4 py-1.5 sm:py-2 text-left text-[10px] sm:text-sm">Status</th>
                   <th className="px-4 py-2 text-center">Action</th>
                 </tr>
               </thead>
@@ -191,16 +220,16 @@ function MyApprovals() {
                         : ""
                     }`}
                   >
-                    <td className="px-4 py-2">
+                    <td className="px-1 sm:px-3 py-1.5 sm:py-2 break-words whitespace-normal text-[10px] sm:text-sm">
                       {a.employee_name} ({a.employee_id})
                     </td>
-                    <td className="px-4 py-2">{a.department || "-"}</td>
-                    <td className="px-4 py-2">
+                    <td className="px-1 sm:px-3 py-1.5 sm:py-2 break-words whitespace-normal text-[10px] sm:text-sm">{a.department || "-"}</td>
+                    <td className="px-1 sm:px-3 py-1.5 sm:py-2 break-words whitespace-normal text-[10px] sm:text-sm">
                       {a.created_at
                         ? new Date(a.created_at).toLocaleDateString()
                         : "—"}
                     </td>
-                    <td className="px-4 py-2">
+                    <td className="px-1 sm:px-3 py-1.5 sm:py-2 break-words whitespace-normal text-[10px] sm:text-sm">
                       {a.start_date} → {a.end_date}
                     </td>
                     <td
@@ -211,18 +240,18 @@ function MyApprovals() {
                     >
                       {previewReason(a.reason)}
                     </td>
-                    <td className="px-4 py-2">{a.application_type}</td>
-<td className="px-4 py-2">
-  {a.use_paid_holiday === "yes" ? (
-    <span className="text-green-700 font-semibold">Yes</span>
-  ) : (
-    <span className="text-gray-600 font-semibold">No</span>
-  )}
-</td>
-                    <td className="px-4 py-2">{a.level}</td>
+                    <td className="px-1 sm:px-3 py-1.5 sm:py-2 break-words whitespace-normal text-[10px] sm:text-sm">{a.application_type}</td>
+                    <td className="px-1 sm:px-3 py-1.5 sm:py-2 break-words whitespace-normal text-[10px] sm:text-sm">
+                      {a.use_paid_holiday === "yes" ? (
+                        <span className="text-green-700 font-semibold">Yes</span>
+                      ) : (
+                        <span className="text-gray-600 font-semibold">No</span>
+                        )}
+                    </td>
+                    <td className="px-1 sm:px-3 py-1.5 sm:py-2 break-words whitespace-normal text-[10px] sm:text-sm">{a.level}</td>
 
                     {/* Status Column */}
-                    <td className="px-4 py-2">
+                    <td className="px-1 sm:px-3 py-1.5 sm:py-2 break-words whitespace-normal text-[10px] sm:text-sm">
                       {a.status === "Rejected" && a.rejection_message ? (
                         <span className="text-red-600 font-bold">
                           {a.rejection_message}
@@ -257,7 +286,7 @@ function MyApprovals() {
                                     details: a,
                                   })
                                 }
-                                className="px-3 py-1 bg-green-500 hover:bg-green-600 text-white rounded flex items-center gap-1"
+                                className="px-2 sm:px-3 py-1 text-xs sm:text-sm bg-green-500 hover:bg-green-600 text-white rounded flex items-center gap-1"
                               >
                                 <CheckCircleIcon className="h-4 w-4" /> Approve
                               </button>
@@ -270,7 +299,7 @@ function MyApprovals() {
                                     details: a,
                                   })
                                 }
-                                className="px-3 py-1 bg-red-500 hover:bg-red-600 text-white rounded flex items-center gap-1"
+                                className="px-2 sm:px-3 py-1 text-xs sm:text-sm bg-red-500 hover:bg-red-600 text-white rounded flex items-center gap-1"
                               >
                                 <XCircleIcon className="h-4 w-4" /> Reject
                               </button>
@@ -306,7 +335,7 @@ function MyApprovals() {
       {/* Reason Modal */}
       {reasonModal.show && (
         <div className="fixed inset-0 bg-black bg-opacity-40 flex justify-center items-center z-50">
-          <div className="bg-white p-6 rounded-xl shadow-lg max-w-lg w-full">
+          <div className="bg-white p-4 sm:p-6 rounded-xl shadow-lg max-w-[90vw] sm:max-w-lg w-full mx-2">
             <h2 className="text-lg font-bold mb-3 text-indigo-700">
               Application Reason
             </h2>
@@ -328,7 +357,7 @@ function MyApprovals() {
       {/* Confirmation Modal */}
       {confirmModal.show && (
         <div className="fixed inset-0 bg-black bg-opacity-40 flex justify-center items-center z-50">
-          <div className="bg-white p-6 rounded-xl shadow-lg max-w-md w-full text-center">
+          <div className="bg-white p-4 sm:p-6 rounded-xl shadow-lg max-w-[90vw] sm:max-w-md w-full text-center mx-2">
             <p className="font-bold text-lg text-gray-800 mb-3">
               Confirm {confirmModal.status}
             </p>
@@ -348,14 +377,18 @@ function MyApprovals() {
             </p>
             <p>Application Type: {confirmModal.details.application_type}</p>
             <div className="flex justify-center gap-3 mt-4">
-              <button
-                onClick={() =>
-                  updateStatus(confirmModal.approverId, confirmModal.status)
-                }
-                className="px-5 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg shadow"
-              >
-                Yes, {confirmModal.status}
-              </button>
+<button
+  onClick={() =>
+    updateStatus(confirmModal.approverId, confirmModal.status)
+  }
+  className={`px-5 py-2 text-white rounded-lg shadow transition-all duration-200 ${
+    confirmModal.status === "Rejected"
+      ? "bg-red-600 hover:bg-red-700"
+      : "bg-green-600 hover:bg-green-700"
+  }`}
+>
+  Yes, {confirmModal.status}
+</button>
               <button
                 onClick={() =>
                   setConfirmModal({

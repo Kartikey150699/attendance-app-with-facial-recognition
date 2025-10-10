@@ -194,10 +194,13 @@ useEffect(() => {
   };
 
   return (
-    <div className="flex flex-col min-h-screen bg-gradient-to-tr from-blue-300 via-indigo-200 to-cyan-300 overflow-x-hidden">
-{/* Header */}
-{/* Midnight Glass Header */}
-<header className="relative w-full bg-gradient-to-r from-slate-800 via-gray-800 to-slate-900 text-white shadow-xl overflow-hidden border-b border-gray-700/30">
+<div className="relative flex flex-col min-h-screen overflow-x-hidden bg-gradient-to-br from-cyan-100 via-sky-200 to-blue-300 text-gray-900">
+  {/* Soft glow blobs for ambient light */}
+  <div className="absolute -top-20 left-20 w-[600px] h-[600px] bg-cyan-300/20 blur-[200px] rounded-full"></div>
+  <div className="absolute bottom-0 right-0 w-[500px] h-[500px] bg-blue-400/20 blur-[200px] rounded-full"></div>
+
+
+  <header className="relative w-full bg-gradient-to-r from-slate-800 via-gray-800 to-slate-900 text-white shadow-xl overflow-hidden border-b border-gray-700/30">
   {/* Frosted overlay for glass effect */}
   <div className="absolute inset-0 bg-gradient-to-tr from-white/10 via-transparent to-white/5 backdrop-blur-md"></div>
 
@@ -250,7 +253,7 @@ useEffect(() => {
     setAction("checkin");
     setShowCamera(true);
   }}
-  className="relative w-[85%] md:w-[90%] lg:w-[70%] h-40 sm:h-48 bg-green-500 hover:bg-green-600 hover:scale-105 active:scale-95 
+  className="relative w-[85%] md:w-[90%] lg:w-[70%] h-40 sm:h-48 bg-gradient-to-r from-green-700 via-emerald-600 to-teal-500 hover:from-green-400 hover:to-emerald-500 shadow-[0_0_20px_rgba(34,197,94,0.4)] hover:shadow-[0_0_35px_rgba(34,197,94,0.6)] hover:scale-105 active:scale-95 
              transition-transform duration-200 text-white text-4xl font-semibold 
              rounded-xl shadow-lg flex flex-col items-center justify-center overflow-hidden"
 >
@@ -271,11 +274,9 @@ useEffect(() => {
     setAction("checkout");
     setShowCamera(true);
   }}
-  className="relative w-[85%] md:w-[90%] lg:w-[70%] h-48 bg-red-500 hover:bg-red-600 hover:scale-105 active:scale-95 
-             transition-transform duration-200 text-white text-4xl font-semibold 
-             rounded-xl shadow-lg flex flex-col items-center justify-center overflow-hidden"
->
-  <span className="absolute inset-0 bg-[repeating-linear-gradient(45deg,rgba(255,255,255,0.08)_0,rgba(255,255,255,0.08)_2px,transparent_2px,transparent_6px)]"></span>
+  className="relative w-[85%] md:w-[90%] lg:w-[70%] h-40 sm:h-48 bg-gradient-to-r from-red-700 via-rose-400 to-pink-300 hover:from-red-400 hover:to-rose-500 shadow-[0_0_20px_rgba(244,63,94,0.4)] hover:shadow-[0_0_35px_rgba(244,63,94,0.6)] hover:scale-105 active:scale-95 
+             transition-transform duration-300 text-white text-4xl font-semibold rounded-xl flex flex-col items-center justify-center overflow-hidden">
+  <div className="absolute inset-0 bg-[repeating-linear-gradient(45deg,rgba(255,255,255,0.08)_0,rgba(255,255,255,0.08)_2px,transparent_2px,transparent_6px)]"></div>
   <span className="relative flex flex-col items-center justify-center">
     <ClockIcon className="h-16 w-16 mb-4" />
     <span>Check Out</span>
@@ -288,11 +289,9 @@ useEffect(() => {
     setAction("break");
     setShowCamera(true);
   }}
-  className="relative w-[85%] md:w-[90%] lg:w-[70%] h-48 bg-yellow-400 hover:bg-yellow-500 hover:scale-105 active:scale-95 
-             transition-transform duration-200 text-white text-4xl font-semibold 
-             rounded-xl shadow-lg flex flex-col items-center justify-center overflow-hidden"
->
-  <span className="absolute inset-0 bg-[repeating-linear-gradient(45deg,rgba(255,255,255,0.15)_0,rgba(255,255,255,0.15)_2px,transparent_2px,transparent_6px)]"></span>
+  className="relative w-[85%] md:w-[90%] lg:w-[70%] h-40 sm:h-48 bg-gradient-to-r from-yellow-700 via-amber-400 to-orange-300 hover:from-yellow-300 hover:to-amber-400 shadow-[0_0_20px_rgba(250,204,21,0.4)] hover:shadow-[0_0_35px_rgba(250,204,21,0.6)] hover:scale-105 active:scale-95 
+             transition-transform duration-300 text-white text-4xl font-semibold rounded-xl flex flex-col items-center justify-center overflow-hidden">
+  <div className="absolute inset-0 bg-[repeating-linear-gradient(45deg,rgba(255,255,255,0.1)_0,rgba(255,255,255,0.1)_2px,transparent_2px,transparent_6px)]"></div>
   <span className="relative flex flex-col items-center justify-center">
     <PauseCircleIcon className="h-16 w-16 mb-4" />
     <span>Break</span>
@@ -301,19 +300,16 @@ useEffect(() => {
 
 {/* Work Application */}
 <button
-  onClick={() => {
-    navigate("/work-application-login");
-  }}
-  className="relative w-[85%] md:w-[90%] lg:w-[70%] h-48 bg-purple-500 hover:bg-purple-600 hover:scale-105 active:scale-95 
-             transition-transform duration-200 text-white text-4xl font-semibold 
-             rounded-xl shadow-lg flex flex-col items-center justify-center overflow-hidden"
->
-  <span className="absolute inset-0 bg-[repeating-linear-gradient(45deg,rgba(255,255,255,0.1)_0,rgba(255,255,255,0.1)_2px,transparent_2px,transparent_6px)]"></span>
+  onClick={() => navigate("/work-application-login")}
+  className="relative w-[85%] md:w-[90%] lg:w-[70%] h-40 sm:h-48 bg-gradient-to-r from-indigo-500 via-purple-400 to-pink-400 hover:from-indigo-400 hover:to-purple-500 shadow-[0_0_20px_rgba(168,85,247,0.4)] hover:shadow-[0_0_35px_rgba(168,85,247,0.6)] hover:scale-105 active:scale-95 
+             transition-transform duration-300 text-white text-4xl font-semibold rounded-xl flex flex-col items-center justify-center overflow-hidden">
+  <div className="absolute inset-0 bg-[repeating-linear-gradient(45deg,rgba(255,255,255,0.08)_0,rgba(255,255,255,0.08)_2px,transparent_2px,transparent_6px)]"></div>
   <span className="relative flex flex-col items-center justify-center">
     <ClipboardDocumentListIcon className="h-16 w-16 mb-4" />
     <span>Work Application</span>
   </span>
 </button>
+
           </div>
         ) : (
           <div className="flex flex-col items-center w-full gap-12 mt-4 sm:mt-6 md:mt-8 lg:mt-0">
@@ -342,8 +338,7 @@ useEffect(() => {
   ref={(el) => {
     if (el) setDisplayWidth(el.offsetWidth);
   }}
-  className="relative border-[4px] sm:border-[6px] border-blue-800 rounded-lg shadow-2xl inline-block w-full sm:w-auto max-w-full"
-  style={{
+className="relative border border-white/10 rounded-2xl shadow-[0_0_25px_rgba(56,189,248,0.3)] bg-white/10 backdrop-blur-xl transition-all duration-300 hover:shadow-[0_0_35px_rgba(56,189,248,0.5)] inline-block w-full sm:w-auto max-w-full"  style={{
     width: "100%",
     maxWidth: "580px",
     height: window.innerWidth >= 1024 ? "355px" : "auto",
@@ -434,8 +429,7 @@ useEffect(() => {
 
               {/* Status Panel */}
               <div
-  className="w-full lg:w-[37%] bg-white border-[4px] sm:border-[6px] border-indigo-700 rounded-xl shadow-2xl p-4 sm:p-6 flex flex-col items-center mt-6 lg:mt-0"
-  style={{ minHeight: "355px" }}
+className="w-full lg:w-[37%] bg-white/10 backdrop-blur-xl border border-white/10 rounded-2xl shadow-[0_0_25px_rgba(99,102,241,0.3)] p-6 flex flex-col items-center transition-all duration-300 hover:shadow-[0_0_40px_rgba(99,102,241,0.5)]"  style={{ minHeight: "355px" }}
 >
                 <h2 className="text-2xl font-bold text-indigo-700 mb-6 flex items-center gap-2">
                   {action === "checkin" ? (
