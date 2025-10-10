@@ -315,6 +315,7 @@ def list_by_approver(employee_id: str, db: Session = Depends(get_db)):
             "employee_name": applicant.name if applicant else "Unknown",
             "department": applicant.department if applicant else None,
             "application_type": work_app.application_type,
+            "use_paid_holiday": work_app.use_paid_holiday,
             "created_at": work_app.created_at,
             "start_date": str(work_app.start_date) if work_app.start_date else None,
             "end_date": str(work_app.end_date) if work_app.end_date else None,

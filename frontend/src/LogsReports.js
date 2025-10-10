@@ -213,7 +213,7 @@ const getDecidedShift = (empId, dateStr) => {
   .filter((log) => {
     const logDate = parseLocalDate(log.date);
 
-    // --- Fix: Date filter ---
+    // --- Date filter ---
     if (selectedDate) {
       const logDateStr = parseLocalDate(log.date).toISOString().split("T")[0];
       if (logDateStr !== selectedDate) return false;
@@ -317,29 +317,52 @@ const toggleRow = (i) => {
   return (
     <div className="flex flex-col min-h-screen bg-gradient-to-tr from-gray-100 via-indigo-100 to-blue-200">
       {/* Header */}
-      <div className="w-full flex items-center justify-center px-10 py-4 bg-indigo-300 shadow-md relative">
-        <div className="absolute left-10 text-blue-800 text-xl font-bold">
-          <HeaderDateTime />
-        </div>
-        <h1
-          onClick={() => {
-            localStorage.removeItem("currentAdmin");
-            navigate("/admin-login", { replace: true });
-            navigate("/", { replace: false });
-          }}
-          className="text-5xl font-bold text-blue-900 cursor-pointer hover:text-blue-700 transition-colors"
-        >
-          FaceTrack Attendance
-        </h1>
-        <div className="absolute right-10">
-          <button
-            onClick={() => navigate("/hr-portal")}
-            className="w-40 px-6 py-3 bg-red-500 hover:bg-red-600 text-white font-bold rounded-lg shadow flex items-center justify-center gap-2"
-          >
-            <ArrowUturnLeftIcon className="h-5 w-5" /> Back
-          </button>
-        </div>
+{/* Midnight Glass Header */}
+<header className="relative w-full bg-gradient-to-r from-slate-800 via-gray-800 to-slate-900 text-white shadow-xl overflow-hidden border-b border-gray-700/30 mb-10">
+  {/* Frosted glass overlay */}
+  <div className="absolute inset-0 bg-gradient-to-tr from-white/10 via-transparent to-white/5 backdrop-blur-md"></div>
+
+  {/* Header Content */}
+  <div className="relative z-10 flex flex-col sm:flex-row items-center justify-between px-6 sm:px-10 lg:px-16 py-4 sm:py-5">
+
+    {/* Left: Logo + Title */}
+    <div
+      onClick={() => {
+        localStorage.removeItem("currentAdmin");
+        navigate("/", { replace: true });
+      }}
+      className="flex items-center gap-3 cursor-pointer transition-transform duration-300 hover:scale-105"
+    >
+      <img
+        src={`${process.env.PUBLIC_URL}/favicon.png`}
+        alt="FaceTrack Logo"
+        className="w-10 h-10 sm:w-12 sm:h-12 rounded-full shadow-md border border-white/20 bg-white/10 p-1 object-contain"
+      />
+      <h1 className="text-3xl sm:text-4xl font-extrabold tracking-tight text-white drop-shadow-sm">
+        FaceTrack <span className="font-light text-gray-300 ml-1">Reports</span>
+      </h1>
+    </div>
+
+    {/* Right: Date & Time + Back Button */}
+    <div className="flex flex-col sm:flex-row items-center justify-end gap-2 sm:gap-4 mt-3 sm:mt-0">
+      {/* Date & Time */}
+      <div className="text-center text-sm sm:text-base md:text-lg font-semibold text-white tracking-wide drop-shadow-md order-2 sm:order-1">
+        <HeaderDateTime />
       </div>
+
+      {/* Back Button */}
+      <button
+        onClick={() => navigate("/hr-portal")}
+        className="order-1 sm:order-2 px-5 sm:px-6 py-2.5 rounded-xl bg-gradient-to-r from-red-500 via-pink-500 to-rose-500 
+                   hover:from-red-600 hover:to-rose-600 text-white font-semibold shadow-lg hover:shadow-xl 
+                   transition-all duration-300 flex items-center gap-2"
+      >
+        <ArrowUturnLeftIcon className="h-5 w-5" />
+        Back
+      </button>
+    </div>
+  </div>
+</header>
 
       {/* Individual OR Main View */}
       {selectedUser ? (
@@ -396,8 +419,8 @@ const toggleRow = (i) => {
 </div>
 
 {/* ------------------- Attendance + Summary Table ------------------- */}
-<div className="bg-white rounded-lg shadow p-6 mb-10">
-  <table className="min-w-full border-collapse text-sm">
+<div className="bg-white rounded-lg shadow p-4 sm:p-6 mb-10 overflow-x-auto">
+  <table className="min-w-[900px] sm:min-w-full border-collapse text-xs sm:text-sm">
     <thead className="bg-gray-200 text-gray-700 sticky top-0 z-10">
       <tr>
         <th className="p-2 border">Date</th>
@@ -1032,34 +1055,33 @@ if (logDate > today) {
           </div>
 
 {/* Filters */}
-<div className="max-w-7xl w-full mx-auto px-6 mb-6">
-  <div className="flex flex-wrap gap-4 justify-between items-center bg-white p-5 rounded-lg shadow text-lg">
-    {/* Search */}
+<div className="max-w-7xl w-full mx-auto px-4 sm:px-6 mb-6">
+<div className="flex flex-wrap justify-center sm:justify-between items-center gap-4 sm:gap-6 bg-white p-4 sm:p-5 rounded-lg shadow text-base sm:text-lg text-center">    {/* Search */}
     <div className="flex items-center gap-2">
       <MagnifyingGlassIcon className="h-6 w-6 text-indigo-600" />
-      <input
-        type="text"
-        value={search}
-        onChange={(e) => setSearch(e.target.value)}
-        placeholder="Search logs..."
-        className="px-4 py-2 border rounded-md shadow-sm text-base focus:ring-2 focus:ring-indigo-400"
-      />
+<input
+  type="text"
+  value={search}
+  onChange={(e) => setSearch(e.target.value)}
+  placeholder="Search logs..."
+  className="flex-1 sm:flex-none w-full sm:w-64 px-3 py-2 border rounded-md shadow-sm text-sm sm:text-base focus:ring-2 focus:ring-indigo-400 text-center placeholder:text-center"
+/>
     </div>
 
     {/* Date Filter */}
-    <input
-      type="date"
-      value={selectedDate}
-      max={todayStr}
-      onChange={(e) => {
-        setSelectedDate(e.target.value);
-        setQuickFilter(null);
-      }}
-      className="px-3 py-2 border rounded-md text-base"
-    />
+<input
+  type="date"
+  value={selectedDate}
+  max={todayStr}
+  onChange={(e) => {
+    setSelectedDate(e.target.value);
+    setQuickFilter(null);
+  }}
+  className="px-3 py-2 border rounded-md text-sm sm:text-base w-44 sm:w-auto text-center"
+/>
 
     {/* Quick Filters */}
-    <div className="flex gap-2">
+    <div className="flex flex-wrap gap-2 w-full sm:w-auto justify-center">
       <button
         onClick={() => {
           setQuickFilter("week");
@@ -1090,11 +1112,11 @@ if (logDate > today) {
 
     {/* Rows per page */}
     <div>
-      <select
-        value={rowsPerPage}
-        onChange={(e) => setRowsPerPage(Number(e.target.value))}
-        className="px-3 py-2 border rounded-md text-base"
-      >
+<select
+  value={rowsPerPage}
+  onChange={(e) => setRowsPerPage(Number(e.target.value))}
+  className="px-3 py-2 border rounded-md text-sm sm:text-base w-44 sm:w-auto text-center"
+>
         {[10, 20, 50].map((num) => (
           <option key={num} value={num}>
             {num} rows
@@ -1104,10 +1126,10 @@ if (logDate > today) {
     </div>
 
     {/* Reset */}
-    <button
-      onClick={resetFilters}
-      className="flex items-center gap-2 px-4 py-2 bg-gray-200 hover:bg-gray-300 rounded-md shadow text-base font-semibold"
-    >
+<button
+  onClick={resetFilters}
+  className="flex items-center justify-center gap-2 px-4 py-2 bg-gray-200 hover:bg-gray-300 rounded-md shadow text-sm sm:text-base font-semibold w-full sm:w-auto"
+>
       <ArrowPathIcon className="h-5 w-5" />
       Reset
     </button>
@@ -1115,11 +1137,13 @@ if (logDate > today) {
 </div>
 
           {/* Logs Table */}
-          <div className="max-w-7xl w-full mx-auto px-6 flex-grow mb-12">
-            <table className="w-full border-collapse bg-white shadow-lg rounded-xl overflow-hidden text-lg">
+          <div className="max-w-7xl w-full mx-auto px-2 sm:px-6 flex-grow mb-12">
+            <div className="overflow-x-auto rounded-xl shadow-lg bg-white 
+                  w-[95%] sm:w-[90%] md:w-full mx-auto">
+              <table className="min-w-[800px] sm:min-w-full border-collapse text-sm sm:text-lg">
               <thead>
-                <tr className="bg-indigo-500 text-white text-lg">
-                  <th className="p-4 cursor-pointer" onClick={() => requestSort("date")}>
+                <tr className="bg-indigo-500 text-white text-xs sm:text-sm md:text-base lg:text-lg">
+                  <th className="p-2 sm:p-3 md:p-4 cursor-pointer" onClick={() => requestSort("date")}>
                     Date {getArrow("date")}
                   </th>
                   <th className="p-4">Employee ID</th>
@@ -1180,35 +1204,36 @@ if (logDate > today) {
     </tr>
   )}
 </tbody>
-            </table>
+      </table>
+      </div>
 
             {/* Pagination */}
-            <div className="flex justify-between items-center mt-6">
-              <button
-                disabled={currentPage === 1}
-                onClick={() => setCurrentPage((prev) => prev - 1)}
-                className={`px-4 py-2 rounded-md font-semibold shadow ${
-                  currentPage === 1
-                    ? "bg-gray-300 text-gray-600 cursor-not-allowed"
-                    : "bg-indigo-600 text-white hover:bg-indigo-700"
-                }`}
-              >
-                Previous
-              </button>
+            <div className="flex flex-wrap justify-center sm:justify-between items-center gap-3 mt-6 px-2 text-center">
+<button
+  disabled={currentPage === 1}
+  onClick={() => setCurrentPage((prev) => prev - 1)}
+  className={`px-3 sm:px-4 py-2 rounded-md font-semibold shadow text-sm sm:text-base ${
+    currentPage === 1
+      ? "bg-gray-300 text-gray-600 cursor-not-allowed"
+      : "bg-indigo-600 text-white hover:bg-indigo-700"
+  }`}
+>
+  Previous
+</button>
               <span className="text-lg font-semibold">
                 Page {currentPage} of {totalPages || 1}
               </span>
-              <button
-                disabled={currentPage === totalPages || totalPages === 0}
-                onClick={() => setCurrentPage((prev) => prev + 1)}
-                className={`px-4 py-2 rounded-md font-semibold shadow ${
-                  currentPage === totalPages || totalPages === 0
-                    ? "bg-gray-300 text-gray-600 cursor-not-allowed"
-                    : "bg-indigo-600 text-white hover:bg-indigo-700"
-                }`}
-              >
-                Next
-              </button>
+<button
+  disabled={currentPage === totalPages || totalPages === 0}
+  onClick={() => setCurrentPage((prev) => prev + 1)}
+  className={`px-3 sm:px-4 py-2 rounded-md font-semibold shadow text-sm sm:text-base ${
+    currentPage === totalPages || totalPages === 0
+      ? "bg-gray-300 text-gray-600 cursor-not-allowed"
+      : "bg-indigo-600 text-white hover:bg-indigo-700"
+  }`}
+>
+  Next
+</button>
             </div>
           </div>
         </>

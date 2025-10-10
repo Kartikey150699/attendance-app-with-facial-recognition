@@ -219,7 +219,7 @@ const getStatusClass = (status) => {
         className="w-10 h-10 sm:w-12 sm:h-12 rounded-full shadow-md border border-white/20 bg-white/10 p-1 object-contain"
       />
       <h1 className="text-3xl sm:text-4xl font-extrabold tracking-tight text-white drop-shadow-sm">
-        FaceTrack <span className="font-light text-gray-300 ml-1">Attendance</span>
+        FaceTrack <span className="font-light text-gray-300 ml-1">Users</span>
       </h1>
     </div>
 

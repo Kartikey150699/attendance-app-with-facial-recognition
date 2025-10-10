@@ -176,113 +176,161 @@ function WorkApplication() {
   return (
     <div className="flex flex-col min-h-screen bg-gradient-to-tr from-gray-100 via-indigo-100 to-blue-200 overflow-x-hidden">
       {/* Header */}
-      <div className="w-full flex items-center justify-center px-10 py-4 bg-indigo-300 shadow-md relative">
-        <div className="absolute left-10 text-blue-800 text-xl font-bold">
-          <HeaderDateTime />
-        </div>
-        <h1
-          onClick={() => navigate("/", { replace: true })}
-          className="text-5xl font-bold text-blue-900 cursor-pointer hover:text-blue-700 transition-colors"
-        >
-          FaceTrack Attendance
-        </h1>
-        <div className="absolute right-10">
-          <button
-            onClick={() => {
-              localStorage.removeItem("user");
-              localStorage.removeItem("employeeId");
-              navigate("/work-application-login", { replace: true });
-              window.location.reload();
-            }}
-            className="w-40 px-6 py-3 bg-red-500 hover:bg-red-600 hover:scale-105 active:scale-95 
-                       transition-transform duration-200 text-white font-bold rounded-lg shadow flex items-center justify-center gap-2"
-          >
-            <ArrowRightOnRectangleIcon className="h-5 w-5 text-white" />
-            <span>Logout</span>
-          </button>
-        </div>
+{/* Midnight Glass Header */}
+<header className="relative w-full bg-gradient-to-r from-slate-800 via-gray-800 to-slate-900 text-white shadow-xl overflow-hidden border-b border-gray-700/30">
+  {/* Frosted glass overlay */}
+  <div className="absolute inset-0 bg-gradient-to-tr from-white/10 via-transparent to-white/5 backdrop-blur-md"></div>
+
+  {/* Header Content */}
+  <div className="relative z-10 flex flex-col sm:flex-row items-center justify-between px-6 sm:px-10 lg:px-16 py-4 sm:py-5">
+
+    {/* Left: Logo + Title */}
+    <div
+      onClick={() => navigate("/", { replace: true })}
+      className="flex items-center gap-3 cursor-pointer transition-transform duration-300 hover:scale-105"
+    >
+      <img
+        src={`${process.env.PUBLIC_URL}/favicon.png`}
+        alt="FaceTrack Logo"
+        className="w-10 h-10 sm:w-12 sm:h-12 rounded-full shadow-md border border-white/20 bg-white/10 p-1 object-contain"
+      />
+      <h1 className="text-3xl sm:text-4xl font-extrabold tracking-tight text-white drop-shadow-sm">
+        FaceTrack <span className="font-light text-gray-300 ml-1">Work Application</span>
+      </h1>
+    </div>
+
+    {/* Right: Date & Time + Logout */}
+    <div className="flex flex-col sm:flex-row items-center justify-end gap-3 sm:gap-5 mt-3 sm:mt-0">
+      {/* Date & Time */}
+      <div className="text-center text-sm sm:text-base md:text-lg font-semibold text-white tracking-wide drop-shadow-md order-2 sm:order-1">
+        <HeaderDateTime />
       </div>
 
-      {/* Remaining Paid Holidays + Action Buttons */}
-      <div className="flex justify-between items-center px-10 mt-4">
-        <div
-          className={`shadow-md rounded-lg px-6 py-3 flex items-center gap-2 text-lg font-semibold ${
-            remainingDays === 0
-              ? "bg-red-100 text-red-700 border border-red-400"
-              : "bg-green-100 text-green-700 border border-green-400"
-          }`}
-        >
-          <GiftIcon
-            className={`h-6 w-6 ${
-              remainingDays === 0 ? "text-red-600" : "text-green-600"
-            }`}
-          />
-          Remaining Paid Holidays:{" "}
-          <span>{remainingDays !== null ? remainingDays : "Loading..."}</span>
-        </div>
+      {/* Logout Button */}
+      <button
+        onClick={() => {
+          localStorage.removeItem("user");
+          localStorage.removeItem("employeeId");
+          navigate("/work-application-login", { replace: true });
+          window.location.reload();
+        }}
+        className="order-1 sm:order-2 px-5 sm:px-6 py-2.5 rounded-xl bg-gradient-to-r from-red-500 via-pink-500 to-rose-500 
+                   hover:from-red-600 hover:to-rose-600 text-white font-semibold shadow-lg hover:shadow-xl 
+                   transition-all duration-300 flex items-center gap-2"
+      >
+        <ArrowRightOnRectangleIcon className="h-5 w-5" />
+        Logout
+      </button>
+    </div>
+  </div>
+</header>
 
-        <div className="flex gap-3 relative">
-          {/* My Approvals with Notification Badge */}
-          <div className="relative">
-            <button
-              onClick={() => navigate("/my-approvals", { state: { employeeId } })}
-              className="px-5 py-2 bg-purple-600 hover:bg-purple-700 text-white font-bold rounded-lg shadow flex items-center gap-2 
-                         transition-transform hover:scale-105 active:scale-95 relative"
-            >
-              <CheckCircleIcon className="h-5 w-5" />
-              My Approvals
-            </button>
-            {pendingApprovals > 0 && (
-              <span className="absolute -top-2 -right-2 bg-red-600 text-white text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center shadow">
-                {pendingApprovals}
-              </span>
-            )}
-          </div>
+{/* Remaining Paid Holidays + Action Buttons */}
+<div className="flex flex-col items-center justify-center gap-4 px-3 sm:px-5 md:px-10 mt-6 text-center">
 
-          <button
-            onClick={() =>
-              navigate("/your-applications", { state: { user, employeeId } })
-            }
-            className="px-5 py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-lg shadow flex items-center gap-2 
-                       transition-transform hover:scale-105 active:scale-95"
-          >
-            <ClipboardDocumentListIcon className="h-5 w-5" />
-            Your Applications
-          </button>
-          <button
-            onClick={() => navigate("/calendar-view", { state: { from: "work" } })}
-            className="px-5 py-2 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-lg shadow flex items-center gap-2 
-                       transition-transform hover:scale-105 active:scale-95"
-          >
-            <BuildingOffice2Icon className="h-5 w-5" />
-            Holiday Calendar
-          </button>
-          <button
-            onClick={() =>
-              navigate("/my-attendance", { state: { user, employeeId } })
-            }
-            className="px-5 py-2 bg-green-600 hover:bg-green-700 text-white font-bold rounded-lg shadow flex items-center gap-2 
-                       transition-transform hover:scale-105 active:scale-95"
-          >
-            <ClockIcon className="h-5 w-5" />
-            My Attendance
-          </button>
-        </div>
-      </div>
+  {/* Row 1 — Remaining Paid Holidays */}
+  <div
+    className={`shadow-md rounded-lg px-4 sm:px-5 md:px-6 py-2 sm:py-3 
+                flex items-center justify-center gap-2 
+                text-sm sm:text-base md:text-lg font-semibold whitespace-nowrap w-full max-w-[500px]
+                ${
+                  remainingDays === 0
+                    ? "bg-red-100 text-red-700 border border-red-400"
+                    : "bg-green-100 text-green-700 border border-green-400"
+                }`}
+  >
+    <GiftIcon
+      className={`h-5 w-5 md:h-6 md:w-6 ${
+        remainingDays === 0 ? "text-red-600" : "text-green-600"
+      }`}
+    />
+    <span>
+      Remaining Paid Holidays:{" "}
+      {remainingDays !== null ? remainingDays : "Loading..."}
+    </span>
+  </div>
+
+  {/* Row 2 — Action Buttons (Responsive 2x2 Grid) */}
+  <div
+    className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-2 gap-3 sm:gap-4 
+               w-full max-w-[500px] sm:max-w-[550px] md:max-w-[600px]"
+  >
+    {/* My Approvals */}
+    <div className="relative flex justify-center">
+      <button
+        onClick={() => navigate("/my-approvals", { state: { employeeId } })}
+        className="w-full h-[45px] sm:h-[48px] md:h-[50px]
+                   bg-purple-600 hover:bg-purple-700 text-white font-semibold 
+                   rounded-md shadow flex items-center justify-center gap-1 
+                   transition-transform hover:scale-105 active:scale-95 text-xs sm:text-sm md:text-base"
+      >
+        <CheckCircleIcon className="h-4 w-4 md:h-5 md:w-5" />
+        My Approvals
+      </button>
+      {pendingApprovals > 0 && (
+        <span className="absolute -top-1.5 -right-1.5 bg-red-600 text-white text-[10px] font-bold rounded-full w-4 h-4 flex items-center justify-center shadow">
+          {pendingApprovals}
+        </span>
+      )}
+    </div>
+
+    {/* Your Applications */}
+    <button
+      onClick={() =>
+        navigate("/your-applications", { state: { user, employeeId } })
+      }
+      className="w-full h-[45px] sm:h-[48px] md:h-[50px]
+                 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold 
+                 rounded-md shadow flex items-center justify-center gap-1 
+                 transition-transform hover:scale-105 active:scale-95 text-xs sm:text-sm md:text-base"
+    >
+      <ClipboardDocumentListIcon className="h-4 w-4 md:h-5 md:w-5" />
+      Your Applications
+    </button>
+
+    {/* Holiday Calendar */}
+    <button
+      onClick={() => navigate("/calendar-view", { state: { from: 'work' } })}
+      className="w-full h-[45px] sm:h-[48px] md:h-[50px]
+                 bg-blue-600 hover:bg-blue-700 text-white font-semibold 
+                 rounded-md shadow flex items-center justify-center gap-1 
+                 transition-transform hover:scale-105 active:scale-95 text-xs sm:text-sm md:text-base"
+    >
+      <BuildingOffice2Icon className="h-4 w-4 md:h-5 md:w-5" />
+      Holiday Calendar
+    </button>
+
+    {/* My Attendance */}
+    <button
+      onClick={() =>
+        navigate("/my-attendance", { state: { user, employeeId } })
+      }
+      className="w-full h-[45px] sm:h-[48px] md:h-[50px]
+                 bg-green-600 hover:bg-green-700 text-white font-semibold 
+                 rounded-md shadow flex items-center justify-center gap-1 
+                 transition-transform hover:scale-105 active:scale-95 text-xs sm:text-sm md:text-base"
+    >
+      <ClockIcon className="h-4 w-4 md:h-5 md:w-5" />
+      My Attendance
+    </button>
+  </div>
+</div>
 
       {/* Request Form */}
-      <div className="flex justify-center px-4 mb-12 mt-6">
-        <form
-          onSubmit={handleSubmit}
-          className="w-full max-w-3xl bg-white rounded-xl shadow-lg p-8 border border-indigo-200 space-y-6 text-base"
-        >
+      <div className="flex justify-center px-3 sm:px-4 mb-12 mt-6">
+<form
+  onSubmit={handleSubmit}
+  className="w-full max-w-3xl bg-white rounded-xl shadow-lg 
+             p-4 sm:p-6 md:p-8 border border-indigo-200 
+             space-y-5 sm:space-y-6 text-sm sm:text-base"
+>
           <h3 className="text-xl font-bold text-indigo-700 mb-4 flex items-center gap-2 justify-center">
             <PencilSquareIcon className="h-6 w-6 text-indigo-700" />
             Submit New Request
           </h3>
 
           {/* Name, Employee ID & Department */}
-          <div className="flex justify-between items-center">
+          <div className="flex flex-col sm:flex-col md:flex-row justify-between items-center gap-3 text-center md:text-left">
             <div className="flex items-center gap-2">
               <label className="text-gray-700 font-semibold">Name:</label>
               <span className="text-red-600 font-bold">{user}</span>
@@ -298,7 +346,7 @@ function WorkApplication() {
           </div>
 
           {/* Application Type + Paid Holidays */}
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="flex flex-col">
               <label className="text-gray-700 font-semibold mb-1">
                 Application Type
@@ -347,7 +395,7 @@ function WorkApplication() {
           </div>
 
           {/* Dates */}
-          <div className="grid grid-cols-4 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
             <div className="flex flex-col">
               <label className="text-gray-700 font-semibold mb-1">
                 Start Date
@@ -445,6 +493,90 @@ function WorkApplication() {
               OK
             </button>
           </div>
+<style>
+{`
+/* Common small screens — improve readability */
+@media (max-width: 640px) {
+  select, input, textarea {
+    font-size: 14px !important;
+  }
+}
+
+/* iPad & Tablets (Portrait + Landscape) */
+@media (min-width: 768px) and (max-width: 1024px) {
+
+  /* Keep holidays + buttons aligned horizontally */
+  .ipad-row {
+    display: flex !important;
+    flex-direction: column !important; /* stack neatly on narrow screens */
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 0.8rem !important;
+    width: 100% !important;
+    padding: 0 0.8rem !important;
+  }
+
+  /* Buttons container */
+  .ipad-fix {
+    display: flex !important;
+    flex-direction: row !important;
+    flex-wrap: wrap !important;  /* allow wrap if needed */
+    justify-content: center !important;
+    align-items: center !important;
+    gap: 0.6rem !important;
+    width: 100% !important;
+    max-width: 95vw !important;
+  }
+
+  /* Individual buttons */
+  .ipad-fix button {
+    flex: 1 1 auto !important;
+    min-width: 140px !important;   /* smaller but balanced */
+    max-width: 160px !important;
+    height: 42px !important;
+    font-size: 0.85rem !important;
+    border-radius: 0.5rem !important;
+    white-space: nowrap !important;
+  }
+}
+
+/* Phones (below iPad) */
+@media (max-width: 767px) {
+  .ipad-row {
+    flex-direction: column !important;
+    align-items: center !important;
+    gap: 0.6rem !important;
+    padding: 0 0.5rem !important;
+  }
+
+  .ipad-fix {
+    flex-direction: column !important;
+    width: 100% !important;
+    align-items: center !important;
+    gap: 0.5rem !important;
+  }
+
+  .ipad-fix button {
+    width: 90% !important;
+    max-width: 280px !important;
+    height: 44px !important;
+    font-size: 0.9rem !important;
+  }
+}
+
+/* ✅ Mac / Large Desktop — no change */
+@media (min-width: 1025px) {
+  .ipad-fix {
+    justify-content: flex-end !important;
+    max-width: 1050px !important;
+    padding-right: 1rem !important;
+  }
+  .ipad-fix button {
+    width: 230px !important;
+  }
+}
+`}
+</style>
         </div>
       )}
 

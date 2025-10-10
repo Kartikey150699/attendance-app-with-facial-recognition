@@ -171,6 +171,7 @@ function MyApprovals() {
                   <th className="px-4 py-2 text-left">Period</th>
                   <th className="px-4 py-2 text-left">Reason</th>
                   <th className="px-4 py-2 text-left">Application Type</th>
+                  <th className="px-4 py-2 text-left">Paid Leave</th>
                   <th className="px-4 py-2 text-left">Level</th>
                   <th className="px-4 py-2 text-left">Status</th>
                   <th className="px-4 py-2 text-center">Action</th>
@@ -211,6 +212,13 @@ function MyApprovals() {
                       {previewReason(a.reason)}
                     </td>
                     <td className="px-4 py-2">{a.application_type}</td>
+<td className="px-4 py-2">
+  {a.use_paid_holiday === "yes" ? (
+    <span className="text-green-700 font-semibold">Yes</span>
+  ) : (
+    <span className="text-gray-600 font-semibold">No</span>
+  )}
+</td>
                     <td className="px-4 py-2">{a.level}</td>
 
                     {/* Status Column */}
