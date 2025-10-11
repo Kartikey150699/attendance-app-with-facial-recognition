@@ -84,7 +84,7 @@ function DevCon() {
     // INFO
     else if (lower === "info") {
       pushLog(
-        `FaceTrack Dev Console\nVersion: 1.0\nPlatform: ${navigator.platform}\nBrowser: ${navigator.userAgent}`
+        `FaceTrack Developer Console\nVersion: 1.0\nPlatform: ${navigator.platform}\nBrowser: ${navigator.userAgent}`
       );
     }
 

@@ -11,28 +11,28 @@ import {
   ArrowDownCircleIcon,
   ArrowUpCircleIcon,
 } from "@heroicons/react/24/solid";
-import Webcam from "react-webcam";
 import { useNavigate } from "react-router-dom";
 import Footer from "./Footer";
 import HeaderDateTime from "./HeaderDateTime";
 import { API_BASE } from "./config";
+import FaceTracker from "./FaceTracker";
 
 function Home() {
-  const videoWidth = 580;
-  const videoHeight = 343;
   const [dateTime, setDateTime] = useState(new Date());
   const [showCamera, setShowCamera] = useState(false);
-  const [faces, setFaces] = useState([]);
   const [statusMessages, setStatusMessages] = useState([]);
   const [action, setAction] = useState("checkin");
   const [cameras, setCameras] = useState([]);
   const [selectedCamera, setSelectedCamera] = useState(null);
+  //const [previewFaces, setPreviewFaces] = useState([]);
+  const previewFacesRef = useRef([]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+
 
   
 
   const webcamRef = useRef(null);
   const navigate = useNavigate(); 
-  const [displayWidth, setDisplayWidth] = useState(videoWidth);
 
   // Live date/time
   useEffect(() => {
@@ -62,7 +62,6 @@ function Home() {
 const handleBackendResponse = useCallback(
   (data, mode) => {
     if (data.error) {
-      setFaces([{ name: "Unknown", status: "unknown", box: [50, 50, 100, 100] }]);
       setStatusMessages(["❌ Unknown face detected"]);
       return;
     }
@@ -77,9 +76,11 @@ const handleBackendResponse = useCallback(
         confidence: face.confidence,
       }));
 
-      // Always update faces (so preview shows boxes too)
-      setFaces(mappedFaces);
-
+      // Update live preview faces when mode is "preview"
+      if (mode === "preview") {
+        previewFacesRef.current = data.results || [];
+      }
+      
       // Only show messages when capturing (mark mode)
       if (mode === "mark" && mappedFaces.length > 0) {
         const currentDateTime = dateTime.toLocaleString("en-US", {
@@ -136,63 +137,71 @@ const handleBackendResponse = useCallback(
   },
   [action, dateTime, navigate]
 );
-  // Capture frame function wrapped in useCallback
-  const captureAndSendFrame = useCallback(
-    async (mode = "preview", subAction = null) => {
-      if (!webcamRef.current) return;
-      const imageSrc = webcamRef.current.getScreenshot();
-      if (!imageSrc) return;
+// Capture frame function wrapped in useCallback
+const captureAndSendFrame = useCallback(
+  async (mode = "preview", subAction = null) => {
+    if (!webcamRef.current) return;
+    const imageSrc = webcamRef.current.getScreenshot();
+    if (!imageSrc) return;
 
-      const blob = await (await fetch(imageSrc)).blob();
-      const formData = new FormData();
-      formData.append("file", blob, "frame.jpg");
+    const blob = await (await fetch(imageSrc)).blob();
+    const formData = new FormData();
+    formData.append("file", blob, "frame.jpg");
 
-      // Use proper action mapping
-      if (action === "work-application") {
-        formData.append("action", "login");
-      } else {
-        formData.append("action", subAction || action);
+    // Use proper action mapping
+    if (action === "work-application") {
+      formData.append("action", "login");
+    } else {
+      formData.append("action", subAction || action);
+    }
+
+    try {
+      const response = await fetch(`${API_BASE}/attendance/${mode}`, {
+        method: "POST",
+        body: formData,
+      });
+      const data = await response.json();
+
+      // Backend rest mode — stop previewing temporarily
+      if (mode === "preview" && data.stop_preview) {
+        console.log(
+          "Backend resting — all faces confirmed 3×, skipping further preview frames"
+        );
+        return; // Don't send more frames while backend is resting
       }
 
-      try {
-const response = await fetch(`${API_BASE}/attendance/${mode}`, {
-  method: "POST",
-  body: formData,
-});
-        const data = await response.json();
-        handleBackendResponse(data, mode);
-      } catch (error) {
-        console.error("Error sending frame:", error);
-      }
-    },
-    [action, handleBackendResponse]
-  );
+      // Normal response handling
+      handleBackendResponse(data, mode);
+    } catch (error) {
+      console.error("Error sending frame:", error);
+    }
+  },
+  [action, handleBackendResponse]
+);
 
-// Auto-preview when camera opens
+// Auto-preview when camera opens (throttled for performance)
 useEffect(() => {
   let interval;
-  if (showCamera) {
-    // Send first frame immediately
-    captureAndSendFrame("preview");
+  let isProcessing = false;
 
-    // Then keep sending every 2 seconds
-    interval = setInterval(() => captureAndSendFrame("preview"), 2000);
+  if (showCamera) {
+    const sendFrame = async () => {
+      if (!isProcessing) {
+        isProcessing = true;
+        await captureAndSendFrame("preview");
+        isProcessing = false;
+      }
+    };
+
+    // Send first frame immediately
+    sendFrame();
+
+    // Then repeat every 1200 ms
+    interval = setInterval(sendFrame, 1200);
   }
+
   return () => clearInterval(interval);
 }, [showCamera, action, captureAndSendFrame]);
-
-  // Face box colors
-  const getBoxColor = (status) => {
-    if (status === "checked_in") return "border-green-500";
-    if (status === "already_checked_in") return "border-yellow-400";
-    if (status === "checked_out") return "border-blue-500";
-    if (status === "already_checked_out") return "border-yellow-400";
-    if (status === "unknown") return "border-red-600";
-    if (status === "logged_in") return "border-green-500";
-    if (status === "preview") return "border-green-300";
-    if (status === "spoof") return "border-orange-700";
-    return "border-gray-300";
-  };
 
   return (
 <div className="relative flex flex-col min-h-screen overflow-x-hidden bg-gradient-to-br from-cyan-100 via-sky-200 to-blue-300 text-gray-900">
@@ -335,61 +344,21 @@ useEffect(() => {
             <div className="flex flex-col lg:flex-row w-full justify-center items-center lg:items-start gap-8 px-4 sm:px-8 mb-20 sm:mb-10 lg:mb-0">
               {/* Camera */}
               <div className="relative">
-               <div
-  ref={(el) => {
-    if (el) setDisplayWidth(el.offsetWidth);
-  }}
-className="relative border border-white/10 rounded-2xl shadow-[0_0_25px_rgba(56,189,248,0.3)] bg-white/10 backdrop-blur-xl transition-all duration-300 hover:shadow-[0_0_35px_rgba(56,189,248,0.5)] inline-block w-full sm:w-auto max-w-full"  style={{
+<div
+  className="relative border border-white/10 rounded-2xl shadow-[0_0_25px_rgba(56,189,248,0.3)] bg-white/10 backdrop-blur-xl transition-all duration-300 hover:shadow-[0_0_35px_rgba(56,189,248,0.5)] inline-block w-full sm:w-auto max-w-full"
+  style={{
     width: "100%",
     maxWidth: "580px",
-    height: window.innerWidth >= 1024 ? "355px" : "auto",
+    height: window.innerWidth >= 1024 ? "355px" : "auto", // fixed for balanced look
   }}
 >
-  <Webcam
-    key={selectedCamera}
-    audio={false}
-    ref={webcamRef}
-    screenshotFormat="image/jpeg"
-    className="w-full h-full object-cover transform scale-x-[-1] rounded-lg"
-    videoConstraints={{
-      width: videoWidth,
-      height: videoHeight,
-      deviceId: selectedCamera ? { exact: selectedCamera } : undefined,
-    }}
-  />
-
-  {/* Face Boxes inside the same container */}
-{faces.map((face, index) => (
-  <div
-    key={index}
-    className={`absolute border-4 ${getBoxColor(face.status)} rounded-lg transition-all duration-200 ease-linear`}
-    style={{
-      top: `${face.box[1]}px`,
-      left: `${displayWidth - face.box[0] - face.box[2]}px`,
-      width: `${face.box[2]}px`,
-      height: `${face.box[3]}px`,
-    }}
-  >
-    {/* Confidence on top (only for valid matches) */}
-    {face.confidence !== undefined &&
-      face.confidence > 0 &&
-      face.status !== "unknown" &&
-      face.status !== "maybe_match" && (
-        <div className="absolute -top-6 left-1/2 -translate-x-1/2 bg-black/80 text-white text-xs sm:text-sm px-2 py-0.5 rounded-md font-semibold shadow whitespace-nowrap">
-          Match: {face.confidence.toFixed(1)}%
-        </div>
-      )}
-
-    {/* Name below the face box */}
-    <div className="absolute bottom-0 left-0 right-0 flex justify-center">
-      <span className="bg-black/80 text-white px-2 py-1 rounded-b-lg font-bold whitespace-nowrap shadow">
-        {face.status === "spoof"
-          ? "Photo Detected – Not Allowed"
-          : face.name}
-      </span>
-    </div>
-  </div>
-))}
+  {/* Replaced old webcam + face boxes with FaceTracker */}
+<FaceTracker
+  ref={webcamRef}
+  selectedCamera={selectedCamera}
+  facesRef={previewFacesRef}
+  onDetectionsChange={(detections) => console.log("Detected faces:", detections.length)}
+/>
 </div>
                 {/* Buttons under Camera */}
                 <div className="flex flex-wrap gap-3 sm:gap-4 mt-4 mb-4 justify-center px-2">
@@ -426,7 +395,6 @@ className="relative border border-white/10 rounded-2xl shadow-[0_0_25px_rgba(56,
                     onClick={() => {
                       setShowCamera(false);
                       setStatusMessages([]);
-                      setFaces([]);
                     }}
                     className="px-6 py-3 bg-red-500 hover:bg-red-600 hover:scale-105 active:scale-95 
                              transition-transform duration-200 text-white font-bold rounded-lg shadow"
@@ -438,7 +406,8 @@ className="relative border border-white/10 rounded-2xl shadow-[0_0_25px_rgba(56,
 
               {/* Status Panel */}
               <div
-className="w-full lg:w-[37%] bg-white/10 backdrop-blur-xl border border-white/10 rounded-2xl shadow-[0_0_25px_rgba(99,102,241,0.3)] p-6 flex flex-col items-center transition-all duration-300 hover:shadow-[0_0_40px_rgba(99,102,241,0.5)]"  style={{ minHeight: "355px" }}
+className="w-full lg:w-[37%] bg-white/10 backdrop-blur-xl border border-white/10 rounded-2xl shadow-[0_0_25px_rgba(99,102,241,0.3)] p-6 flex flex-col items-center transition-all duration-300 hover:shadow-[0_0_40px_rgba(99,102,241,0.5)]"  
+style={{ minHeight: "355px" }}
 >
                 <h2 className="text-2xl font-bold text-indigo-700 mb-6 flex items-center gap-2">
                   {action === "checkin" ? (

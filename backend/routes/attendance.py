@@ -229,7 +229,8 @@ def load_embeddings(db: Session):
                 "id": user.id,
                 "name": user.name,
                 "embeddings": stored_embeddings,
-                "np_embeddings": np_embs
+                "np_embeddings": np_embs,
+                "threshold": user.threshold,
             })
 
             # for vectorized lookup, store each embedding row
@@ -287,177 +288,229 @@ except Exception as e:
 # -------------------------
 # Vectorized Matching Helper
 # -------------------------
-def find_best_match(embedding, threshold, fallback_threshold=0.0):
-    global all_embeddings, user_ids, user_names
-    if all_embeddings is None or len(all_embeddings) == 0:
+def find_best_match(embedding, default_threshold=0.38, fallback_threshold=0.35):
+    """
+    Find best match using per-user adaptive threshold (μ - 2σ rule).
+    Falls back to global threshold if user threshold missing.
+    """
+    global embedding_cache
+    if not embedding_cache:
         return None, -1, "unknown"
 
-    # normalize input embedding
     emb = np.array(embedding, dtype=float)
     emb = emb / np.linalg.norm(emb)
 
-    # cosine similarity against all users (vectorized)
-    sims = np.dot(all_embeddings, emb)  # shape: (num_embeddings,)
-    best_idx = int(np.argmax(sims))
-    best_score = float(sims[best_idx])
+    best_match = None
+    best_score = -1
+    best_threshold = default_threshold
+    status = "unknown"
 
-    best_match = {"id": user_ids[best_idx], "name": user_names[best_idx]}
+    # Iterate through users in cache
+    for data in embedding_cache:
+        user_threshold = data.get("threshold", default_threshold)
+        np_embs = data["np_embeddings"]
 
-    if best_score >= threshold:
-        return best_match, best_score, "match"
+        # Cosine similarities for all embeddings of this user
+        sims = np.dot(np_embs, emb)
+        mean_sim = float(np.mean(sims))
+
+        if mean_sim > best_score:
+            best_score = mean_sim
+            best_match = {"id": data["id"], "name": data["name"]}
+            best_threshold = user_threshold
+
+    # Decision logic
+    if best_score >= best_threshold:
+        status = "match"
     elif best_score >= fallback_threshold:
-        return best_match, best_score, "maybe"
+        status = "maybe"
     else:
-        return None, best_score, "unknown"
+        status = "unknown"
+
+    return best_match, best_score, status
 
 # -------------------------
-# Preview API
+# Temporary face session cache for live preview
+# -------------------------
+active_faces = {}  # {face_id: {"embedding": list, "name": str, "pending_name": str, "confirmed": bool, "last_seen": float}}
+FACE_EXPIRY_SECONDS = 5.0
+CONFIRM_THRESHOLD = 0.88  # similarity to confirm the same face
+
+# -------------------------
+# Preview API (with confidence % and smart recheck logic)
 # -------------------------
 @router.post("/preview")
 async def preview_faces(file: UploadFile = None):
     if not file:
         return {"error": "No image uploaded"}
 
-    start_time = time.time()  # start timer
+    start_time = time.time()
 
+    # --- Read uploaded image ---
     contents = await file.read()
     with tempfile.NamedTemporaryFile(delete=False, suffix=".jpg") as tmp:
         tmp.write(contents)
         tmp_path = tmp.name
 
+    # --- Run detection ---
     faces = detect_faces(tmp_path)
     if not faces:
         duration = time.time() - start_time
-        print(f"⚡ Recognition completed in {duration:.3f} seconds (no faces found)")
+        print(f"⚡ Recognition completed in {duration:.3f}s (no faces found)")
         return {"results": []}
 
-    results = []
-    threshold = 0.20
-    fallback_threshold = 0.20
+    # --- Cleanup expired faces ---
+    now = time.time()
+    expired = [
+        fid for fid, data in active_faces.items()
+        if now - data["last_seen"] > FACE_EXPIRY_SECONDS
+    ]
+    for fid in expired:
+        del active_faces[fid]
+        print(f"🧹 Expired face removed: {fid} — will be rechecked if seen again")
 
-    for face in faces:
+    results = []
+    threshold = 40
+    fallback_threshold = 0.35
+
+    # --- Loop through all detected faces ---
+    for idx, face in enumerate(faces):
+        face_id = f"face_{idx + 1}"
         embedding = face.get("embedding")
         box = face.get("facial_area", {})
 
-        best_match, best_score, status = find_best_match(
-            embedding, threshold, fallback_threshold
-        )
+        # --- Check if this face matches any cached one ---
+        matched_id = None
+        for fid, data in active_faces.items():
+            sim = cosine_similarity(embedding, data["embedding"])
+            if sim > CONFIRM_THRESHOLD:
+                matched_id = fid
+                break
 
-        # -------------------------
-        # Gender + Age detection (disabled for speed)
-        # -------------------------
+        confidence = 0.0
+        name = "Unknown"
+        result_status = "verifying"
+
+        # --- Existing face already in cache ---
+        if matched_id:
+            data = active_faces[matched_id]
+            data["last_seen"] = now
+
+            # --- If confirmed or permanent unknown, skip recheck ---
+            if data.get("confirmed"):
+                name = data["name"]
+                confidence = 100.0
+                result_status = "known"
+                print(f"✅ Skipping confirmed face {name}")
+
+            elif data.get("permanent_unknown"):
+                name = "Unknown"
+                confidence = 0.0
+                result_status = "unknown"
+                print(f"🛑 Skipping permanently unknown face {matched_id}")
+
+            else:
+                # --- Silent internal verification (until 3x) ---
+                best_match, best_score, status = find_best_match(
+                    embedding, threshold, fallback_threshold
+                )
+                confidence = round(best_score * 100, 2)
+
+                if status == "match" and best_match["name"] == data["pending_name"]:
+                    data["confirm_count"] = data.get("confirm_count", 1) + 1
+
+                    if data["confirm_count"] >= 3:
+                        data["confirmed"] = True
+                        data["name"] = best_match["name"]
+                        print(
+                            f"✅ Face {matched_id} verified internally as {data['name']} "
+                            f"(3x match, {confidence:.2f}%)"
+                        )
+                    else:
+                        print(
+                            f"🔁 Internal recheck {data['confirm_count']}/3 for "
+                            f"{data['pending_name']} ({confidence:.2f}%)"
+                        )
+
+                    name = data["pending_name"]
+                    result_status = "verifying"
+
+                else:
+                    # --- Unknown or mismatched face ---
+                    data["unknown_count"] = data.get("unknown_count", 0) + 1
+                    if data["unknown_count"] >= 3:
+                        data["permanent_unknown"] = True
+                        data["name"] = "Unknown"
+                        print(
+                            f"🚫 Face {matched_id} locked as Unknown after 3 failed checks"
+                        )
+                        name = "Unknown"
+                        confidence = 0.0
+                        result_status = "unknown"
+                    else:
+                        print(
+                            f"🔁 Unknown recheck {data['unknown_count']}/3 "
+                            f"({confidence:.2f}%)"
+                        )
+                        name = data["pending_name"]
+
+        # --- New face (not seen before) ---
+        else:
+            best_match, best_score, status = find_best_match(
+                embedding, threshold, fallback_threshold
+            )
+            pending_name = (
+                best_match["name"] if status in ["match", "maybe"] else "Unknown"
+            )
+            confidence = round(best_score * 100, 2)
+
+            active_faces[face_id] = {
+                "embedding": embedding,
+                "name": pending_name if status == "match" else "Unknown",
+                "pending_name": pending_name,
+                "confirmed": False,
+                "permanent_unknown": False,
+                "confirm_count": 1 if status == "match" else 0,
+                "unknown_count": 1 if status != "match" else 0,
+                "last_seen": now,
+            }
+
+            print(
+                f"⚡ New face {face_id} recognized instantly as {pending_name} "
+                f"({confidence:.2f}%)"
+            )
+            name = pending_name
+            result_status = "new_face"
+
+        # --- Gender/Age (still disabled for speed) ---
         gender = "unknown"
         age = "N/A"
-        confidence = 0.0  # ✅ initialize safely
 
-        try:
-            x, y, w, h = box.get("x"), box.get("y"), box.get("w"), box.get("h")
-            img = cv2.imread(tmp_path)
-            cropped_face = img[y:y + h, x:x + w]
-
-            # Temporarily disable DeepFace analyze (too slow)
-            analyze_info = []
-            # analyze_info = DeepFace.analyze(
-            #     cropped_face,
-            #     actions=["age", "gender"],
-            #     enforce_detection=False
-            # )
-
-            # Gender (disabled, placeholder kept for structure)
-            if analyze_info:
-                dominant = analyze_info[0].get("dominant_gender", "unknown")
-                gender_probs = analyze_info[0].get("gender", {})
-                if dominant in gender_probs:
-                    confidence = gender_probs[dominant]
-                gender = f"{dominant.capitalize()} ({confidence:.0f}%)"
-
-                # Fast Age Estimation (optional)
-                raw_age = analyze_info[0].get("age", "N/A")
-                if raw_age != "N/A":
-                    try:
-                        raw_age = int(raw_age)
-                        gray = cv2.cvtColor(cropped_face, cv2.COLOR_BGR2GRAY)
-                        _, stddev = cv2.meanStdDev(gray)
-                        blur_metric = stddev[0][0]
-                        gender_pred = analyze_info[0].get("dominant_gender", "unknown").lower()
-
-                        # Texture correction
-                        if blur_metric < 35:
-                            texture_correction = -3
-                        elif blur_metric < 60:
-                            texture_correction = -2
-                        else:
-                            texture_correction = -1
-
-                        gender_correction = -1 if gender_pred == "female" else -2
-
-                        # Base adaptive correction
-                        if raw_age <= 20:
-                            base = -1
-                        elif 21 <= raw_age <= 30:
-                            base = -2
-                        elif 31 <= raw_age <= 45:
-                            base = -3
-                        elif 46 <= raw_age <= 60:
-                            base = -4
-                        else:
-                            base = -5
-
-                        adjusted_age = raw_age + base + texture_correction + gender_correction
-                        age = max(adjusted_age, 1)
-                    except Exception as e:
-                        print("⚠️ Fast hybrid age smoothing failed:", e)
-                        age = raw_age
-        except Exception as e:
-            print("⚠️ Gender/Age detection skipped:", e)
-
-        # -------------------------
-        # Compute recognition confidence %
-        # -------------------------
-        recognition_confidence = (
-            ((best_score - fallback_threshold) / (1 - fallback_threshold)) * 100
-            if best_score > fallback_threshold
-            else 0.0
+        # --- Append final result for frontend ---
+        results.append(
+            {
+                "face_id": face_id,
+                "name": name,
+                "confidence": confidence,
+                "box": [box.get("x"), box.get("y"), box.get("w"), box.get("h")],
+                "status": result_status,
+                "gender": gender,
+                "age": age,
+            }
         )
-        recognition_confidence = round(max(0, min(recognition_confidence, 100)), 2)
 
-        # -------------------------
-        # Append recognition results
-        # -------------------------
-        if status == "match":
-            results.append({
-                "name": best_match["name"],
-                "employee_id": f"IFNT{best_match['id']:03d}",
-                "box": [box.get("x"), box.get("y"), box.get("w"), box.get("h")],
-                "status": "preview",
-                "confidence": recognition_confidence,  # include only for match/maybe
-                "gender": gender,
-                "age": age
-            })
-        elif status == "maybe":
-            results.append({
-                "name": best_match["name"],
-                "employee_id": f"IFNT{best_match['id']:03d}",
-                "box": [box.get("x"), box.get("y"), box.get("w"), box.get("h")],
-                "status": "maybe_match",
-                "confidence": recognition_confidence,  
-                "gender": gender,
-                "age": age
-            })
-        else:
-            results.append({
-                "name": "Unknown",
-                "employee_id": None,
-                "box": [box.get("x"), box.get("y"), box.get("w"), box.get("h")],
-                "status": "unknown",
-                "gender": gender,
-                "age": age
-            })
+    # --- Rest condition (backend can sleep until new face appears) ---
+    all_done = all(
+        d.get("confirmed") or d.get("permanent_unknown")
+        for d in active_faces.values()
+    )
 
     duration = time.time() - start_time
-    print(f"⚡ Recognition completed in {duration:.3f}s | Faces: {len(faces)}")
+    print(
+        f"⚡ Recognition completed in {duration:.3f}s | Active faces: {len(active_faces)}"
+    )
 
-    return {"results": results}
+    return {"results": results, "stop_preview": all_done}
 
 # -------------------------
 # Toggle Auto-Train API
@@ -484,10 +537,11 @@ async def get_auto_train_status():
 # -------------------------
 def maybe_update_user_embedding(db: Session, user_id: int, new_embedding, similarity: float, threshold: float = 0.90):
     """
-    If similarity is very high, add this embedding to keep user profile updated.
+    If similarity is very high, update user's embedding bank using
+    weighted + median fusion and adaptive threshold recalculation.
     """
     if similarity < threshold:
-        return  # only update when system is very confident
+        return  # only update when system is confident
 
     user = db.query(User).filter(User.id == user_id, User.is_active == True).first()
     if not user:
@@ -498,24 +552,73 @@ def maybe_update_user_embedding(db: Session, user_id: int, new_embedding, simila
         if isinstance(stored_embeddings[0], (int, float)):
             stored_embeddings = [stored_embeddings]
 
-        # Compare with last embedding, avoid duplicates
+        # Add the new embedding (if sufficiently different)
         last_emb = np.array(stored_embeddings[-1], dtype=float)
         new_emb = np.array(new_embedding, dtype=float)
         sim = cosine_similarity(last_emb, new_emb)
+        if sim >= 0.98:
+            return  # too similar — skip duplicate
 
-        if sim < 0.98:  # only add if slightly different
-            stored_embeddings.append(new_embedding)
-            user.embedding = json.dumps(stored_embeddings)
-            db.commit()
-            db.refresh(user)
-            refresh_embeddings()
-            print(f"Embedding updated for {user.name} (total: {len(stored_embeddings)})")
+        stored_embeddings.append(new_embedding)
+        # Keep most recent 20
+        if len(stored_embeddings) > 20:
+            stored_embeddings = stored_embeddings[-20:]
+
+        # ------------------------------------------------------
+        # (1) Recompute Median + Weighted Embedding Fusion
+        # ------------------------------------------------------
+        emb_vectors = np.array(stored_embeddings, dtype=float)
+        norms = np.linalg.norm(emb_vectors, axis=1, keepdims=True)
+        emb_vectors = emb_vectors / (norms + 1e-8)
+
+        # Weighted mean based on sharpness proxy (variance)
+        weights = np.var(emb_vectors, axis=1)
+        weights = weights / np.sum(weights)
+        weighted_mean = np.sum(emb_vectors * weights[:, None], axis=0)
+
+        # Median embedding
+        median_embedding = np.median(emb_vectors, axis=0)
+
+        # Final fused embedding
+        final_embedding = (weighted_mean + median_embedding) / 2.0
+        final_embedding /= np.linalg.norm(final_embedding)
+
+        # ------------------------------------------------------
+        # (2) Recalculate adaptive threshold (same logic as /register)
+        # ------------------------------------------------------
+        sims = np.dot(emb_vectors, emb_vectors.T)
+        upper_tri = sims[np.triu_indices_from(sims, k=1)]
+        mean_sim = float(np.mean(upper_tri))
+
+        if mean_sim > 0.88:
+            user_threshold = 0.42
+        elif mean_sim > 0.82:
+            user_threshold = 0.40
+        elif mean_sim > 0.78:
+            user_threshold = 0.38
+        else:
+            user_threshold = 0.36
+
+        # ------------------------------------------------------
+        # (3) Save updated data
+        # ------------------------------------------------------
+        user.embedding = json.dumps(final_embedding.tolist())
+        user.threshold = user_threshold
+        db.commit()
+        db.refresh(user)
+
+        refresh_embeddings()
+        print(
+            f"🧠 Auto-Train updated {user.name}: "
+            f"{len(stored_embeddings)} samples, threshold={user_threshold:.2f}"
+        )
+
     except Exception as e:
-        print(f"⚠️ Could not update embedding for {user_id}: {e}")
+        print(f"⚠️ Could not auto-update embedding for {user_id}: {e}")
 
 
 # -------------------------
-# Mark Attendance API
+# Mark Attendance API (aligned with Preview recognition + Work Application)
 # -------------------------
 @router.post("/mark")
 async def mark_attendance(
@@ -539,164 +642,93 @@ async def mark_attendance(
     results = []
     today = date.today()
     action = action.lower().strip()
-    threshold = 0.70
-    fallback_threshold = 0.65
+    threshold = 0.35
+    fallback_threshold = 0.30
     aging_update_threshold = 0.90
 
     for face in faces:
         embedding = face.get("embedding")
         box = face.get("facial_area", {})
 
-        # -------------------------
-        # Gender + Age detection (for preview only)
-        # -------------------------
         gender = "unknown"
         age = "N/A"
-        confidence = 0.0  # Safe initialization
 
-        try:
-            x, y, w, h = box.get("x"), box.get("y"), box.get("w"), box.get("h")
-            img = cv2.imread(tmp_path)
-            cropped_face = img[y:y + h, x:x + w]
+        # --- Recognition (shared logic) ---
+        best_match, best_score, status = find_best_match(
+            embedding, threshold, fallback_threshold
+        )
+        confidence = round(best_score * 100, 2)
 
-            # DeepFace analyze temporarily disabled
-            analyze_info = []
-            # analyze_info = DeepFace.analyze(
-            #     cropped_face,
-            #     actions=["age", "gender"],
-            #     enforce_detection=False
-            # )
-
-            if analyze_info:
-                dominant = analyze_info[0].get("dominant_gender", "unknown")
-                gender_probs = analyze_info[0].get("gender", {})
-                if dominant in gender_probs:
-                    confidence = gender_probs[dominant]
-                gender = f"{dominant.capitalize()} ({confidence:.0f}%)"
-
-                raw_age = analyze_info[0].get("age", "N/A")
-                if raw_age != "N/A":
-                    try:
-                        raw_age = int(raw_age)
-                        gray = cv2.cvtColor(cropped_face, cv2.COLOR_BGR2GRAY)
-                        _, stddev = cv2.meanStdDev(gray)
-                        blur_metric = stddev[0][0]
-                        gender_pred = analyze_info[0].get("dominant_gender", "unknown").lower()
-
-                        if blur_metric < 35:
-                            texture_correction = -3
-                        elif blur_metric < 60:
-                            texture_correction = -2
-                        else:
-                            texture_correction = -1
-
-                        gender_correction = -1 if gender_pred == "female" else -2
-
-                        if raw_age <= 20:
-                            base = -1
-                        elif 21 <= raw_age <= 30:
-                            base = -2
-                        elif 31 <= raw_age <= 45:
-                            base = -3
-                        elif 46 <= raw_age <= 60:
-                            base = -4
-                        else:
-                            base = -5
-
-                        adjusted_age = raw_age + base + texture_correction + gender_correction
-                        age = max(adjusted_age, 1)
-                    except Exception as e:
-                        print("⚠️ Fast hybrid age smoothing failed:", e)
-                        age = raw_age
-        except Exception as e:
-            print("⚠️ Gender/Age detection skipped:", e)
-
-        # -------------------------
-        # Work Application Login Flow (STRICT ID VALIDATION)
-        # -------------------------
-        if action == "work-application-login":
+        # ---------------------------------------------------------------------
+        #  WORK APPLICATION LOGIN — face + employee_id verification
+        # ---------------------------------------------------------------------
+        if action == "work-application":
             if not employee_id:
+                return {"results": [{"status": "invalid_employee_id"}]}
+
+            user = db.query(User).filter(User.employee_id == employee_id).first()
+            if not user:
+                return {"results": [{"status": "invalid_employee_id"}]}
+
+            # if face is unknown or not matched
+            if status != "match":
+                return {
+                    "results": [
+                        {
+                            "status": "face_mismatch",
+                            "name": "Unknown",
+                            "employee_id": employee_id,
+                            "confidence": confidence,
+                            "box": [box.get("x"), box.get("y"), box.get("w"), box.get("h")],
+                        }
+                    ]
+                }
+
+            # valid match but ensure the face belongs to this employee
+            if best_match["id"] != user.id:
+                return {
+                    "results": [
+                        {
+                            "status": "face_mismatch",
+                            "name": best_match["name"],
+                            "employee_id": employee_id,
+                            "confidence": confidence,
+                            "box": [box.get("x"), box.get("y"), box.get("w"), box.get("h")],
+                        }
+                    ]
+                }
+
+            # ✅ Face and Employee ID match
+            print(f"🟢 Work Application login verified for {user.name} ({employee_id})")
+            return {
+                "results": [
+                    {
+                        "status": "logged_in",
+                        "name": user.name,
+                        "employee_id": employee_id,
+                        "confidence": confidence,
+                        "box": [box.get("x"), box.get("y"), box.get("w"), box.get("h")],
+                    }
+                ]
+            }
+
+        # ---------------------------------------------------------------------
+        #  NORMAL ATTENDANCE ACTIONS (checkin, checkout, break, etc.)
+        # ---------------------------------------------------------------------
+        if status == "match":
+            user = db.query(User).filter(User.id == best_match["id"]).first()
+            if not user:
                 results.append({
                     "name": "Unknown",
                     "employee_id": None,
                     "box": [box.get("x"), box.get("y"), box.get("w"), box.get("h")],
-                    "status": "employee_id_missing",
+                    "status": "unknown",
+                    "confidence": confidence,
                     "gender": gender,
                     "age": age
                 })
                 continue
 
-            user = None
-            if employee_id.startswith("IFNT"):
-                numeric_part = employee_id[4:]
-                if numeric_part.isdigit() and len(numeric_part) == 3:
-                    expected_id = int(numeric_part)
-                    db_user = db.query(User).filter(
-                        User.id == expected_id, User.is_active == True
-                    ).first()
-                    if db_user and employee_id == f"IFNT{db_user.id:03d}":
-                        user = db_user
-
-            if not user:
-                results.append({
-                    "name": "Unknown",
-                    "employee_id": employee_id,
-                    "box": [box.get("x"), box.get("y"), box.get("w"), box.get("h")],
-                    "status": "invalid_employee_id",
-                    "gender": gender,
-                    "age": age
-                })
-                continue
-
-            stored_embeddings = json.loads(user.embedding)
-            if isinstance(stored_embeddings[0], (int, float)):
-                stored_embeddings = [stored_embeddings]
-
-            best_score = max(cosine_similarity(embedding, emb) for emb in stored_embeddings)
-            matched = best_score >= threshold
-            status = "logged_in" if matched else "face_mismatch"
-
-            # Auto-train safeguard
-            if AUTO_TRAIN_ENABLED and status == "logged_in" and best_score >= aging_update_threshold:
-                stored_embeddings.append(embedding)
-                if len(stored_embeddings) > 20:
-                    stored_embeddings = stored_embeddings[-20:]
-                user.embedding = json.dumps(stored_embeddings)
-                db.commit()
-                refresh_embeddings()
-                print(f"Embedding updated for {user.name} due to aging consistency")
-
-            recognition_confidence = (
-                ((best_score - fallback_threshold) / (1 - fallback_threshold)) * 100
-                if best_score > fallback_threshold
-                else 0.0
-            )
-            recognition_confidence = round(max(0, min(recognition_confidence, 100)), 2)
-
-            results.append({
-                "name": user.name,
-                "employee_id": employee_id,
-                "box": [box.get("x"), box.get("y"), box.get("w"), box.get("h")],
-                "status": status,
-                "confidence": recognition_confidence,
-                "gender": gender,
-                "age": age
-            })
-            continue
-
-        # -------------------------
-        # Normal Attendance Flow
-        # -------------------------
-        best_match, best_score, status = find_best_match(embedding, threshold, fallback_threshold)
-
-        recognition_confidence = (
-            ((best_score - fallback_threshold) / (1 - fallback_threshold)) * 100
-            if best_score > fallback_threshold
-            else 0.0
-        )
-        recognition_confidence = round(max(0, min(recognition_confidence, 100)), 2)
-
-        if status == "match":
             record = db.query(Attendance).filter(
                 Attendance.user_id == best_match["id"],
                 Attendance.date == today
@@ -712,7 +744,6 @@ async def mark_attendance(
 
             now_jst = datetime.now(JST)
 
-            # Attendance Logic
             if action == "checkin":
                 if record.check_out:
                     status = "already_checked_out"
@@ -764,27 +795,16 @@ async def mark_attendance(
             db.commit()
             db.refresh(record)
 
-            # Optional auto-train
-            user = db.query(User).filter(User.id == best_match["id"]).first()
-            if AUTO_TRAIN_ENABLED and user and best_score >= aging_update_threshold:
-                stored_embeddings = json.loads(user.embedding)
-                if isinstance(stored_embeddings[0], (int, float)):
-                    stored_embeddings = [stored_embeddings]
-
-                stored_embeddings.append(embedding)
-                if len(stored_embeddings) > 20:
-                    stored_embeddings = stored_embeddings[-20:]
-                user.embedding = json.dumps(stored_embeddings)
-                db.commit()
-                refresh_embeddings()
-                print(f"Embedding updated for {user.name} (ID: {user.id}) | score={best_score:.2f}")
+            # --- Auto-Train (median + threshold update) ---
+            if AUTO_TRAIN_ENABLED and best_score >= aging_update_threshold:
+                maybe_update_user_embedding(db, user.id, embedding, best_score)
 
             results.append({
                 "name": best_match["name"],
                 "employee_id": f"IFNT{best_match['id']:03d}",
                 "box": [box.get("x"), box.get("y"), box.get("w"), box.get("h")],
                 "status": status,
-                "confidence": recognition_confidence,  # unified confidence
+                "confidence": confidence,
                 "total_work": record.total_work,
                 "gender": gender,
                 "age": age
@@ -796,19 +816,29 @@ async def mark_attendance(
                 "employee_id": f"IFNT{best_match['id']:03d}",
                 "box": [box.get("x"), box.get("y"), box.get("w"), box.get("h")],
                 "status": "maybe_match",
-                "confidence": recognition_confidence,
+                "confidence": confidence,
                 "gender": gender,
                 "age": age
             })
+
         else:
             results.append({
                 "name": "Unknown",
                 "employee_id": None,
                 "box": [box.get("x"), box.get("y"), box.get("w"), box.get("h")],
                 "status": "unknown",
+                "confidence": confidence,
                 "gender": gender,
                 "age": age
             })
+
+    # --- Reset preview cache after mark ---
+    try:
+        global active_faces
+        active_faces.clear()
+        print("🧹 Cleared active_faces cache after attendance mark")
+    except Exception as e:
+        print(f"⚠️ Cache clear skipped: {e}")
 
     return {"results": results}
 

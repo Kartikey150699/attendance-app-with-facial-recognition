@@ -1,5 +1,5 @@
-from sqlalchemy import Column, Integer, String, DateTime, Boolean
-from sqlalchemy.dialects.mysql import LONGTEXT  # Import MySQL LONGTEXT type
+from sqlalchemy import Column, Integer, String, DateTime, Boolean, Float
+from sqlalchemy.dialects.mysql import LONGTEXT  # For large embedding storage
 from datetime import datetime, timezone, timedelta
 from utils.db import Base
 
@@ -11,20 +11,22 @@ class User(Base):
     __tablename__ = "users"
 
     id = Column(Integer, primary_key=True, index=True)
-    
-    # New: Employee ID (unique, formatted like IFNT001)
+
+    # Unique Employee ID (e.g., IFNT001)
     employee_id = Column(String(20), unique=True, index=True, nullable=True)
 
+    # Basic details
     name = Column(String(100), nullable=False)
-
-    # Column for Department
     department = Column(String(100), nullable=True)
 
-    # Store embeddings as JSON string (can now hold multiple embeddings, e.g., [normal, masked])
-    embedding = Column(LONGTEXT, nullable=False)   # Changed to LONGTEXT
+    # Store multiple embeddings as JSON string (LONGTEXT for size)
+    embedding = Column(LONGTEXT, nullable=False)
 
-    # Save in JST instead of UTC
+    # New: Per-user adaptive threshold (used for recognition strictness)
+    threshold = Column(Float, default=0.40, nullable=False)
+
+    # Creation timestamp (JST)
     created_at = Column(DateTime, default=lambda: datetime.now(JST))
 
-    # Soft delete flag → if False, user is considered deleted
+    # Soft delete flag
     is_active = Column(Boolean, default=True, nullable=False)

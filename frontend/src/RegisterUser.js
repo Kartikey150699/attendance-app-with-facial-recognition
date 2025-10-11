@@ -37,7 +37,10 @@ function RegisterUser() {
   const webcamRef = useRef(null);
   const [isCameraActive, setIsCameraActive] = useState(false);
   const [alignmentMessage, setAlignmentMessage] = useState("");
-  const [alignmentOk, setAlignmentOk] = useState(false);
+
+  const [captureStage, setCaptureStage] = useState("front");
+  // eslint-disable-next-line
+  const [angleReady, setAngleReady] = useState(false);
 
   // Button progress text
   useEffect(() => {
@@ -75,46 +78,59 @@ function RegisterUser() {
     fetchDevices();
   }, []);
 
+// 🔄 Live guided registration (front → right → left)
+useEffect(() => {
+  let interval;
+  if (isCameraActive && !isSubmitting) {
+    interval = setInterval(async () => {
+      if (!webcamRef.current) return;
+      const imageSrc = webcamRef.current.getScreenshot();
+      if (!imageSrc) return;
 
-  // Alignment detection before registration starts
-const checkAlignment = async () => {
-  if (!webcamRef.current) return false;
+      const blob = await (await fetch(imageSrc)).blob();
+      const formData = new FormData();
+      formData.append("file", blob, "angle_check.jpg");
 
-  const imageSrc = webcamRef.current.getScreenshot();
-  if (!imageSrc) return false;
+      try {
+        const res = await fetch(`${API_BASE}/users/preview-angle`, {
+          method: "POST",
+          body: formData,
+        });
+        const data = await res.json();
+        if (res.ok && data.message) {
+          setAlignmentMessage(data.message);
 
-  const blob = await (await fetch(imageSrc)).blob();
-  const formData = new FormData();
-  formData.append("file", blob, "preview.jpg");
-
-  try {
-    const res = await fetch(`${API_BASE}/users/preview-align`, {  // 👈 We'll create this new backend route
-      method: "POST",
-      body: formData,
-    });
-    const data = await res.json();
-
-    if (res.ok && data.alignment === "perfect") {
-      setAlignmentMessage("✅ Perfect alignment! Starting registration...");
-      setAlignmentOk(true);
-      return true;
-    } else {
-      setAlignmentMessage(data.message || "⚠️ Adjust your face alignment");
-      setAlignmentOk(false);
-      return false;
-    }
-  } catch (err) {
-    console.error("Alignment check failed:", err);
-    setAlignmentMessage("⚠️ Alignment check failed. Try again.");
-    return false;
+          // Track capture progression
+          if (data.status === "front_captured") {
+            setCaptureStage("right");
+            setAngleReady(true);
+          } else if (data.status === "right_captured") {
+            setCaptureStage("left");
+            setAngleReady(true);
+          } else if (data.status === "left_captured") {
+            setCaptureStage("done");
+            setAngleReady(true);
+          } else if (data.status === "done") {
+            setCaptureStage("done");
+            setAngleReady(true);
+          } else {
+            setAngleReady(false);
+          }
+        }
+      } catch (err) {
+        console.error("Angle check failed:", err);
+      }
+    }, 1000);
   }
-};
+  return () => clearInterval(interval);
+}, [isCameraActive, isSubmitting]);
+
 
 // Submit handler
 const handleSubmit = async () => {
   if (isSubmitting) return;
 
-  // Basic form checks
+  // Basic form validation
   if (!name.trim()) {
     setPopupMessage("⚠️ Please enter name of the user!");
     setShowPopup(true);
@@ -131,19 +147,21 @@ const handleSubmit = async () => {
     return;
   }
 
-  // Step 1️⃣: Activate camera & check alignment
+  // Step 1️⃣ — Activate camera & check alignment
   setIsCameraActive(true);
+  setIsSubmitting(true);
   setAlignmentMessage("🔍 Checking face alignment... Please stay still.");
 
   try {
-    // Capture a single frame for alignment test
     const imageSrc = webcamRef.current.getScreenshot();
     if (!imageSrc) {
       setPopupMessage("⚠️ Could not capture image for alignment check.");
       setShowPopup(true);
+      setIsSubmitting(false);
       return;
     }
 
+    // Alignment check
     const blob = await (await fetch(imageSrc)).blob();
     const alignForm = new FormData();
     alignForm.append("file", blob, "align_check.jpg");
@@ -152,39 +170,53 @@ const handleSubmit = async () => {
       method: "POST",
       body: alignForm,
     });
-
     const alignData = await alignResponse.json();
 
     if (!alignResponse.ok || alignData.alignment !== "perfect") {
-      setPopupMessage(`⚠️ ${alignData.message || "Face not properly aligned. Please try again."}`);
+      setPopupMessage(
+        `⚠️ ${alignData.message || "Face not properly aligned. Please try again."}`
+      );
       setShowPopup(true);
+      setIsSubmitting(false);
       setIsCameraActive(false);
       setAlignmentMessage("");
       return;
     }
 
-    // If alignment is good
-    setAlignmentMessage("✅ Perfect alignment! Starting registration...");
-    setAlignmentOk(true);
-
-    // Step 2️⃣: Start registration capture
-    setIsSubmitting(true);
+    // ✅ Alignment successful
+    setAlignmentMessage("✅ Perfect alignment! Starting capture...");
     setFrameCount(0);
 
     const formData = new FormData();
     formData.append("name", name);
     formData.append("department", department);
 
-    for (let i = 0; i < 10; i++) {
-      const imageSrc = webcamRef.current.getScreenshot();
-      if (imageSrc) {
-        const blob = await (await fetch(imageSrc)).blob();
-        formData.append("files", blob, `frame_${i}.jpg`);
-        setFrameCount(i + 1);
+    // Helper to capture N frames
+    const captureFrames = async (count, phaseLabel, messageBefore, messageAfter) => {
+      setAlignmentMessage(messageBefore);
+      for (let i = 0; i < count; i++) {
+        const imgSrc = webcamRef.current.getScreenshot();
+        if (imgSrc) {
+          const blob = await (await fetch(imgSrc)).blob();
+          formData.append("files", blob, `${phaseLabel}_${i + 1}.jpg`);
+          setFrameCount((prev) => prev + 1);
+        }
+        await new Promise((r) => setTimeout(r, 300));
       }
-      await new Promise((resolve) => setTimeout(resolve, 300));
-    }
+      setAlignmentMessage(messageAfter);
+      await new Promise((r) => setTimeout(r, 2000));
+    };
 
+    // FRONT (5)
+    await captureFrames(5, "front", "🟢 Facing front — capturing...", "📸 Front captured! Please turn LEFT.");
+
+    // LEFT (5)
+    await captureFrames(5, "left", "↩️ Turn LEFT — capturing...", "✅ Left captured! Please turn RIGHT.");
+
+    // RIGHT (5)
+    await captureFrames(5, "right", "↪️ Turn RIGHT — capturing...", "✅ All angles captured! Registering...");
+
+    // Step 3️⃣ — Send registration data
     const response = await fetch(`${API_BASE}/users/register`, {
       method: "POST",
       body: formData,
@@ -193,13 +225,9 @@ const handleSubmit = async () => {
     const data = await response.json();
 
     if (!response.ok) {
-      if (data.detail) {
-        setPopupMessage(`❌ ${data.detail}`);
-      } else if (data.error) {
-        setPopupMessage(`❌ ${data.error}`);
-      } else {
-        setPopupMessage("❌ Registration failed.");
-      }
+      if (data.detail) setPopupMessage(`❌ ${data.detail}`);
+      else if (data.error) setPopupMessage(`❌ ${data.error}`);
+      else setPopupMessage("❌ Registration failed.");
       setIsSubmitting(false);
       setIsCameraActive(false);
       setAlignmentMessage("");
@@ -219,11 +247,10 @@ const handleSubmit = async () => {
     console.error("❌ Error registering user:", error);
     setPopupMessage("❌ Failed to register user.");
     setShowPopup(true);
+  } finally {
     setIsSubmitting(false);
     setIsCameraActive(false);
     setAlignmentMessage("");
-    setName("");
-    setDepartment("");
   }
 };
 
@@ -368,23 +395,50 @@ const handleSubmit = async () => {
           }}
           onUserMediaError={(err) => console.error("❌ Webcam error:", err)}
         />
+  
       ) : (
         <div className="w-full h-[300px] flex items-center justify-center bg-gray-200 rounded-lg">
           <p className="text-gray-600 text-center">No camera detected</p>
         </div>
       )}
-      {isSubmitting && (
-        <>
-          <div className="absolute top-0 left-0 w-full h-full overflow-hidden rounded-lg">
-            <div className="w-full h-1 animate-scan glow-line"></div>
-          </div>
-          <div className="absolute bottom-2 w-full text-center text-white font-bold text-lg bg-black bg-opacity-40 py-1 rounded">
-            {frameCount < 10
-              ? `Capturing frame ${frameCount}/10`
-              : "Processing..."}
-          </div>
-        </>
-      )}
+
+      <div className="absolute top-2 right-2 text-sm sm:text-base text-white bg-black/60 px-3 py-1 rounded-lg shadow-lg border border-white/20">
+  {captureStage === "front" && "🟢 Capturing Front..."}
+  {captureStage === "right" && "↪️ Turn Right"}
+  {captureStage === "left" && "↩️ Turn Left"}
+  {captureStage === "done" && "✅ All Angles Captured"}
+</div>
+{/* 🧠 Camera overlays — scanning, progress, and live guidance */}
+{isSubmitting ? (
+  <>
+    {/* Scanning Line */}
+    <div className="absolute top-0 left-0 w-full h-full overflow-hidden rounded-lg">
+      <div className="w-full h-1 animate-scan glow-line"></div>
+    </div>
+
+    {/* Frame count during capture */}
+    <div className="absolute bottom-3 w-full text-center text-white font-bold text-lg bg-black/50 py-1 rounded-lg">
+      {frameCount < 10
+        ? `📸 Capturing frame ${frameCount}/10`
+        : "🧠 Processing registration..."}
+    </div>
+  </>
+) : (
+  // Show alignment / distance feedback when not submitting
+  alignmentMessage && (
+<div
+  className={`absolute bottom-3 w-full text-center text-lg font-semibold py-2 rounded-lg ${
+    alignmentMessage.includes("Perfect")
+      ? "bg-green-600/60 text-white"
+      : alignmentMessage.includes("Move")
+      ? "bg-yellow-600/60 text-white"
+      : "bg-red-600/60 text-white"
+  }`}
+>
+  {alignmentMessage}
+</div>
+  )
+)}
     </div>
   </div>
 

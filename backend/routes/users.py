@@ -6,8 +6,7 @@ from models.Attendance import Attendance
 from deepface import DeepFace
 import tempfile
 import json
-import numpy as np
-import cv2
+import cv2, numpy as np, tempfile
 from pydantic import BaseModel
 from typing import List, Optional
 
@@ -15,7 +14,6 @@ from typing import List, Optional
 from routes.attendance import refresh_embeddings
 
 router = APIRouter(prefix="/users", tags=["Users"])
-
 
 # -------------------------
 # Dependency: DB session
@@ -36,12 +34,58 @@ def format_employee_id(user_id: int) -> str:
 
 
 # -------------------------
-# Cosine similarity helper
+# Cosine similarity helper (robust version)
 # -------------------------
 def cosine_similarity(vec1, vec2):
     v1, v2 = np.array(vec1, dtype=float), np.array(vec2, dtype=float)
-    v1, v2 = v1 / np.linalg.norm(v1), v2 / np.linalg.norm(v2)
+
+    # 🧠 Handle multi-embedding cases (e.g. (20,512))
+    if v1.ndim > 1:
+        v1 = np.mean(v1, axis=0)
+    if v2.ndim > 1:
+        v2 = np.mean(v2, axis=0)
+
+    # 🧹 Normalize safely
+    v1 /= np.linalg.norm(v1) + 1e-8
+    v2 /= np.linalg.norm(v2) + 1e-8
+
+    # 🔢 Return cosine similarity
     return float(np.dot(v1, v2))
+
+# -------------------------
+# Helper: advanced illumination normalization (Tan–Triggs + CLAHE)
+# -------------------------
+def normalize_lighting(img):
+    # Convert to float and normalize
+    img = np.float32(img) / 255.0
+    img = np.log1p(img)                     # logarithmic compression
+    img = cv2.normalize(img, None, 0, 255, cv2.NORM_MINMAX)
+    img = np.uint8(img)
+
+    # Apply CLAHE on L channel
+    lab = cv2.cvtColor(img, cv2.COLOR_RGB2LAB)
+    l, a, b = cv2.split(lab)
+    clahe = cv2.createCLAHE(clipLimit=2.0, tileGridSize=(8,8))
+    l = clahe.apply(l)
+    lab = cv2.merge((l, a, b))
+    img = cv2.cvtColor(lab, cv2.COLOR_LAB2RGB)
+    return img
+
+
+# -------------------------
+# Helper: compute image sharpness (for weighted averaging)
+# -------------------------
+def sharpness_score(img):
+    gray = cv2.cvtColor(img, cv2.COLOR_RGB2GRAY)
+    return cv2.Laplacian(gray, cv2.CV_64F).var()
+
+# -------------------------
+# Helper: compute weighted mean embedding
+# -------------------------
+def weighted_mean_embeddings(embeddings, weights):
+    weights = np.array(weights)
+    weights = weights / np.sum(weights)
+    return np.sum(np.array(embeddings) * weights[:, None], axis=0)
 
 
 # -------------------------
@@ -62,6 +106,9 @@ def apply_synthetic_mask(image_path):
     return tmp_masked.name
 
 
+# -------------------------
+# Correct alignment during registration 
+# -------------------------
 @router.post("/preview-align")
 async def preview_align(file: UploadFile = File(...)):
     import cv2, numpy as np, tempfile
@@ -113,6 +160,13 @@ async def register_user(
     department: Optional[str] = Form(None),
     db: Session = Depends(get_db)
 ):
+    # ------------------------------------------------------
+    # (0) Normalize input
+    # ------------------------------------------------------
+    name = " ".join(name.split())  # trims edges + reduces multiple spaces
+    if department:
+        department = " ".join(department.split())
+
     if not files or len(files) == 0:
         raise HTTPException(status_code=400, detail="No images uploaded")
 
@@ -127,7 +181,7 @@ async def register_user(
 
         try:
             # ------------------------------------------------------
-            # (1) Adaptive Gamma + CLAHE Preprocessing
+            # (1) Advanced Preprocessing (Lighting + Gamma + Sharpness)
             # ------------------------------------------------------
             img = cv2.imread(tmp_path)
             if img is None:
@@ -136,28 +190,28 @@ async def register_user(
 
             img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
 
-            # Adaptive gamma correction
+            # Tan–Triggs illumination normalization
+            img = normalize_lighting(img)
+
+            # Adaptive gamma correction (brighten if dark)
             gray = cv2.cvtColor(img, cv2.COLOR_RGB2GRAY)
             mean_intensity = np.mean(gray)
             gamma = 1.4 if mean_intensity < 110 else 1.0
             img = np.power(img / 255.0, gamma)
             img = np.uint8(img * 255)
 
-            # CLAHE (Contrast Limited Adaptive Histogram Equalization)
-            lab = cv2.cvtColor(img, cv2.COLOR_RGB2LAB)
-            l, a, b = cv2.split(lab)
-            clahe = cv2.createCLAHE(clipLimit=2.0, tileGridSize=(8, 8))
-            l = clahe.apply(l)
-            lab = cv2.merge((l, a, b))
-            img = cv2.cvtColor(lab, cv2.COLOR_LAB2RGB)
+            # Compute image sharpness
+            sharpness = sharpness_score(img)
 
-            # Overwrite temp image with preprocessed version
+            # Save processed image
             cv2.imwrite(tmp_path, cv2.cvtColor(img, cv2.COLOR_RGB2BGR))
 
             # ------------------------------------------------------
             # (2) Face Position + Framing Enforcement
             # ------------------------------------------------------
-            detector = cv2.CascadeClassifier(cv2.data.haarcascades + "haarcascade_frontalface_default.xml")
+            detector = cv2.CascadeClassifier(
+                cv2.data.haarcascades + "haarcascade_frontalface_default.xml"
+            )
             gray = cv2.cvtColor(img, cv2.COLOR_RGB2GRAY)
             faces = detector.detectMultiScale(gray, 1.1, 5)
 
@@ -175,11 +229,11 @@ async def register_user(
             offset_y = abs(face_center_y - frame_center_y) / h_img
             face_area_ratio = (w * h) / (w_img * h_img)
 
-            # Reject if face is off-center or too small
+            # Reject if off-center or too small
             if offset_x > 0.25 or offset_y > 0.25:
                 raise HTTPException(
                     status_code=400,
-                    detail="⚠️ Face not centered. Please align your face properly in the frame."
+                    detail="⚠️ Face not centered. Please align properly in the frame."
                 )
             if face_area_ratio < 0.15:
                 raise HTTPException(
@@ -187,7 +241,7 @@ async def register_user(
                     detail="⚠️ Face too far. Move closer to the camera."
                 )
 
-            valid_frame_found = True  # Alignment is correct, we can now register
+            valid_frame_found = True
 
             # ------------------------------------------------------
             # (3) Generate Embeddings (Normal + Masked)
@@ -204,9 +258,9 @@ async def register_user(
             if rep and "embedding" in rep[0]:
                 emb = np.array(rep[0]["embedding"], dtype=float)
                 emb /= np.linalg.norm(emb)
-                embeddings.append(emb.tolist())
+                embeddings.append((emb, sharpness))  # store embedding + sharpness
 
-            # Masked embedding
+            # Masked embedding for robustness
             masked_path = apply_synthetic_mask(tmp_path)
             if masked_path:
                 rep_mask = DeepFace.represent(
@@ -220,10 +274,9 @@ async def register_user(
                 if rep_mask and "embedding" in rep_mask[0]:
                     emb2 = np.array(rep_mask[0]["embedding"], dtype=float)
                     emb2 /= np.linalg.norm(emb2)
-                    embeddings.append(emb2.tolist())
+                    embeddings.append((emb2, sharpness * 0.8))
 
         except HTTPException as he:
-            # Raise directly for clear feedback
             raise he
         except Exception as e:
             print(f"⚠️ Frame skipped due to error: {e}")
@@ -232,38 +285,76 @@ async def register_user(
     # ------------------------------------------------------
     # (4) Ensure at least one good frame
     # ------------------------------------------------------
-    if not valid_frame_found:
+    if not valid_frame_found or not embeddings:
         raise HTTPException(
             status_code=400,
-            detail="❌ Registration failed. Please center your face and try again."
+            detail="❌ Registration failed. Ensure good lighting and centered face."
         )
 
-    if not embeddings:
-        raise HTTPException(status_code=400, detail="❌ No valid faces after preprocessing. Try again!")
+    # ------------------------------------------------------
+    # (5) Weighted + Median Embedding Fusion (Stable Identity)
+    # ------------------------------------------------------
+    emb_vectors = [e[0] for e in embeddings]
+    weights = np.array([e[1] for e in embeddings])
+    weights = weights / np.sum(weights)
+
+    # Weighted mean (based on sharpness)
+    weighted_mean = np.sum([w * v for w, v in zip(weights, emb_vectors)], axis=0)
+
+    # Median embedding (robust to outliers / lighting variance)
+    median_embedding = np.median(np.array(emb_vectors), axis=0)
+
+    # Fuse both for best stability
+    final_embedding = (weighted_mean + median_embedding) / 2.0
+    final_embedding /= np.linalg.norm(final_embedding)
 
     # ------------------------------------------------------
-    # (5) Validation and Duplicate Checking
+    # (5.5) Adaptive user threshold based on embedding stability
+    # ------------------------------------------------------
+    emb_matrix = np.vstack(emb_vectors)
+    sims = np.dot(emb_matrix, emb_matrix.T)
+    upper_tri = sims[np.triu_indices_from(sims, k=1)]
+    mean_sim = float(np.mean(upper_tri))
+
+    # Dynamic threshold rule:
+    # Very stable faces → stricter (0.42)
+    # Slightly variable → looser (0.36–0.40)
+    if mean_sim > 0.88:
+        user_threshold = 0.42
+    elif mean_sim > 0.82:
+        user_threshold = 0.40
+    elif mean_sim > 0.78:
+        user_threshold = 0.38
+    else:
+        user_threshold = 0.36
+
+    # ------------------------------------------------------
+    # (6) Validation — Check duplicates (by name or face)
     # ------------------------------------------------------
     users = db.query(User).all()
     threshold = 0.55
+
     for user in users:
-        stored_embeddings = json.loads(user.embedding)
-        emb_list = stored_embeddings if isinstance(stored_embeddings[0], list) else [stored_embeddings]
-        for stored_emb in emb_list:
-            score = cosine_similarity(embeddings[0], stored_emb)
-            if score >= threshold:
-                raise HTTPException(
-                    status_code=400,
-                    detail=f"User '{user.name}' is already registered with this face!"
-                )
+        if user.name.strip().lower() == name.strip().lower():
+            raise HTTPException(status_code=400, detail=f"⚠️ User '{name}' already exists by name.")
+
+    for user in users:
+        stored_emb = np.array(json.loads(user.embedding), dtype=float)
+        score = cosine_similarity(final_embedding, stored_emb)
+        if score >= threshold:
+            raise HTTPException(
+                status_code=400,
+                detail=f"⚠️ User '{user.name}' already registered with a this face!"
+            )
 
     # ------------------------------------------------------
-    # (6) Save New User + Assign Employee ID
+    # (7) Save User + Generate Employee ID
     # ------------------------------------------------------
     new_user = User(
         name=name,
-        embedding=json.dumps(embeddings),
-        department=department
+        embedding=json.dumps(final_embedding.tolist()),
+        department=department,
+        threshold=user_threshold 
     )
     db.add(new_user)
     db.commit()
@@ -274,7 +365,7 @@ async def register_user(
     db.refresh(new_user)
 
     # ------------------------------------------------------
-    # (7) Refresh cache
+    # (8) Refresh embeddings cache
     # ------------------------------------------------------
     refresh_embeddings()
 
@@ -282,7 +373,8 @@ async def register_user(
         "message": f"✅ User {name} registered successfully!",
         "employee_id": new_user.employee_id,
         "department": new_user.department,
-        "embeddings_stored": len(embeddings)
+        "frames_processed": len(files),
+        "final_embedding_dim": len(final_embedding),
     }
 
 
