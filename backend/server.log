@@ -1,0 +1,1541 @@
+2025-10-11 22:25:56 [INFO] ✅ Loaded 21 embeddings for 2 users into cache.
+2025-10-11 22:25:56 [INFO] ✅ Loaded 21 embeddings for 2 users into cache.
+2025-10-11 22:25:56 [INFO] ✅ Embedding cache refreshed successfully.
+2025-10-11 22:26:55 [INFO] ✅ Loaded 21 embeddings for 2 users into cache.
+2025-10-11 22:26:55 [INFO] ✅ Loaded embeddings for 2 users.
+2025-10-11 22:26:56 [INFO] ✅ Loaded 21 embeddings for 2 users into cache.
+2025-10-11 22:26:56 [INFO] ✅ Embedding cache refreshed successfully.
+2025-10-11 22:27:12 [INFO] ⚡ New face face_1 recognized instantly as Kartikey (75.08%)
+2025-10-11 22:27:12 [INFO] ⚡ Recognition completed in 1.600s | Active faces: 1
+2025-10-11 22:27:12 [INFO] 🔁 Internal recheck 2/3 for Kartikey (74.49%)
+2025-10-11 22:27:12 [INFO] ⚡ Recognition completed in 0.326s | Active faces: 1
+2025-10-11 22:27:13 [INFO] ⚡ New face face_1 recognized instantly as Kartikey (76.35%)
+2025-10-11 22:27:13 [INFO] ⚡ Recognition completed in 0.476s | Active faces: 1
+2025-10-11 22:27:14 [INFO] 🔁 Internal recheck 2/3 for Kartikey (77.12%)
+2025-10-11 22:27:14 [INFO] ⚡ Recognition completed in 0.266s | Active faces: 1
+2025-10-11 22:27:15 [INFO] ✅ Face face_1 verified internally as Kartikey (3x match, 77.93%)
+2025-10-11 22:27:15 [INFO] ⚡ Recognition completed in 0.272s | Active faces: 1
+2025-10-11 22:27:15 [INFO] ✅ Skipping confirmed face Kartikey
+2025-10-11 22:27:15 [INFO] ⚡ Recognition completed in 0.144s | Active faces: 1
+2025-10-11 22:27:16 [INFO] ✅ Skipping confirmed face Kartikey
+2025-10-11 22:27:16 [INFO] ⚡ Recognition completed in 0.253s | Active faces: 1
+2025-10-11 22:27:17 [INFO] ✅ Skipping confirmed face Kartikey
+2025-10-11 22:27:17 [INFO] ⚡ Recognition completed in 0.195s | Active faces: 1
+2025-10-11 22:29:10 [INFO] 🧹 Expired face removed: face_1 — will be rechecked if seen again
+2025-10-11 22:29:10 [INFO] ⚡ New face face_1 recognized instantly as Kartikey (77.33%)
+2025-10-11 22:29:10 [INFO] ⚡ Recognition completed in 0.399s | Active faces: 1
+2025-10-11 22:29:10 [INFO] ⚡ New face face_1 recognized instantly as Kartikey (75.38%)
+2025-10-11 22:29:10 [INFO] ⚡ Recognition completed in 0.184s | Active faces: 1
+2025-10-11 22:29:11 [INFO] ⚡ New face face_1 recognized instantly as Kartikey (73.60%)
+2025-10-11 22:29:11 [INFO] ⚡ Recognition completed in 0.187s | Active faces: 1
+2025-10-11 22:29:12 [INFO] ⚡ New face face_1 recognized instantly as Kartikey (74.46%)
+2025-10-11 22:29:12 [INFO] ⚡ Recognition completed in 0.179s | Active faces: 1
+2025-10-11 22:29:13 [INFO] 🔁 Internal recheck 2/3 for Kartikey (75.44%)
+2025-10-11 22:29:13 [INFO] ⚡ Recognition completed in 0.184s | Active faces: 1
+2025-10-11 22:29:14 [INFO] ✅ Face face_1 verified internally as Kartikey (3x match, 73.35%)
+2025-10-11 22:29:14 [INFO] ⚡ Recognition completed in 0.194s | Active faces: 1
+2025-10-11 22:29:15 [INFO] ✅ Skipping confirmed face Kartikey
+2025-10-11 22:29:15 [INFO] ⚡ Recognition completed in 0.189s | Active faces: 1
+2025-10-11 23:33:26 [INFO] 🧹 Expired face removed: face_1 — will be rechecked if seen again
+2025-10-11 23:33:26 [INFO] ⚡ New face face_1 recognized instantly as Kartikey (44.27%)
+2025-10-11 23:33:26 [INFO] ⚡ Recognition completed in 2.127s | Active faces: 1
+2025-10-11 23:33:29 [INFO] ⚡ Recognition completed in 3.508s (no faces found)
+2025-10-11 23:33:31 [INFO] 🧹 Expired face removed: face_1 — will be rechecked if seen again
+2025-10-11 23:33:31 [INFO] ⚡ New face face_1 recognized instantly as Kartikey (39.74%)
+2025-10-11 23:33:31 [INFO] ⚡ Recognition completed in 1.832s | Active faces: 1
+2025-10-11 23:33:33 [INFO] ⚡ New face face_1 recognized instantly as Kartikey (47.59%)
+2025-10-11 23:33:33 [INFO] ⚡ Recognition completed in 2.040s | Active faces: 1
+2025-10-11 23:33:39 [INFO] 🧹 Expired face removed: face_1 — will be rechecked if seen again
+2025-10-11 23:33:39 [INFO] ⚡ New face face_1 recognized instantly as Kartikey (65.48%)
+2025-10-11 23:33:39 [INFO] ⚡ Recognition completed in 5.770s | Active faces: 1
+2025-10-11 23:33:40 [INFO] ⚡ New face face_1 recognized instantly as Kartikey (54.26%)
+2025-10-11 23:33:40 [INFO] ⚡ Recognition completed in 1.510s | Active faces: 1
+2025-10-11 23:33:42 [INFO] ⚡ New face face_1 recognized instantly as Kartikey (66.52%)
+2025-10-11 23:33:42 [INFO] ⚡ Recognition completed in 1.981s | Active faces: 1
+2025-10-11 23:33:44 [INFO] ⚡ New face face_1 recognized instantly as Kartikey (46.39%)
+2025-10-11 23:33:44 [INFO] ⚡ Recognition completed in 2.049s | Active faces: 1
+2025-10-11 23:33:47 [INFO] ⚡ New face face_1 recognized instantly as Kartikey (60.10%)
+2025-10-11 23:33:47 [INFO] ⚡ Recognition completed in 2.420s | Active faces: 1
+2025-10-11 23:33:49 [INFO] ⚡ New face face_1 recognized instantly as Kartikey (60.61%)
+2025-10-11 23:33:49 [INFO] ⚡ Recognition completed in 1.996s | Active faces: 1
+2025-10-11 23:33:52 [INFO] ⚡ New face face_1 recognized instantly as Kartikey (56.46%)
+2025-10-11 23:33:52 [INFO] ⚡ Recognition completed in 3.546s | Active faces: 1
+2025-10-11 23:33:55 [INFO] ⚡ New face face_1 recognized instantly as Kartikey (65.82%)
+2025-10-11 23:33:55 [INFO] ⚡ Recognition completed in 2.340s | Active faces: 1
+2025-10-11 23:33:56 [INFO] ⚡ New face face_1 recognized instantly as Kartikey (63.57%)
+2025-10-11 23:33:56 [INFO] ⚡ Recognition completed in 0.563s | Active faces: 1
+2025-10-11 23:33:56 [INFO] ⚡ New face face_1 recognized instantly as Kartikey (61.30%)
+2025-10-11 23:33:56 [INFO] ⚡ Recognition completed in 0.601s | Active faces: 1
+2025-10-11 23:33:57 [INFO] ⚡ New face face_1 recognized instantly as Kartikey (59.30%)
+2025-10-11 23:33:57 [INFO] ⚡ Recognition completed in 0.484s | Active faces: 1
+2025-10-11 23:34:00 [INFO] ⚡ New face face_1 recognized instantly as Unknown (33.54%)
+2025-10-11 23:34:00 [INFO] ⚡ Recognition completed in 3.127s | Active faces: 1
+2025-10-11 23:34:00 [INFO] ⚡ New face face_1 recognized instantly as Unknown (28.23%)
+2025-10-11 23:34:00 [INFO] ⚡ Recognition completed in 0.456s | Active faces: 1
+2025-10-11 23:34:01 [INFO] ⚡ Recognition completed in 0.446s (no faces found)
+2025-10-11 23:34:01 [INFO] ⚡ Recognition completed in 0.300s (no faces found)
+2025-10-11 23:34:01 [INFO] ⚡ Recognition completed in 0.343s (no faces found)
+2025-10-11 23:34:02 [INFO] ⚡ Recognition completed in 0.376s (no faces found)
+2025-10-11 23:34:02 [INFO] ⚡ New face face_1 recognized instantly as Kartikey (54.17%)
+2025-10-11 23:34:02 [INFO] ⚡ Recognition completed in 0.363s | Active faces: 1
+2025-10-11 23:34:03 [INFO] ⚡ New face face_1 recognized instantly as Kartikey (51.48%)
+2025-10-11 23:34:03 [INFO] ⚡ Recognition completed in 0.415s | Active faces: 1
+2025-10-11 23:34:03 [INFO] ⚡ New face face_1 recognized instantly as Kartikey (52.31%)
+2025-10-11 23:34:03 [INFO] ⚡ Recognition completed in 0.426s | Active faces: 1
+2025-10-11 23:34:03 [INFO] ⚡ Recognition completed in 0.477s (no faces found)
+2025-10-11 23:34:04 [INFO] ⚡ New face face_1 recognized instantly as Kartikey (47.88%)
+2025-10-11 23:34:04 [INFO] ⚡ Recognition completed in 0.442s | Active faces: 1
+2025-10-11 23:34:04 [INFO] ⚡ New face face_1 recognized instantly as Kartikey (62.17%)
+2025-10-11 23:34:04 [INFO] ⚡ Recognition completed in 0.496s | Active faces: 1
+2025-10-11 23:34:05 [INFO] ⚡ New face face_1 recognized instantly as Unknown (26.60%)
+2025-10-11 23:34:05 [INFO] ⚡ Recognition completed in 0.448s | Active faces: 1
+2025-10-11 23:34:05 [INFO] ⚡ New face face_1 recognized instantly as Kartikey (53.24%)
+2025-10-11 23:34:05 [INFO] ⚡ Recognition completed in 0.400s | Active faces: 1
+2025-10-11 23:34:06 [INFO] ⚡ New face face_1 recognized instantly as Kartikey (46.60%)
+2025-10-11 23:34:06 [INFO] ⚡ Recognition completed in 0.427s | Active faces: 1
+2025-10-11 23:34:06 [INFO] ⚡ New face face_1 recognized instantly as Kartikey (49.50%)
+2025-10-11 23:34:06 [INFO] ⚡ Recognition completed in 0.412s | Active faces: 1
+2025-10-11 23:34:07 [INFO] ⚡ New face face_1 recognized instantly as Kartikey (53.51%)
+2025-10-11 23:34:07 [INFO] ⚡ Recognition completed in 0.456s | Active faces: 1
+2025-10-11 23:34:07 [INFO] ⚡ Recognition completed in 0.549s (no faces found)
+2025-10-11 23:34:08 [INFO] 🔁 Internal recheck 2/3 for Kartikey (51.43%)
+2025-10-11 23:34:08 [INFO] ⚡ Recognition completed in 0.947s | Active faces: 1
+2025-10-11 23:34:10 [INFO] ⚡ New face face_1 recognized instantly as Kartikey (50.84%)
+2025-10-11 23:34:10 [INFO] ⚡ Recognition completed in 1.879s | Active faces: 1
+2025-10-11 23:34:11 [INFO] ⚡ New face face_1 recognized instantly as Kartikey (51.85%)
+2025-10-11 23:34:11 [INFO] ⚡ Recognition completed in 0.821s | Active faces: 1
+2025-10-11 23:34:12 [INFO] ⚡ New face face_1 recognized instantly as Kartikey (56.11%)
+2025-10-11 23:34:12 [INFO] ⚡ Recognition completed in 1.112s | Active faces: 1
+2025-10-11 23:34:14 [INFO] 🔁 Internal recheck 2/3 for Kartikey (56.81%)
+2025-10-11 23:34:14 [INFO] ⚡ Recognition completed in 2.459s | Active faces: 1
+2025-10-11 23:34:16 [INFO] ✅ Face face_1 verified internally as Kartikey (3x match, 56.02%)
+2025-10-11 23:34:16 [INFO] ⚡ Recognition completed in 1.304s | Active faces: 1
+2025-10-11 23:34:17 [INFO] ✅ Skipping confirmed face Kartikey
+2025-10-11 23:34:17 [INFO] ⚡ Recognition completed in 1.538s | Active faces: 1
+2025-10-11 23:34:19 [INFO] ✅ Skipping confirmed face Kartikey
+2025-10-11 23:34:19 [INFO] ⚡ Recognition completed in 2.015s | Active faces: 1
+2025-10-11 23:34:21 [INFO] ✅ Skipping confirmed face Kartikey
+2025-10-11 23:34:21 [INFO] ⚡ Recognition completed in 1.327s | Active faces: 1
+2025-10-11 23:34:22 [INFO] ✅ Skipping confirmed face Kartikey
+2025-10-11 23:34:22 [INFO] ⚡ Recognition completed in 0.954s | Active faces: 1
+2025-10-11 23:34:23 [INFO] ✅ Skipping confirmed face Kartikey
+2025-10-11 23:34:23 [INFO] ⚡ Recognition completed in 1.043s | Active faces: 1
+2025-10-11 23:34:24 [INFO] ✅ Skipping confirmed face Kartikey
+2025-10-11 23:34:24 [INFO] ⚡ Recognition completed in 1.146s | Active faces: 1
+2025-10-11 23:34:25 [INFO] ✅ Skipping confirmed face Kartikey
+2025-10-11 23:34:25 [INFO] ⚡ Recognition completed in 1.345s | Active faces: 1
+2025-10-11 23:34:27 [INFO] ⚡ New face face_1 recognized instantly as Kartikey (58.81%)
+2025-10-11 23:34:27 [INFO] ⚡ Recognition completed in 1.401s | Active faces: 1
+2025-10-11 23:34:28 [INFO] ⚡ New face face_1 recognized instantly as Unknown (30.05%)
+2025-10-11 23:34:28 [INFO] ⚡ Recognition completed in 1.228s | Active faces: 1
+2025-10-11 23:34:28 [INFO] ⚡ Recognition completed in 0.584s (no faces found)
+2025-10-11 23:34:29 [INFO] ⚡ Recognition completed in 0.454s (no faces found)
+2025-10-11 23:34:29 [INFO] ⚡ New face face_1 recognized instantly as Kartikey (65.36%)
+2025-10-11 23:34:29 [INFO] ⚡ Recognition completed in 0.276s | Active faces: 1
+2025-10-11 23:34:30 [INFO] ⚡ Recognition completed in 0.778s (no faces found)
+2025-10-11 23:34:30 [INFO] ⚡ New face face_1 recognized instantly as Kartikey (60.90%)
+2025-10-11 23:34:30 [INFO] ⚡ Recognition completed in 0.221s | Active faces: 1
+2025-10-11 23:34:31 [INFO] ⚡ New face face_1 recognized instantly as Kartikey (70.69%)
+2025-10-11 23:34:31 [INFO] ⚡ Recognition completed in 0.501s | Active faces: 1
+2025-10-11 23:34:31 [INFO] 🔁 Internal recheck 2/3 for Kartikey (72.23%)
+2025-10-11 23:34:31 [INFO] ⚡ Recognition completed in 0.316s | Active faces: 1
+2025-10-11 23:34:31 [INFO] ✅ Face face_1 verified internally as Kartikey (3x match, 67.21%)
+2025-10-11 23:34:31 [INFO] ⚡ Recognition completed in 0.330s | Active faces: 1
+2025-10-11 23:34:32 [INFO] ⚡ New face face_1 recognized instantly as Kartikey (64.86%)
+2025-10-11 23:34:32 [INFO] ⚡ Recognition completed in 0.343s | Active faces: 1
+2025-10-11 23:34:32 [INFO] 🔁 Internal recheck 2/3 for Kartikey (63.50%)
+2025-10-11 23:34:32 [INFO] ⚡ Recognition completed in 0.345s | Active faces: 1
+2025-10-11 23:34:32 [INFO] ⚡ New face face_1 recognized instantly as Kartikey (65.76%)
+2025-10-11 23:34:32 [INFO] ⚡ Recognition completed in 0.424s | Active faces: 1
+2025-10-11 23:34:33 [INFO] ⚡ New face face_1 recognized instantly as Kartikey (55.60%)
+2025-10-11 23:34:33 [INFO] ⚡ Recognition completed in 0.316s | Active faces: 1
+2025-10-11 23:34:33 [INFO] ⚡ New face face_1 recognized instantly as Kartikey (72.70%)
+2025-10-11 23:34:33 [INFO] ⚡ Recognition completed in 0.471s | Active faces: 1
+2025-10-11 23:34:34 [INFO] 🔁 Internal recheck 2/3 for Kartikey (72.73%)
+2025-10-11 23:34:34 [INFO] ⚡ Recognition completed in 0.365s | Active faces: 1
+2025-10-11 23:34:34 [INFO] ⚡ New face face_1 recognized instantly as Kartikey (72.07%)
+2025-10-11 23:34:34 [INFO] ⚡ Recognition completed in 0.312s | Active faces: 1
+2025-10-11 23:34:35 [INFO] 🧹 Cleared active_faces cache after attendance mark
+2025-10-11 23:34:35 [INFO] ⚡ New face face_1 recognized instantly as Kartikey (73.82%)
+2025-10-11 23:34:35 [INFO] ⚡ Recognition completed in 0.272s | Active faces: 1
+2025-10-11 23:34:36 [INFO] 🧹 Cleared active_faces cache after attendance mark
+2025-10-11 23:34:38 [INFO] ⚡ New face face_1 recognized instantly as Kartikey (74.48%)
+2025-10-11 23:34:38 [INFO] ⚡ Recognition completed in 1.204s | Active faces: 1
+2025-10-11 23:34:40 [INFO] 🔁 Internal recheck 2/3 for Kartikey (72.26%)
+2025-10-11 23:34:40 [INFO] ⚡ Recognition completed in 1.111s | Active faces: 1
+2025-10-11 23:34:41 [INFO] ✅ Face face_1 verified internally as Kartikey (3x match, 74.17%)
+2025-10-11 23:34:41 [INFO] ⚡ Recognition completed in 0.689s | Active faces: 1
+2025-10-11 23:34:43 [INFO] ✅ Skipping confirmed face Kartikey
+2025-10-11 23:34:43 [INFO] ⚡ Recognition completed in 0.898s | Active faces: 1
+2025-10-11 23:34:45 [INFO] ⚡ New face face_1 recognized instantly as Kartikey (69.50%)
+2025-10-11 23:34:45 [INFO] ⚡ Recognition completed in 1.321s | Active faces: 1
+2025-10-11 23:34:47 [INFO] ⚡ New face face_1 recognized instantly as Kartikey (72.04%)
+2025-10-11 23:34:47 [INFO] ⚡ Recognition completed in 0.927s | Active faces: 1
+2025-10-11 23:34:49 [INFO] ⚡ New face face_1 recognized instantly as Kartikey (74.19%)
+2025-10-11 23:34:49 [INFO] ⚡ Recognition completed in 1.268s | Active faces: 1
+2025-10-11 23:34:59 [INFO] 🧹 Expired face removed: face_1 — will be rechecked if seen again
+2025-10-11 23:34:59 [INFO] ⚡ New face face_1 recognized instantly as Kartikey (65.43%)
+2025-10-11 23:34:59 [INFO] ⚡ Recognition completed in 0.376s | Active faces: 1
+2025-10-11 23:35:01 [INFO] ⚡ New face face_1 recognized instantly as Kartikey (73.95%)
+2025-10-11 23:35:01 [INFO] ⚡ Recognition completed in 1.244s | Active faces: 1
+2025-10-11 23:35:02 [INFO] 🔁 Internal recheck 2/3 for Kartikey (74.70%)
+2025-10-11 23:35:02 [INFO] ⚡ Recognition completed in 1.250s | Active faces: 1
+2025-10-11 23:35:03 [INFO] ⚡ Recognition completed in 1.339s (no faces found)
+2025-10-11 23:35:05 [INFO] ⚡ Recognition completed in 1.905s (no faces found)
+2025-10-11 23:35:06 [INFO] ⚡ New face face_1 recognized instantly as Kartikey (53.17%)
+2025-10-11 23:35:06 [INFO] ⚡ Recognition completed in 1.152s | Active faces: 1
+2025-10-11 23:35:08 [INFO] ⚡ New face face_1 recognized instantly as Kartikey (43.55%)
+2025-10-11 23:35:08 [INFO] ⚡ Recognition completed in 1.337s | Active faces: 1
+2025-10-11 23:35:09 [INFO] ⚡ Recognition completed in 1.321s (no faces found)
+2025-10-11 23:35:10 [INFO] ⚡ New face face_1 recognized instantly as Kartikey (59.99%)
+2025-10-11 23:35:10 [INFO] ⚡ Recognition completed in 1.353s | Active faces: 1
+2025-10-11 23:35:12 [INFO] ⚡ New face face_1 recognized instantly as Kartikey (57.57%)
+2025-10-11 23:35:12 [INFO] ⚡ Recognition completed in 1.797s | Active faces: 1
+2025-10-11 23:35:14 [INFO] ⚡ New face face_1 recognized instantly as Kartikey (60.27%)
+2025-10-11 23:35:14 [INFO] ⚡ Recognition completed in 1.376s | Active faces: 1
+2025-10-11 23:35:15 [INFO] ⚡ New face face_1 recognized instantly as Kartikey (69.34%)
+2025-10-11 23:35:15 [INFO] ⚡ Recognition completed in 1.377s | Active faces: 1
+2025-10-11 23:35:17 [INFO] ⚡ Recognition completed in 1.486s (no faces found)
+2025-10-11 23:35:18 [INFO] ⚡ New face face_1 recognized instantly as Kartikey (60.56%)
+2025-10-11 23:35:18 [INFO] ⚡ Recognition completed in 1.246s | Active faces: 1
+2025-10-11 23:35:19 [INFO] ⚡ Recognition completed in 1.426s (no faces found)
+2025-10-11 23:35:21 [INFO] ⚡ Recognition completed in 1.283s (no faces found)
+2025-10-11 23:35:22 [INFO] ⚡ New face face_1 recognized instantly as Kartikey (55.78%)
+2025-10-11 23:35:22 [INFO] ⚡ Recognition completed in 1.114s | Active faces: 1
+2025-10-11 23:35:24 [INFO] ⚡ Recognition completed in 1.875s (no faces found)
+2025-10-11 23:35:25 [INFO] ⚡ Recognition completed in 1.336s (no faces found)
+2025-10-11 23:35:26 [INFO] ⚡ Recognition completed in 1.279s (no faces found)
+2025-10-11 23:35:27 [INFO] ⚡ Recognition completed in 1.295s (no faces found)
+2025-10-11 23:35:29 [INFO] ⚡ Recognition completed in 1.191s (no faces found)
+2025-10-11 23:35:30 [INFO] ⚡ Recognition completed in 1.073s (no faces found)
+2025-10-11 23:35:31 [INFO] 🧹 Expired face removed: face_1 — will be rechecked if seen again
+2025-10-11 23:35:31 [INFO] ⚡ New face face_1 recognized instantly as Kartikey (53.81%)
+2025-10-11 23:35:31 [INFO] ⚡ Recognition completed in 1.183s | Active faces: 1
+2025-10-11 23:35:32 [INFO] ⚡ Recognition completed in 1.283s (no faces found)
+2025-10-11 23:35:33 [INFO] ⚡ Recognition completed in 1.245s (no faces found)
+2025-10-11 23:35:35 [INFO] ⚡ Recognition completed in 1.113s (no faces found)
+2025-10-11 23:35:36 [INFO] ⚡ Recognition completed in 1.036s (no faces found)
+2025-10-11 23:35:37 [INFO] ⚡ Recognition completed in 1.045s (no faces found)
+2025-10-11 23:35:38 [INFO] 🧹 Expired face removed: face_1 — will be rechecked if seen again
+2025-10-11 23:35:38 [INFO] ⚡ New face face_1 recognized instantly as Kartikey (42.68%)
+2025-10-11 23:35:38 [INFO] ⚡ Recognition completed in 1.650s | Active faces: 1
+2025-10-11 23:35:40 [INFO] ⚡ New face face_1 recognized instantly as Kartikey (46.93%)
+2025-10-11 23:35:40 [INFO] ⚡ Recognition completed in 1.626s | Active faces: 1
+2025-10-11 23:35:41 [INFO] ⚡ Recognition completed in 1.302s (no faces found)
+2025-10-11 23:35:42 [INFO] ⚡ Recognition completed in 1.126s (no faces found)
+2025-10-11 23:35:43 [INFO] ⚡ Recognition completed in 0.931s (no faces found)
+2025-10-11 23:35:44 [INFO] ⚡ Recognition completed in 1.098s (no faces found)
+2025-10-11 23:35:46 [INFO] ⚡ Recognition completed in 1.188s (no faces found)
+2025-10-11 23:35:47 [INFO] 🧹 Expired face removed: face_1 — will be rechecked if seen again
+2025-10-11 23:35:47 [INFO] ⚡ New face face_1 recognized instantly as Kartikey (60.69%)
+2025-10-11 23:35:47 [INFO] ⚡ Recognition completed in 1.504s | Active faces: 1
+2025-10-11 23:35:49 [INFO] ⚡ New face face_1 recognized instantly as Kartikey (50.42%)
+2025-10-11 23:35:49 [INFO] ⚡ Recognition completed in 1.605s | Active faces: 1
+2025-10-11 23:35:50 [INFO] ⚡ New face face_1 recognized instantly as Kartikey (60.04%)
+2025-10-11 23:35:50 [INFO] ⚡ Recognition completed in 1.174s | Active faces: 1
+2025-10-11 23:35:51 [INFO] 🔁 Internal recheck 2/3 for Kartikey (59.80%)
+2025-10-11 23:35:51 [INFO] ⚡ Recognition completed in 1.151s | Active faces: 1
+2025-10-11 23:35:53 [INFO] ⚡ New face face_1 recognized instantly as Kartikey (55.13%)
+2025-10-11 23:35:53 [INFO] ⚡ Recognition completed in 2.035s | Active faces: 1
+2025-10-11 23:35:55 [INFO] ⚡ New face face_1 recognized instantly as Kartikey (58.44%)
+2025-10-11 23:35:55 [INFO] ⚡ Recognition completed in 1.826s | Active faces: 1
+2025-10-11 23:35:57 [INFO] 🔁 Internal recheck 2/3 for Kartikey (58.87%)
+2025-10-11 23:35:57 [INFO] ⚡ Recognition completed in 1.859s | Active faces: 1
+2025-10-11 23:35:59 [INFO] ✅ Face face_1 verified internally as Kartikey (3x match, 61.12%)
+2025-10-11 23:35:59 [INFO] ⚡ Recognition completed in 1.852s | Active faces: 1
+2025-10-11 23:36:00 [INFO] ⚡ Recognition completed in 1.122s (no faces found)
+2025-10-11 23:36:01 [INFO] ⚡ Recognition completed in 1.013s (no faces found)
+2025-10-11 23:36:02 [INFO] ⚡ New face face_1 recognized instantly as Kartikey (54.16%)
+2025-10-11 23:36:02 [INFO] ⚡ Recognition completed in 1.087s | Active faces: 1
+2025-10-11 23:36:03 [INFO] ⚡ New face face_1 recognized instantly as Unknown (22.21%)
+2025-10-11 23:36:03 [INFO] ⚡ Recognition completed in 1.173s | Active faces: 1
+2025-10-11 23:36:04 [INFO] ⚡ New face face_1 recognized instantly as Kartikey (45.43%)
+2025-10-11 23:36:04 [INFO] ⚡ Recognition completed in 1.285s | Active faces: 1
+2025-10-11 23:36:06 [INFO] ⚡ Recognition completed in 1.272s (no faces found)
+2025-10-11 23:36:07 [INFO] ⚡ Recognition completed in 1.395s (no faces found)
+2025-10-11 23:36:08 [INFO] ⚡ Recognition completed in 1.118s (no faces found)
+2025-10-11 23:36:09 [INFO] ⚡ New face face_1 recognized instantly as Unknown (24.60%)
+2025-10-11 23:36:09 [INFO] ⚡ Recognition completed in 1.206s | Active faces: 1
+2025-10-11 23:36:11 [INFO] ⚡ Recognition completed in 1.310s (no faces found)
+2025-10-11 23:36:12 [INFO] ⚡ New face face_1 recognized instantly as Kartikey (45.00%)
+2025-10-11 23:36:12 [INFO] ⚡ Recognition completed in 1.096s | Active faces: 1
+2025-10-11 23:36:13 [INFO] ⚡ Recognition completed in 1.211s (no faces found)
+2025-10-11 23:36:14 [INFO] ⚡ Recognition completed in 1.129s (no faces found)
+2025-10-11 23:36:15 [INFO] ⚡ Recognition completed in 1.128s (no faces found)
+2025-10-11 23:36:17 [INFO] 🧹 Expired face removed: face_1 — will be rechecked if seen again
+2025-10-11 23:36:17 [INFO] ⚡ New face face_1 recognized instantly as Kartikey (50.70%)
+2025-10-11 23:36:17 [INFO] ⚡ Recognition completed in 1.630s | Active faces: 1
+2025-10-11 23:36:18 [INFO] ⚡ Recognition completed in 1.443s (no faces found)
+2025-10-11 23:36:19 [INFO] ⚡ Recognition completed in 0.598s (no faces found)
+2025-10-11 23:36:20 [INFO] ⚡ Recognition completed in 0.638s (no faces found)
+2025-10-11 23:36:21 [INFO] ⚡ Recognition completed in 1.707s (no faces found)
+2025-10-11 23:36:22 [INFO] ⚡ Recognition completed in 1.045s (no faces found)
+2025-10-11 23:36:23 [INFO] 🧹 Expired face removed: face_1 — will be rechecked if seen again
+2025-10-11 23:36:23 [INFO] ⚡ New face face_1 recognized instantly as Kartikey (59.84%)
+2025-10-11 23:36:23 [INFO] ⚡ Recognition completed in 1.014s | Active faces: 1
+2025-10-11 23:36:25 [INFO] ⚡ New face face_1 recognized instantly as Kartikey (44.78%)
+2025-10-11 23:36:25 [INFO] ⚡ Recognition completed in 1.259s | Active faces: 1
+2025-10-11 23:36:26 [INFO] ⚡ New face face_1 recognized instantly as Kartikey (61.33%)
+2025-10-11 23:36:26 [INFO] ⚡ Recognition completed in 0.906s | Active faces: 1
+2025-10-11 23:36:26 [INFO] ⚡ New face face_1 recognized instantly as Kartikey (41.22%)
+2025-10-11 23:36:26 [INFO] ⚡ Recognition completed in 0.823s | Active faces: 1
+2025-10-11 23:36:28 [INFO] ⚡ Recognition completed in 1.312s (no faces found)
+2025-10-11 23:36:30 [INFO] ⚡ Recognition completed in 2.332s (no faces found)
+2025-10-11 23:36:31 [INFO] ⚡ Recognition completed in 1.255s (no faces found)
+2025-10-11 23:36:32 [INFO] 🧹 Expired face removed: face_1 — will be rechecked if seen again
+2025-10-11 23:36:32 [INFO] ⚡ New face face_1 recognized instantly as Kartikey (47.53%)
+2025-10-11 23:36:32 [INFO] ⚡ Recognition completed in 1.178s | Active faces: 1
+2025-10-11 23:36:35 [INFO] ⚡ New face face_1 recognized instantly as Unknown (21.85%)
+2025-10-11 23:36:35 [INFO] ⚡ Recognition completed in 2.899s | Active faces: 1
+2025-10-11 23:36:36 [INFO] ⚡ New face face_1 recognized instantly as Kartikey (67.16%)
+2025-10-11 23:36:36 [INFO] ⚡ Recognition completed in 0.317s | Active faces: 1
+2025-10-11 23:36:36 [INFO] ⚡ New face face_1 recognized instantly as Kartikey (54.22%)
+2025-10-11 23:36:36 [INFO] ⚡ Recognition completed in 0.366s | Active faces: 1
+2025-10-11 23:36:36 [INFO] ⚡ New face face_1 recognized instantly as Kartikey (69.36%)
+2025-10-11 23:36:36 [INFO] ⚡ Recognition completed in 0.313s | Active faces: 1
+2025-10-11 23:36:37 [INFO] 🔁 Internal recheck 2/3 for Kartikey (66.50%)
+2025-10-11 23:36:37 [INFO] ⚡ Recognition completed in 0.317s | Active faces: 1
+2025-10-11 23:36:37 [INFO] ⚡ Recognition completed in 0.405s (no faces found)
+2025-10-11 23:36:37 [INFO] ⚡ Recognition completed in 0.212s (no faces found)
+2025-10-11 23:36:38 [INFO] ⚡ Recognition completed in 0.202s (no faces found)
+2025-10-11 23:36:38 [INFO] ⚡ New face face_1 recognized instantly as Kartikey (78.65%)
+2025-10-11 23:36:38 [INFO] ⚡ Recognition completed in 0.183s | Active faces: 1
+2025-10-11 23:36:38 [INFO] ⚡ Recognition completed in 0.355s (no faces found)
+2025-10-11 23:37:10 [INFO] 🧹 Expired face removed: face_1 — will be rechecked if seen again
+2025-10-11 23:37:10 [INFO] ⚡ New face face_1 recognized instantly as Kartikey (65.65%)
+2025-10-11 23:37:10 [INFO] ⚡ Recognition completed in 1.673s | Active faces: 1
+2025-10-11 23:37:12 [INFO] ⚡ New face face_1 recognized instantly as Kartikey (63.27%)
+2025-10-11 23:37:12 [INFO] ⚡ Recognition completed in 2.199s | Active faces: 1
+2025-10-11 23:37:14 [INFO] ⚡ New face face_1 recognized instantly as Kartikey (80.05%)
+2025-10-11 23:37:14 [INFO] ⚡ Recognition completed in 2.143s | Active faces: 1
+2025-10-11 23:37:14 [INFO] ⚡ New face face_1 recognized instantly as Kartikey (77.69%)
+2025-10-11 23:37:14 [INFO] ⚡ Recognition completed in 0.361s | Active faces: 1
+2025-10-11 23:37:15 [INFO] ⚡ New face face_1 recognized instantly as Kartikey (77.40%)
+2025-10-11 23:37:15 [INFO] ⚡ Recognition completed in 0.433s | Active faces: 1
+2025-10-11 23:37:15 [INFO] 🔁 Internal recheck 2/3 for Kartikey (78.91%)
+2025-10-11 23:37:15 [INFO] ⚡ Recognition completed in 0.326s | Active faces: 1
+2025-10-11 23:37:16 [INFO] ⚡ New face face_1 recognized instantly as Kartikey (71.37%)
+2025-10-11 23:37:16 [INFO] ⚡ Recognition completed in 0.450s | Active faces: 1
+2025-10-11 23:40:46 [INFO] ✅ Loaded 21 embeddings for 2 users into cache.
+2025-10-11 23:40:46 [INFO] ✅ Loaded embeddings for 2 users.
+2025-10-11 23:40:47 [INFO] ✅ Loaded 21 embeddings for 2 users into cache.
+2025-10-11 23:40:47 [INFO] ✅ Embedding cache refreshed successfully.
+2025-10-11 23:41:06 [INFO] ⚡ New face face_1 recognized instantly as Kartikey (79.66%)
+2025-10-11 23:41:06 [INFO] ⚡ Recognition completed in 5.376s | Active faces: 1
+2025-10-11 23:41:07 [INFO] 🔁 Internal recheck 2/3 for Kartikey (79.23%)
+2025-10-11 23:41:07 [INFO] ⚡ Recognition completed in 0.584s | Active faces: 1
+2025-10-11 23:41:07 [INFO] ✅ Face face_1 verified internally as Kartikey (3x match, 77.46%)
+2025-10-11 23:41:07 [INFO] ⚡ Recognition completed in 0.371s | Active faces: 1
+2025-10-11 23:41:08 [INFO] ✅ Skipping confirmed face Kartikey
+2025-10-11 23:41:08 [INFO] ⚡ Recognition completed in 0.329s | Active faces: 1
+2025-10-11 23:41:08 [INFO] ✅ Skipping confirmed face Kartikey
+2025-10-11 23:41:08 [INFO] ⚡ Recognition completed in 0.197s | Active faces: 1
+2025-10-11 23:41:14 [INFO] ⚡ Recognition completed in 2.044s (no faces found)
+2025-10-11 23:41:15 [INFO] 🧹 Expired face removed: face_1 — will be rechecked if seen again
+2025-10-11 23:41:15 [INFO] ⚡ New face face_1 recognized instantly as Kartikey (65.86%)
+2025-10-11 23:41:15 [INFO] ⚡ Recognition completed in 1.229s | Active faces: 1
+2025-10-11 23:41:16 [INFO] ⚡ New face face_1 recognized instantly as Kartikey (78.82%)
+2025-10-11 23:41:16 [INFO] ⚡ Recognition completed in 1.224s | Active faces: 1
+2025-10-11 23:41:18 [INFO] 🔁 Internal recheck 2/3 for Kartikey (73.82%)
+2025-10-11 23:41:18 [INFO] ⚡ Recognition completed in 1.352s | Active faces: 1
+2025-10-11 23:41:19 [INFO] ⚡ Recognition completed in 1.202s (no faces found)
+2025-10-11 23:41:20 [INFO] ✅ Face face_1 verified internally as Kartikey (3x match, 75.21%)
+2025-10-11 23:41:20 [INFO] ⚡ Recognition completed in 1.052s | Active faces: 1
+2025-10-11 23:41:21 [INFO] ⚡ Recognition completed in 1.285s (no faces found)
+2025-10-11 23:41:22 [INFO] ⚡ Recognition completed in 1.116s (no faces found)
+2025-10-11 23:41:23 [INFO] ⚡ New face face_1 recognized instantly as Kartikey (71.61%)
+2025-10-11 23:41:23 [INFO] ⚡ Recognition completed in 1.083s | Active faces: 1
+2025-10-11 23:41:25 [INFO] ⚡ New face face_1 recognized instantly as Kartikey (55.32%)
+2025-10-11 23:41:25 [INFO] ⚡ Recognition completed in 1.239s | Active faces: 1
+2025-10-11 23:41:26 [INFO] 🔁 Internal recheck 2/3 for Kartikey (57.79%)
+2025-10-11 23:41:26 [INFO] ⚡ Recognition completed in 1.167s | Active faces: 1
+2025-10-11 23:41:27 [INFO] ⚡ Recognition completed in 1.287s (no faces found)
+2025-10-11 23:41:28 [INFO] ⚡ Recognition completed in 1.269s (no faces found)
+2025-10-11 23:41:29 [INFO] ✅ Face face_1 verified internally as Kartikey (3x match, 49.84%)
+2025-10-11 23:41:29 [INFO] ⚡ Recognition completed in 1.009s | Active faces: 1
+2025-10-11 23:41:31 [INFO] ✅ Skipping confirmed face Kartikey
+2025-10-11 23:41:31 [INFO] ⚡ Recognition completed in 1.248s | Active faces: 1
+2025-10-11 23:41:32 [INFO] ⚡ New face face_1 recognized instantly as Kartikey (73.37%)
+2025-10-11 23:41:32 [INFO] ⚡ Recognition completed in 1.101s | Active faces: 1
+2025-10-11 23:41:33 [INFO] ⚡ Recognition completed in 1.478s (no faces found)
+2025-10-11 23:41:34 [INFO] ⚡ Recognition completed in 1.134s (no faces found)
+2025-10-11 23:41:36 [INFO] ⚡ New face face_1 recognized instantly as Unknown (31.94%)
+2025-10-11 23:41:36 [INFO] ⚡ Recognition completed in 1.112s | Active faces: 1
+2025-10-11 23:41:37 [INFO] ⚡ New face face_1 recognized instantly as Kartikey (39.86%)
+2025-10-11 23:41:37 [INFO] ⚡ Recognition completed in 1.357s | Active faces: 1
+2025-10-11 23:41:38 [INFO] ⚡ Recognition completed in 1.344s (no faces found)
+2025-10-11 23:41:39 [INFO] ⚡ New face face_1 recognized instantly as Kartikey (43.83%)
+2025-10-11 23:41:39 [INFO] ⚡ Recognition completed in 1.099s | Active faces: 1
+2025-10-11 23:41:41 [INFO] ⚡ New face face_1 recognized instantly as Kartikey (46.76%)
+2025-10-11 23:41:41 [INFO] ⚡ Recognition completed in 1.172s | Active faces: 1
+2025-10-11 23:41:42 [INFO] ⚡ New face face_1 recognized instantly as Kartikey (55.46%)
+2025-10-11 23:41:42 [INFO] ⚡ Recognition completed in 1.261s | Active faces: 1
+2025-10-11 23:41:43 [INFO] ⚡ New face face_1 recognized instantly as Kartikey (51.28%)
+2025-10-11 23:41:43 [INFO] ⚡ Recognition completed in 1.144s | Active faces: 1
+2025-10-11 23:41:44 [INFO] ⚡ New face face_1 recognized instantly as Kartikey (64.75%)
+2025-10-11 23:41:44 [INFO] ⚡ Recognition completed in 1.145s | Active faces: 1
+2025-10-11 23:41:45 [INFO] ⚡ New face face_1 recognized instantly as Kartikey (53.78%)
+2025-10-11 23:41:45 [INFO] ⚡ Recognition completed in 1.199s | Active faces: 1
+2025-10-11 23:41:47 [INFO] ⚡ Recognition completed in 1.382s (no faces found)
+2025-10-11 23:41:48 [INFO] ⚡ New face face_1 recognized instantly as Kartikey (71.83%)
+2025-10-11 23:41:48 [INFO] ⚡ Recognition completed in 1.337s | Active faces: 1
+2025-10-11 23:41:48 [INFO] ⚡ Recognition completed in 0.355s (no faces found)
+2025-10-11 23:41:49 [INFO] ⚡ New face face_1 recognized instantly as Kartikey (68.24%)
+2025-10-11 23:41:49 [INFO] ⚡ Recognition completed in 0.203s | Active faces: 1
+2025-10-11 23:41:49 [INFO] ⚡ Recognition completed in 0.477s (no faces found)
+2025-10-11 23:41:49 [INFO] ⚡ New face face_1 recognized instantly as Kartikey (70.63%)
+2025-10-11 23:41:49 [INFO] ⚡ Recognition completed in 0.242s | Active faces: 1
+2025-10-11 23:41:50 [INFO] ⚡ New face face_1 recognized instantly as Kartikey (63.12%)
+2025-10-11 23:41:50 [INFO] ⚡ Recognition completed in 0.473s | Active faces: 1
+2025-10-11 23:41:50 [INFO] ⚡ New face face_1 recognized instantly as Kartikey (52.73%)
+2025-10-11 23:41:50 [INFO] ⚡ Recognition completed in 0.354s | Active faces: 1
+2025-10-11 23:41:50 [INFO] ⚡ New face face_1 recognized instantly as Kartikey (71.32%)
+2025-10-11 23:41:50 [INFO] ⚡ Recognition completed in 0.341s | Active faces: 1
+2025-10-11 23:43:23 [INFO] ✅ Loaded 21 embeddings for 2 users into cache.
+2025-10-11 23:43:23 [INFO] ✅ Loaded embeddings for 2 users.
+2025-10-11 23:43:23 [INFO] ✅ Loaded 21 embeddings for 2 users into cache.
+2025-10-11 23:43:23 [INFO] ✅ Embedding cache refreshed successfully.
+2025-10-11 23:43:52 [INFO] ✅ Loaded 21 embeddings for 2 users into cache.
+2025-10-11 23:43:52 [INFO] ✅ Loaded embeddings for 2 users.
+2025-10-11 23:43:52 [INFO] ✅ Loaded 21 embeddings for 2 users into cache.
+2025-10-11 23:43:52 [INFO] ✅ Embedding cache refreshed successfully.
+2025-10-11 23:44:28 [INFO] ⚡ New face face_1 recognized instantly as Kartikey (79.69%)
+2025-10-11 23:44:28 [INFO] ⚡ Recognition completed in 4.930s | Active faces: 1
+2025-10-11 23:44:31 [INFO] 🔁 Internal recheck 2/3 for Kartikey (77.21%)
+2025-10-11 23:44:31 [INFO] ⚡ Recognition completed in 2.534s | Active faces: 1
+2025-10-11 23:44:32 [INFO] ✅ Face face_1 verified internally as Kartikey (3x match, 80.23%)
+2025-10-11 23:44:32 [INFO] ⚡ Recognition completed in 0.850s | Active faces: 1
+2025-10-11 23:44:35 [INFO] ✅ Skipping confirmed face Kartikey
+2025-10-11 23:44:35 [INFO] ⚡ Recognition completed in 1.299s | Active faces: 1
+2025-10-11 23:44:36 [INFO] ⚡ New face face_1 recognized instantly as Kartikey (77.64%)
+2025-10-11 23:44:36 [INFO] ⚡ Recognition completed in 0.731s | Active faces: 1
+2025-10-11 23:44:37 [INFO] 🔁 Internal recheck 2/3 for Kartikey (77.08%)
+2025-10-11 23:44:37 [INFO] ⚡ Recognition completed in 0.914s | Active faces: 1
+2025-10-11 23:44:39 [INFO] ⚡ New face face_1 recognized instantly as Kartikey (79.63%)
+2025-10-11 23:44:39 [INFO] ⚡ Recognition completed in 1.292s | Active faces: 1
+2025-10-11 23:44:42 [INFO] ⚡ New face face_1 recognized instantly as Kartikey (57.25%)
+2025-10-11 23:44:42 [INFO] ⚡ Recognition completed in 1.410s | Active faces: 1
+2025-10-11 23:44:44 [INFO] ⚡ New face face_1 recognized instantly as Kartikey (73.39%)
+2025-10-11 23:44:44 [INFO] ⚡ Recognition completed in 1.489s | Active faces: 1
+2025-10-11 23:44:45 [INFO] ⚡ New face face_1 recognized instantly as Kartikey (74.30%)
+2025-10-11 23:44:45 [INFO] ⚡ Recognition completed in 0.970s | Active faces: 1
+2025-10-11 23:44:48 [INFO] 🔁 Internal recheck 2/3 for Kartikey (73.60%)
+2025-10-11 23:44:48 [INFO] ⚡ Recognition completed in 1.551s | Active faces: 1
+2025-10-11 23:44:50 [INFO] ✅ Face face_1 verified internally as Kartikey (3x match, 74.57%)
+2025-10-11 23:44:50 [INFO] ⚡ Recognition completed in 1.789s | Active faces: 1
+2025-10-11 23:44:55 [INFO] ⚡ New face face_1 recognized instantly as Kartikey (75.99%)
+2025-10-11 23:44:55 [INFO] ⚡ Recognition completed in 1.824s | Active faces: 1
+2025-10-11 23:44:56 [INFO] 🔁 Internal recheck 2/3 for Kartikey (74.58%)
+2025-10-11 23:44:56 [INFO] ⚡ Recognition completed in 0.825s | Active faces: 1
+2025-10-11 23:44:56 [INFO] ✅ Face face_1 verified internally as Kartikey (3x match, 77.04%)
+2025-10-11 23:44:56 [INFO] ⚡ Recognition completed in 0.466s | Active faces: 1
+2025-10-11 23:48:10 [INFO] ✅ Loaded 21 embeddings for 2 users into cache.
+2025-10-11 23:48:10 [INFO] ✅ Loaded embeddings for 2 users.
+2025-10-11 23:48:10 [INFO] ✅ Loaded 21 embeddings for 2 users into cache.
+2025-10-11 23:48:10 [INFO] ✅ Embedding cache refreshed successfully.
+2025-10-11 23:48:52 [INFO] ✅ Loaded 21 embeddings for 2 users into cache.
+2025-10-11 23:48:52 [INFO] ✅ Loaded embeddings for 2 users.
+2025-10-11 23:48:52 [INFO] ✅ Loaded 21 embeddings for 2 users into cache.
+2025-10-11 23:48:52 [INFO] ✅ Embedding cache refreshed successfully.
+2025-10-11 23:49:01 [INFO] ⚡ New face face_1 recognized instantly as Kartikey (71.58%)
+2025-10-11 23:49:01 [INFO] ⚡ Recognition completed in 4.536s | Active faces: 1
+2025-10-11 23:49:02 [INFO] 🔁 Internal recheck 2/3 for Kartikey (68.59%)
+2025-10-11 23:49:02 [INFO] ⚡ Recognition completed in 0.455s | Active faces: 1
+2025-10-11 23:49:02 [INFO] ⚡ New face face_1 recognized instantly as Kartikey (67.77%)
+2025-10-11 23:49:02 [INFO] ⚡ Recognition completed in 0.376s | Active faces: 1
+2025-10-11 23:49:03 [INFO] ⚡ New face face_1 recognized instantly as Kartikey (70.88%)
+2025-10-11 23:49:03 [INFO] ⚡ Recognition completed in 0.403s | Active faces: 1
+2025-10-11 23:49:03 [INFO] ⚡ New face face_1 recognized instantly as Kartikey (71.93%)
+2025-10-11 23:49:03 [INFO] ⚡ Recognition completed in 0.363s | Active faces: 1
+2025-10-11 23:49:03 [INFO] 🔁 Internal recheck 2/3 for Kartikey (67.50%)
+2025-10-11 23:49:03 [INFO] ⚡ Recognition completed in 0.379s | Active faces: 1
+2025-10-11 23:49:05 [INFO] ⚡ New face face_1 recognized instantly as Kartikey (74.45%)
+2025-10-11 23:49:05 [INFO] ⚡ Recognition completed in 2.043s | Active faces: 1
+2025-10-11 23:49:06 [INFO] 🔁 Internal recheck 2/3 for Kartikey (69.09%)
+2025-10-11 23:49:06 [INFO] ⚡ Recognition completed in 0.428s | Active faces: 1
+2025-10-11 23:49:06 [INFO] ✅ Face face_1 verified internally as Kartikey (3x match, 77.30%)
+2025-10-11 23:49:06 [INFO] ⚡ Recognition completed in 0.392s | Active faces: 1
+2025-10-11 23:49:07 [INFO] ✅ Skipping confirmed face Kartikey
+2025-10-11 23:49:07 [INFO] ⚡ Recognition completed in 0.332s | Active faces: 1
+2025-10-11 23:49:21 [INFO] 🧹 Expired face removed: face_1 — will be rechecked if seen again
+2025-10-11 23:49:21 [INFO] ⚡ New face face_1 recognized instantly as Kartikey (79.61%)
+2025-10-11 23:49:21 [INFO] ⚡ Recognition completed in 1.995s | Active faces: 1
+2025-10-11 23:49:22 [INFO] ⚡ New face face_1 recognized instantly as Unknown (21.56%)
+2025-10-11 23:49:22 [INFO] ⚡ Recognition completed in 1.687s | Active faces: 1
+2025-10-11 23:49:24 [INFO] ⚡ New face face_1 recognized instantly as Kartikey (78.36%)
+2025-10-11 23:49:24 [INFO] ⚡ Recognition completed in 1.137s | Active faces: 1
+2025-10-11 23:49:24 [INFO] 🔁 Internal recheck 2/3 for Kartikey (79.42%)
+2025-10-11 23:49:24 [INFO] ⚡ Recognition completed in 0.572s | Active faces: 1
+2025-10-11 23:51:38 [INFO] 🧹 Expired face removed: face_1 — will be rechecked if seen again
+2025-10-11 23:51:38 [INFO] ⚡ New face face_1 recognized instantly as Kartikey (72.44%)
+2025-10-11 23:51:38 [INFO] ⚡ Recognition completed in 4.146s | Active faces: 1
+2025-10-11 23:51:40 [INFO] ⚡ New face face_1 recognized instantly as Kartikey (68.17%)
+2025-10-11 23:51:40 [INFO] ⚡ Recognition completed in 2.426s | Active faces: 1
+2025-10-11 23:51:41 [INFO] ⚡ New face face_1 recognized instantly as Kartikey (75.00%)
+2025-10-11 23:51:41 [INFO] ⚡ Recognition completed in 0.468s | Active faces: 1
+2025-10-11 23:51:42 [INFO] ⚡ New face face_1 recognized instantly as Kartikey (71.32%)
+2025-10-11 23:51:42 [INFO] ⚡ Recognition completed in 0.809s | Active faces: 1
+2025-10-11 23:51:42 [INFO] ⚡ New face face_1 recognized instantly as Kartikey (69.15%)
+2025-10-11 23:51:42 [INFO] ⚡ Recognition completed in 0.386s | Active faces: 1
+2025-10-11 23:51:45 [INFO] ⚡ New face face_1 recognized instantly as Kartikey (76.03%)
+2025-10-11 23:51:45 [INFO] ⚡ Recognition completed in 2.624s | Active faces: 1
+2025-10-11 23:51:49 [INFO] 🔁 Internal recheck 2/3 for Kartikey (72.37%)
+2025-10-11 23:51:49 [INFO] ⚡ Recognition completed in 4.330s | Active faces: 1
+2025-10-11 23:51:50 [INFO] ✅ Face face_1 verified internally as Kartikey (3x match, 70.25%)
+2025-10-11 23:51:50 [INFO] ⚡ Recognition completed in 0.562s | Active faces: 1
+2025-10-11 23:51:50 [INFO] ⚡ New face face_1 recognized instantly as Kartikey (72.67%)
+2025-10-11 23:51:50 [INFO] ⚡ Recognition completed in 0.393s | Active faces: 1
+2025-10-11 23:51:50 [INFO] 🔁 Internal recheck 2/3 for Kartikey (77.90%)
+2025-10-11 23:51:50 [INFO] ⚡ Recognition completed in 0.416s | Active faces: 1
+2025-10-11 23:51:51 [INFO] ✅ Face face_1 verified internally as Kartikey (3x match, 72.31%)
+2025-10-11 23:51:51 [INFO] ⚡ Recognition completed in 0.506s | Active faces: 1
+2025-10-11 23:51:51 [INFO] ✅ Skipping confirmed face Kartikey
+2025-10-11 23:51:51 [INFO] ⚡ Recognition completed in 0.491s | Active faces: 1
+2025-10-11 23:51:52 [INFO] ✅ Skipping confirmed face Kartikey
+2025-10-11 23:51:52 [INFO] ⚡ Recognition completed in 0.265s | Active faces: 1
+2025-10-11 23:51:52 [INFO] ✅ Skipping confirmed face Kartikey
+2025-10-11 23:51:52 [INFO] ⚡ Recognition completed in 0.276s | Active faces: 1
+2025-10-11 23:54:03 [INFO] 🧹 Expired face removed: face_1 — will be rechecked if seen again
+2025-10-11 23:54:03 [INFO] ⚡ New face face_1 recognized instantly as Kartikey (74.00%)
+2025-10-11 23:54:03 [INFO] ⚡ Recognition completed in 1.618s | Active faces: 1
+2025-10-11 23:54:05 [INFO] ⚡ New face face_1 recognized instantly as Kartikey (78.70%)
+2025-10-11 23:54:05 [INFO] ⚡ Recognition completed in 1.139s | Active faces: 1
+2025-10-11 23:54:07 [INFO] ⚡ New face face_1 recognized instantly as Kartikey (77.13%)
+2025-10-11 23:54:07 [INFO] ⚡ Recognition completed in 0.962s | Active faces: 1
+2025-10-11 23:54:08 [INFO] ⚡ New face face_1 recognized instantly as Kartikey (75.02%)
+2025-10-11 23:54:08 [INFO] ⚡ Recognition completed in 0.687s | Active faces: 1
+2025-10-11 23:57:22 [INFO] ✅ Loaded 21 embeddings for 2 users into cache.
+2025-10-11 23:57:22 [INFO] ✅ Loaded embeddings for 2 users.
+2025-10-11 23:57:22 [INFO] ✅ Loaded 21 embeddings for 2 users into cache.
+2025-10-11 23:57:22 [INFO] ✅ Embedding cache refreshed successfully.
+2025-10-11 23:57:42 [INFO] ⚡ New face face_1 recognized instantly as Kartikey (71.84%)
+2025-10-11 23:57:42 [INFO] ⚡ Recognition completed in 9.358s | Active faces: 1
+2025-10-11 23:57:43 [INFO] ⚡ New face face_1 recognized instantly as Kartikey (73.07%)
+2025-10-11 23:57:43 [INFO] ⚡ Recognition completed in 0.443s | Active faces: 1
+2025-10-11 23:57:43 [INFO] ⚡ Using cached detection results (Δt=0.43s)
+2025-10-11 23:57:43 [INFO] 🔁 Internal recheck 2/3 for Kartikey (73.07%)
+2025-10-11 23:57:43 [INFO] ⚡ Recognition completed in 0.001s | Active faces: 1
+2025-10-11 23:57:43 [INFO] ⚡ Using cached detection results (Δt=0.44s)
+2025-10-11 23:57:43 [INFO] ✅ Face face_1 verified internally as Kartikey (3x match, 73.07%)
+2025-10-11 23:57:43 [INFO] ⚡ Recognition completed in 0.002s | Active faces: 1
+2025-10-11 23:57:43 [INFO] ⚡ Using cached detection results (Δt=0.44s)
+2025-10-11 23:57:43 [INFO] ✅ Skipping confirmed face Kartikey
+2025-10-11 23:57:43 [INFO] ⚡ Recognition completed in 0.002s | Active faces: 1
+2025-10-11 23:57:43 [INFO] ⚡ Using cached detection results (Δt=0.44s)
+2025-10-11 23:57:43 [INFO] ✅ Skipping confirmed face Kartikey
+2025-10-11 23:57:43 [INFO] ⚡ Recognition completed in 0.002s | Active faces: 1
+2025-10-11 23:57:43 [INFO] ⚡ Using cached detection results (Δt=0.45s)
+2025-10-11 23:57:43 [INFO] ✅ Skipping confirmed face Kartikey
+2025-10-11 23:57:43 [INFO] ⚡ Recognition completed in 0.002s | Active faces: 1
+2025-10-11 23:57:43 [INFO] ⚡ Using cached detection results (Δt=0.46s)
+2025-10-11 23:57:43 [INFO] ✅ Skipping confirmed face Kartikey
+2025-10-11 23:57:43 [INFO] ⚡ Recognition completed in 0.018s | Active faces: 1
+2025-10-11 23:57:43 [INFO] ⚡ Using cached detection results (Δt=0.47s)
+2025-10-11 23:57:43 [INFO] ✅ Skipping confirmed face Kartikey
+2025-10-11 23:57:43 [INFO] ⚡ Recognition completed in 0.002s | Active faces: 1
+2025-10-11 23:57:43 [INFO] ⚡ Using cached detection results (Δt=0.49s)
+2025-10-11 23:57:43 [INFO] ✅ Skipping confirmed face Kartikey
+2025-10-11 23:57:43 [INFO] ⚡ Recognition completed in 0.009s | Active faces: 1
+2025-10-11 23:57:43 [INFO] ⚡ Using cached detection results (Δt=0.64s)
+2025-10-11 23:57:43 [INFO] ✅ Skipping confirmed face Kartikey
+2025-10-11 23:57:43 [INFO] ⚡ Recognition completed in 0.001s | Active faces: 1
+2025-10-11 23:57:46 [INFO] ✅ Skipping confirmed face Kartikey
+2025-10-11 23:57:46 [INFO] ⚡ Recognition completed in 1.624s | Active faces: 1
+2025-10-11 23:57:46 [INFO] ✅ Skipping confirmed face Kartikey
+2025-10-11 23:57:46 [INFO] ⚡ Recognition completed in 0.392s | Active faces: 1
+2025-10-11 23:57:49 [INFO] ⚡ New face face_1 recognized instantly as Kartikey (74.53%)
+2025-10-11 23:57:49 [INFO] ⚡ Recognition completed in 0.880s | Active faces: 1
+2025-10-11 23:57:52 [INFO] ⚡ New face face_1 recognized instantly as Kartikey (75.08%)
+2025-10-11 23:57:52 [INFO] ⚡ Recognition completed in 0.964s | Active faces: 1
+2025-10-11 23:57:54 [INFO] ⚡ New face face_1 recognized instantly as Kartikey (71.60%)
+2025-10-11 23:57:54 [INFO] ⚡ Recognition completed in 1.020s | Active faces: 1
+2025-10-11 23:57:56 [INFO] 🔁 Internal recheck 2/3 for Kartikey (73.98%)
+2025-10-11 23:57:56 [INFO] ⚡ Recognition completed in 0.853s | Active faces: 1
+2025-10-11 23:57:58 [INFO] ✅ Face face_1 verified internally as Kartikey (3x match, 76.18%)
+2025-10-11 23:57:58 [INFO] ⚡ Recognition completed in 1.367s | Active faces: 1
+2025-10-11 23:58:01 [INFO] ⚡ New face face_1 recognized instantly as Kartikey (77.11%)
+2025-10-11 23:58:01 [INFO] ⚡ Recognition completed in 0.965s | Active faces: 1
+2025-10-11 23:58:02 [INFO] 🔁 Internal recheck 2/3 for Kartikey (76.13%)
+2025-10-11 23:58:02 [INFO] ⚡ Recognition completed in 1.165s | Active faces: 1
+2025-10-11 23:58:03 [INFO] ⚡ New face face_1 recognized instantly as Kartikey (76.29%)
+2025-10-11 23:58:03 [INFO] ⚡ Recognition completed in 0.440s | Active faces: 1
+2025-10-11 23:58:06 [INFO] 🔁 Internal recheck 2/3 for Kartikey (76.37%)
+2025-10-11 23:58:06 [INFO] ⚡ Recognition completed in 0.886s | Active faces: 1
+2025-10-12 00:03:51 [INFO] ✅ Loaded 21 embeddings for 2 users into cache.
+2025-10-12 00:03:51 [INFO] ✅ Loaded embeddings for 2 users.
+2025-10-12 00:03:52 [INFO] ✅ Loaded 21 embeddings for 2 users into cache.
+2025-10-12 00:03:52 [INFO] ✅ Embedding cache refreshed successfully.
+2025-10-12 00:04:49 [INFO] ⚡ New face face_1 recognized instantly as Kartikey (76.38%)
+2025-10-12 00:04:49 [INFO] ⚡ Recognition completed in 2.567s | Active faces: 1
+2025-10-12 00:04:52 [INFO] ⚡ New face face_1 recognized instantly as Kartikey (69.26%)
+2025-10-12 00:04:52 [INFO] ⚡ Recognition completed in 2.656s | Active faces: 1
+2025-10-12 00:04:53 [INFO] 🔁 Internal recheck 2/3 for Kartikey (77.97%)
+2025-10-12 00:04:53 [INFO] ⚡ Recognition completed in 1.504s | Active faces: 1
+2025-10-12 00:04:56 [INFO] ✅ Face face_1 verified internally as Kartikey (3x match, 73.52%)
+2025-10-12 00:04:56 [INFO] ⚡ Recognition completed in 2.909s | Active faces: 1
+2025-10-12 00:04:59 [INFO] ⚡ New face face_1 recognized instantly as Kartikey (77.53%)
+2025-10-12 00:04:59 [INFO] ⚡ Recognition completed in 2.696s | Active faces: 1
+2025-10-12 00:05:00 [INFO] 🔁 Internal recheck 2/3 for Kartikey (78.59%)
+2025-10-12 00:05:00 [INFO] ⚡ Recognition completed in 0.813s | Active faces: 1
+2025-10-12 00:05:04 [INFO] ✅ Face face_1 verified internally as Kartikey (3x match, 76.71%)
+2025-10-12 00:05:04 [INFO] ⚡ Recognition completed in 2.579s | Active faces: 1
+2025-10-12 00:05:40 [INFO] ✅ Loaded 21 embeddings for 2 users into cache.
+2025-10-12 00:05:40 [INFO] ✅ Loaded embeddings for 2 users.
+2025-10-12 00:05:40 [INFO] ✅ Loaded 21 embeddings for 2 users into cache.
+2025-10-12 00:05:40 [INFO] ✅ Embedding cache refreshed successfully.
+2025-10-12 00:05:52 [INFO] ⚡ New face face_1 recognized instantly as Kartikey (77.05%)
+2025-10-12 00:05:52 [INFO] ⚡ Recognition completed in 2.815s | Active faces: 1
+2025-10-12 00:05:55 [INFO] ⚡ New face face_1 recognized instantly as Kartikey (67.28%)
+2025-10-12 00:05:55 [INFO] ⚡ Recognition completed in 3.238s | Active faces: 1
+2025-10-12 00:05:56 [INFO] ⚡ New face face_1 recognized instantly as Kartikey (67.10%)
+2025-10-12 00:05:56 [INFO] ⚡ Recognition completed in 0.630s | Active faces: 1
+2025-10-12 00:05:56 [INFO] ⚡ Using cached detection results (Δt=0.62s)
+2025-10-12 00:05:56 [INFO] 🔁 Internal recheck 2/3 for Kartikey (67.10%)
+2025-10-12 00:05:56 [INFO] ⚡ Recognition completed in 0.001s | Active faces: 1
+2025-10-12 00:05:56 [INFO] ⚡ Using cached detection results (Δt=0.62s)
+2025-10-12 00:05:56 [INFO] ✅ Face face_1 verified internally as Kartikey (3x match, 67.10%)
+2025-10-12 00:05:56 [INFO] ⚡ Recognition completed in 0.001s | Active faces: 1
+2025-10-12 00:05:56 [INFO] ⚡ Using cached detection results (Δt=0.62s)
+2025-10-12 00:05:56 [INFO] ✅ Skipping confirmed face Kartikey
+2025-10-12 00:05:56 [INFO] ⚡ Recognition completed in 0.001s | Active faces: 1
+2025-10-12 00:05:56 [INFO] ⚡ Using cached detection results (Δt=0.62s)
+2025-10-12 00:05:56 [INFO] ✅ Skipping confirmed face Kartikey
+2025-10-12 00:05:56 [INFO] ⚡ Recognition completed in 0.001s | Active faces: 1
+2025-10-12 00:06:07 [INFO] 🧹 Expired face removed: face_1 — will be rechecked if seen again
+2025-10-12 00:06:07 [INFO] ⚡ New face face_1 recognized instantly as Kartikey (75.55%)
+2025-10-12 00:06:07 [INFO] ⚡ Recognition completed in 2.074s | Active faces: 1
+2025-10-12 00:06:11 [INFO] 🔁 Internal recheck 2/3 for Kartikey (74.49%)
+2025-10-12 00:06:11 [INFO] ⚡ Recognition completed in 3.039s | Active faces: 1
+2025-10-12 00:06:12 [INFO] ⚡ New face face_1 recognized instantly as Kartikey (66.19%)
+2025-10-12 00:06:12 [INFO] ⚡ Recognition completed in 1.501s | Active faces: 1
+2025-10-12 00:06:14 [INFO] ⚡ New face face_1 recognized instantly as Kartikey (73.89%)
+2025-10-12 00:06:14 [INFO] ⚡ Recognition completed in 1.519s | Active faces: 1
+2025-10-12 00:06:16 [INFO] ⚡ Recognition completed in 2.177s (no faces found)
+2025-10-12 00:06:17 [INFO] 🔁 Internal recheck 2/3 for Kartikey (71.64%)
+2025-10-12 00:06:17 [INFO] ⚡ Recognition completed in 1.399s | Active faces: 1
+2025-10-12 00:06:19 [INFO] ⚡ Recognition completed in 1.469s (no faces found)
+2025-10-12 00:06:21 [INFO] ⚡ Recognition completed in 2.470s (no faces found)
+2025-10-12 00:06:23 [INFO] 🧹 Expired face removed: face_1 — will be rechecked if seen again
+2025-10-12 00:06:23 [INFO] ⚡ New face face_1 recognized instantly as Kartikey (78.77%)
+2025-10-12 00:06:23 [INFO] ⚡ Recognition completed in 1.472s | Active faces: 1
+2025-10-12 00:06:24 [INFO] ⚡ New face face_1 recognized instantly as Kartikey (50.07%)
+2025-10-12 00:06:24 [INFO] ⚡ Recognition completed in 1.485s | Active faces: 1
+2025-10-12 00:06:26 [INFO] ⚡ New face face_1 recognized instantly as Kartikey (65.18%)
+2025-10-12 00:06:26 [INFO] ⚡ Recognition completed in 2.077s | Active faces: 1
+2025-10-12 00:06:27 [INFO] ⚡ New face face_1 recognized instantly as Kartikey (66.33%)
+2025-10-12 00:06:27 [INFO] ⚡ Recognition completed in 0.383s | Active faces: 1
+2025-10-12 00:06:27 [INFO] ⚡ Using cached detection results (Δt=0.38s)
+2025-10-12 00:06:27 [INFO] 🔁 Internal recheck 2/3 for Kartikey (66.33%)
+2025-10-12 00:06:27 [INFO] ⚡ Recognition completed in 0.001s | Active faces: 1
+2025-10-12 00:06:27 [INFO] ⚡ Using cached detection results (Δt=0.39s)
+2025-10-12 00:06:27 [INFO] ✅ Face face_1 verified internally as Kartikey (3x match, 66.33%)
+2025-10-12 00:06:27 [INFO] ⚡ Recognition completed in 0.001s | Active faces: 1
+2025-10-12 00:06:27 [INFO] ⚡ Using cached detection results (Δt=0.39s)
+2025-10-12 00:06:27 [INFO] ✅ Skipping confirmed face Kartikey
+2025-10-12 00:06:27 [INFO] ⚡ Recognition completed in 0.001s | Active faces: 1
+2025-10-12 00:06:27 [INFO] ⚡ Using cached detection results (Δt=0.39s)
+2025-10-12 00:06:27 [INFO] ✅ Skipping confirmed face Kartikey
+2025-10-12 00:06:27 [INFO] ⚡ Recognition completed in 0.001s | Active faces: 1
+2025-10-12 00:06:27 [INFO] ⚡ Using cached detection results (Δt=0.39s)
+2025-10-12 00:06:27 [INFO] ✅ Skipping confirmed face Kartikey
+2025-10-12 00:06:27 [INFO] ⚡ Recognition completed in 0.001s | Active faces: 1
+2025-10-12 00:06:27 [INFO] ⚡ Using cached detection results (Δt=0.40s)
+2025-10-12 00:06:27 [INFO] ✅ Skipping confirmed face Kartikey
+2025-10-12 00:06:27 [INFO] ⚡ Recognition completed in 0.001s | Active faces: 1
+2025-10-12 00:06:27 [INFO] ⚡ Using cached detection results (Δt=0.40s)
+2025-10-12 00:06:27 [INFO] ✅ Skipping confirmed face Kartikey
+2025-10-12 00:06:27 [INFO] ⚡ Recognition completed in 0.002s | Active faces: 1
+2025-10-12 00:06:27 [INFO] ⚡ Using cached detection results (Δt=0.40s)
+2025-10-12 00:06:27 [INFO] ✅ Skipping confirmed face Kartikey
+2025-10-12 00:06:27 [INFO] ⚡ Recognition completed in 0.001s | Active faces: 1
+2025-10-12 00:06:27 [INFO] ⚡ Using cached detection results (Δt=0.41s)
+2025-10-12 00:06:27 [INFO] ✅ Skipping confirmed face Kartikey
+2025-10-12 00:06:27 [INFO] ⚡ Recognition completed in 0.002s | Active faces: 1
+2025-10-12 00:06:27 [INFO] ⚡ Using cached detection results (Δt=0.41s)
+2025-10-12 00:06:27 [INFO] ✅ Skipping confirmed face Kartikey
+2025-10-12 00:06:27 [INFO] ⚡ Recognition completed in 0.003s | Active faces: 1
+2025-10-12 00:08:20 [INFO] 🧠 Preloading ArcFace model into memory...
+2025-10-12 00:08:21 [INFO] ✅ ArcFace model loaded in 0.96 seconds
+2025-10-12 00:08:21 [INFO] ✅ MTCNN detector will auto-load on first use by DeepFace.represent()
+2025-10-12 00:08:21 [INFO] ✅ Loaded 21 embeddings for 2 users into cache.
+2025-10-12 00:08:21 [INFO] ✅ Loaded embeddings for 2 users.
+2025-10-12 00:08:21 [INFO] ✅ Loaded 21 embeddings for 2 users into cache.
+2025-10-12 00:08:21 [INFO] ✅ Embedding cache refreshed successfully.
+2025-10-12 00:09:07 [INFO] 🧠 Preloading ArcFace model into memory...
+2025-10-12 00:09:08 [INFO] ✅ ArcFace model loaded in 0.99 seconds
+2025-10-12 00:09:08 [INFO] ✅ MTCNN detector will auto-load on first use by DeepFace.represent()
+2025-10-12 00:09:08 [INFO] ✅ Loaded 21 embeddings for 2 users into cache.
+2025-10-12 00:09:08 [INFO] ✅ Loaded embeddings for 2 users.
+2025-10-12 00:09:08 [INFO] ✅ Loaded 21 embeddings for 2 users into cache.
+2025-10-12 00:09:08 [INFO] ✅ Embedding cache refreshed successfully.
+2025-10-12 00:10:18 [WARNING] ⚠️ MTCNN failed: represent() got an unexpected keyword argument 'model'
+2025-10-12 00:10:21 [INFO] ⚡ New face face_1 recognized instantly as Kartikey (75.94%)
+2025-10-12 00:10:21 [INFO] ⚡ Recognition completed in 2.536s | Active faces: 1
+2025-10-12 00:10:21 [WARNING] ⚠️ MTCNN failed: represent() got an unexpected keyword argument 'model'
+2025-10-12 00:10:21 [INFO] ⚡ New face face_1 recognized instantly as Kartikey (72.25%)
+2025-10-12 00:10:21 [INFO] ⚡ Recognition completed in 0.345s | Active faces: 1
+2025-10-12 00:10:21 [INFO] ⚡ Using cached detection results (Δt=0.35s)
+2025-10-12 00:10:21 [INFO] 🔁 Internal recheck 2/3 for Kartikey (72.25%)
+2025-10-12 00:10:21 [INFO] ⚡ Recognition completed in 0.001s | Active faces: 1
+2025-10-12 00:11:15 [INFO] 🧠 Preloading ArcFace model into memory...
+2025-10-12 00:11:16 [INFO] ✅ ArcFace model loaded in 0.89 seconds
+2025-10-12 00:11:16 [INFO] ✅ MTCNN detector will auto-load on first use by DeepFace.represent()
+2025-10-12 00:11:16 [INFO] ✅ Loaded 21 embeddings for 2 users into cache.
+2025-10-12 00:11:16 [INFO] ✅ Loaded embeddings for 2 users.
+2025-10-12 00:11:16 [INFO] ✅ Loaded 21 embeddings for 2 users into cache.
+2025-10-12 00:11:16 [INFO] ✅ Embedding cache refreshed successfully.
+2025-10-12 00:11:37 [INFO] ⚡ New face face_1 recognized instantly as Kartikey (68.31%)
+2025-10-12 00:11:37 [INFO] ⚡ Recognition completed in 2.115s | Active faces: 1
+2025-10-12 00:11:38 [INFO] ⚡ New face face_1 recognized instantly as Kartikey (73.80%)
+2025-10-12 00:11:38 [INFO] ⚡ Recognition completed in 0.470s | Active faces: 1
+2025-10-12 00:11:42 [INFO] 🔁 Internal recheck 2/3 for Kartikey (75.13%)
+2025-10-12 00:11:42 [INFO] ⚡ Recognition completed in 0.314s | Active faces: 1
+2025-10-12 00:11:45 [INFO] ⚡ New face face_1 recognized instantly as Kartikey (72.46%)
+2025-10-12 00:11:45 [INFO] ⚡ Recognition completed in 0.960s | Active faces: 1
+2025-10-12 00:11:51 [INFO] 🧹 Expired face removed: face_1 — will be rechecked if seen again
+2025-10-12 00:11:51 [INFO] ⚡ New face face_1 recognized instantly as Kartikey (71.17%)
+2025-10-12 00:11:51 [INFO] ⚡ Recognition completed in 1.413s | Active faces: 1
+2025-10-12 00:11:53 [INFO] ⚡ New face face_1 recognized instantly as Kartikey (71.15%)
+2025-10-12 00:11:53 [INFO] ⚡ Recognition completed in 1.702s | Active faces: 1
+2025-10-12 00:11:54 [INFO] 🔁 Internal recheck 2/3 for Kartikey (75.44%)
+2025-10-12 00:11:54 [INFO] ⚡ Recognition completed in 0.647s | Active faces: 1
+2025-10-12 00:11:54 [INFO] ⚡ Using cached detection results (Δt=0.66s)
+2025-10-12 00:11:54 [INFO] ✅ Face face_1 verified internally as Kartikey (3x match, 75.44%)
+2025-10-12 00:11:54 [INFO] ⚡ Recognition completed in 0.017s | Active faces: 1
+2025-10-12 00:11:59 [INFO] 🧹 Expired face removed: face_1 — will be rechecked if seen again
+2025-10-12 00:11:59 [INFO] ⚡ New face face_1 recognized instantly as Kartikey (72.78%)
+2025-10-12 00:11:59 [INFO] ⚡ Recognition completed in 0.954s | Active faces: 1
+2025-10-12 00:12:05 [INFO] 🧹 Expired face removed: face_1 — will be rechecked if seen again
+2025-10-12 00:12:05 [INFO] ⚡ New face face_1 recognized instantly as Kartikey (70.75%)
+2025-10-12 00:12:05 [INFO] ⚡ Recognition completed in 1.388s | Active faces: 1
+2025-10-12 00:12:07 [INFO] 🔁 Internal recheck 2/3 for Kartikey (73.46%)
+2025-10-12 00:12:07 [INFO] ⚡ Recognition completed in 1.518s | Active faces: 1
+2025-10-12 00:12:07 [INFO] ✅ Face face_1 verified internally as Kartikey (3x match, 72.98%)
+2025-10-12 00:12:07 [INFO] ⚡ Recognition completed in 0.698s | Active faces: 1
+2025-10-12 00:12:07 [INFO] ⚡ Using cached detection results (Δt=0.67s)
+2025-10-12 00:12:07 [INFO] ✅ Skipping confirmed face Kartikey
+2025-10-12 00:12:07 [INFO] ⚡ Recognition completed in 0.001s | Active faces: 1
+2025-10-12 00:13:42 [INFO] 🧹 Expired face removed: face_1 — will be rechecked if seen again
+2025-10-12 00:13:42 [INFO] ⚡ New face face_1 recognized instantly as Kartikey (69.88%)
+2025-10-12 00:13:42 [INFO] ⚡ Recognition completed in 0.696s | Active faces: 1
+2025-10-12 00:13:44 [INFO] ⚡ New face face_1 recognized instantly as Kartikey (68.56%)
+2025-10-12 00:13:44 [INFO] ⚡ Recognition completed in 1.128s | Active faces: 1
+2025-10-12 00:15:33 [INFO] 🧠 Preloading ArcFace model into memory...
+2025-10-12 00:15:35 [INFO] ✅ ArcFace model loaded in 1.90 seconds
+2025-10-12 00:15:35 [INFO] ✅ MTCNN detector will auto-load on first use by DeepFace.represent()
+2025-10-12 00:15:35 [INFO] ✅ Loaded 21 embeddings for 2 users into cache.
+2025-10-12 00:15:35 [INFO] ✅ Loaded embeddings for 2 users.
+2025-10-12 00:15:36 [INFO] ✅ Loaded 21 embeddings for 2 users into cache.
+2025-10-12 00:15:36 [INFO] ✅ Embedding cache refreshed successfully.
+2025-10-12 00:15:39 [INFO] ⚡ New face face_1 recognized instantly as Kartikey (73.73%)
+2025-10-12 00:15:39 [INFO] ⚡ Recognition event in 2.853s | Active faces: 1
+2025-10-12 00:15:40 [INFO] ⚡ New face face_1 recognized instantly as Kartikey (76.21%)
+2025-10-12 00:15:40 [INFO] ⚡ Recognition event in 0.646s | Active faces: 1
+2025-10-12 00:15:40 [INFO] ⚡ Using cached detection results (Δt=0.65s)
+2025-10-12 00:15:40 [INFO] 🔁 Internal recheck 2/3 for Kartikey (76.21%)
+2025-10-12 00:15:40 [INFO] ⚡ Recognition event in 0.001s | Active faces: 1
+2025-10-12 00:15:40 [INFO] ⚡ Using cached detection results (Δt=0.65s)
+2025-10-12 00:15:40 [INFO] ✅ Face face_1 verified internally as Kartikey (3x match, 76.21%)
+2025-10-12 00:15:40 [INFO] ⚡ Recognition event in 0.001s | Active faces: 1
+2025-10-12 00:15:40 [INFO] ⚡ Using cached detection results (Δt=0.65s)
+2025-10-12 00:15:40 [INFO] ✅ Skipping confirmed face Kartikey
+2025-10-12 00:15:40 [INFO] ⚡ Recognition event in 0.001s | Active faces: 1
+2025-10-12 00:16:16 [INFO] 🧹 Expired face removed: face_1 — will be rechecked if seen again
+2025-10-12 00:16:16 [INFO] ⚡ New face face_1 recognized instantly as Kartikey (71.58%)
+2025-10-12 00:16:16 [INFO] ⚡ Recognition event in 3.135s | Active faces: 1
+2025-10-12 00:16:20 [INFO] 🔁 Internal recheck 2/3 for Kartikey (72.94%)
+2025-10-12 00:16:20 [INFO] ⚡ Recognition event in 4.004s | Active faces: 1
+2025-10-12 00:16:23 [INFO] ⚡ New face face_1 recognized instantly as Kartikey (72.22%)
+2025-10-12 00:16:23 [INFO] ⚡ Recognition event in 3.241s | Active faces: 1
+2025-10-12 00:16:25 [INFO] 🔁 Internal recheck 2/3 for Kartikey (72.24%)
+2025-10-12 00:16:25 [INFO] ⚡ Recognition event in 1.415s | Active faces: 1
+2025-10-12 00:16:26 [INFO] ✅ Face face_1 verified internally as Kartikey (3x match, 72.08%)
+2025-10-12 00:16:26 [INFO] ⚡ Recognition event in 0.378s | Active faces: 1
+2025-10-12 00:16:26 [INFO] ⚡ Using cached detection results (Δt=0.38s)
+2025-10-12 00:16:26 [INFO] ✅ Skipping confirmed face Kartikey
+2025-10-12 00:16:26 [INFO] ⚡ Recognition event in 0.001s | Active faces: 1
+2025-10-12 00:16:26 [INFO] ⚡ Using cached detection results (Δt=0.38s)
+2025-10-12 00:16:26 [INFO] ✅ Skipping confirmed face Kartikey
+2025-10-12 00:16:26 [INFO] ⚡ Recognition event in 0.001s | Active faces: 1
+2025-10-12 00:16:26 [INFO] ⚡ Using cached detection results (Δt=0.39s)
+2025-10-12 00:16:26 [INFO] ✅ Skipping confirmed face Kartikey
+2025-10-12 00:16:26 [INFO] ⚡ Recognition event in 0.001s | Active faces: 1
+2025-10-12 00:16:26 [INFO] ⚡ Using cached detection results (Δt=0.39s)
+2025-10-12 00:16:26 [INFO] 🧹 Cleared active_faces cache after attendance mark
+2025-10-12 00:16:26 [INFO] ⚡ Using cached detection results (Δt=0.46s)
+2025-10-12 00:16:26 [INFO] ⚡ New face face_1 recognized instantly as Kartikey (72.08%)
+2025-10-12 00:16:26 [INFO] ⚡ Recognition event in 0.001s | Active faces: 1
+2025-10-12 00:16:26 [INFO] ⚡ Using cached detection results (Δt=0.47s)
+2025-10-12 00:16:26 [INFO] 🔁 Internal recheck 2/3 for Kartikey (72.08%)
+2025-10-12 00:16:26 [INFO] ⚡ Recognition event in 0.001s | Active faces: 1
+2025-10-12 00:16:26 [INFO] ⚡ Using cached detection results (Δt=0.47s)
+2025-10-12 00:16:26 [INFO] 🧹 Cleared active_faces cache after attendance mark
+2025-10-12 00:16:26 [INFO] ⚡ Using cached detection results (Δt=0.48s)
+2025-10-12 00:16:26 [INFO] ⚡ New face face_1 recognized instantly as Kartikey (72.08%)
+2025-10-12 00:16:26 [INFO] ⚡ Recognition event in 0.001s | Active faces: 1
+2025-10-12 00:16:26 [INFO] ⚡ Using cached detection results (Δt=0.49s)
+2025-10-12 00:16:26 [INFO] 🧹 Cleared active_faces cache after attendance mark
+2025-10-12 00:16:26 [INFO] ⚡ Using cached detection results (Δt=0.50s)
+2025-10-12 00:16:26 [INFO] 🧹 Cleared active_faces cache after attendance mark
+2025-10-12 00:16:26 [INFO] ⚡ Using cached detection results (Δt=0.51s)
+2025-10-12 00:16:26 [INFO] 🧹 Cleared active_faces cache after attendance mark
+2025-10-12 00:16:26 [INFO] ⚡ Using cached detection results (Δt=0.55s)
+2025-10-12 00:16:26 [INFO] 🧹 Cleared active_faces cache after attendance mark
+2025-10-12 00:16:26 [INFO] ⚡ Using cached detection results (Δt=0.56s)
+2025-10-12 00:16:26 [INFO] 🧹 Cleared active_faces cache after attendance mark
+2025-10-12 00:16:26 [INFO] ⚡ Using cached detection results (Δt=0.56s)
+2025-10-12 00:16:26 [INFO] 🧹 Cleared active_faces cache after attendance mark
+2025-10-12 00:16:26 [INFO] ⚡ Using cached detection results (Δt=0.57s)
+2025-10-12 00:16:26 [INFO] ⚡ New face face_1 recognized instantly as Kartikey (72.08%)
+2025-10-12 00:16:26 [INFO] ⚡ Recognition event in 0.001s | Active faces: 1
+2025-10-12 00:16:26 [INFO] ⚡ Using cached detection results (Δt=0.58s)
+2025-10-12 00:16:26 [INFO] 🧹 Cleared active_faces cache after attendance mark
+2025-10-12 00:16:26 [INFO] ⚡ Using cached detection results (Δt=0.59s)
+2025-10-12 00:16:26 [INFO] ⚡ New face face_1 recognized instantly as Kartikey (72.08%)
+2025-10-12 00:16:26 [INFO] ⚡ Recognition event in 0.002s | Active faces: 1
+2025-10-12 00:16:26 [INFO] ⚡ Using cached detection results (Δt=0.60s)
+2025-10-12 00:16:26 [INFO] 🧹 Cleared active_faces cache after attendance mark
+2025-10-12 00:16:26 [INFO] ⚡ Using cached detection results (Δt=0.61s)
+2025-10-12 00:16:26 [INFO] 🧹 Cleared active_faces cache after attendance mark
+2025-10-12 00:16:26 [INFO] ⚡ Using cached detection results (Δt=0.61s)
+2025-10-12 00:16:26 [INFO] 🧹 Cleared active_faces cache after attendance mark
+2025-10-12 00:16:43 [INFO] ⚡ New face face_1 recognized instantly as Kartikey (74.43%)
+2025-10-12 00:16:43 [INFO] ⚡ Recognition event in 0.405s | Active faces: 1
+2025-10-12 00:16:43 [INFO] ⚡ Using cached detection results (Δt=0.68s)
+2025-10-12 00:16:44 [INFO] 🧹 Cleared active_faces cache after attendance mark
+2025-10-12 00:16:45 [INFO] ⚡ New face face_1 recognized instantly as Kartikey (75.28%)
+2025-10-12 00:16:45 [INFO] ⚡ Recognition event in 1.747s | Active faces: 1
+2025-10-12 00:16:46 [INFO] 🔁 Internal recheck 2/3 for Kartikey (72.21%)
+2025-10-12 00:16:46 [INFO] ⚡ Recognition event in 0.341s | Active faces: 1
+2025-10-12 00:16:50 [INFO] ✅ Face face_1 verified internally as Kartikey (3x match, 69.20%)
+2025-10-12 00:16:50 [INFO] ⚡ Recognition event in 1.489s | Active faces: 1
+2025-10-12 00:16:52 [INFO] ✅ Skipping confirmed face Kartikey
+2025-10-12 00:16:52 [INFO] ⚡ Recognition event in 1.851s | Active faces: 1
+2025-10-12 00:16:53 [INFO] ✅ Skipping confirmed face Kartikey
+2025-10-12 00:16:53 [INFO] ⚡ Recognition event in 0.547s | Active faces: 1
+2025-10-12 00:16:53 [INFO] ⚡ Using cached detection results (Δt=0.55s)
+2025-10-12 00:16:53 [INFO] 🧹 Cleared active_faces cache after attendance mark
+2025-10-12 00:16:53 [INFO] ⚡ Using cached detection results (Δt=0.57s)
+2025-10-12 00:16:53 [INFO] ⚡ New face face_1 recognized instantly as Kartikey (70.38%)
+2025-10-12 00:16:53 [INFO] ⚡ Recognition event in 0.001s | Active faces: 1
+2025-10-12 00:16:53 [INFO] ⚡ Using cached detection results (Δt=0.57s)
+2025-10-12 00:16:53 [INFO] 🧹 Cleared active_faces cache after attendance mark
+2025-10-12 00:16:53 [INFO] ⚡ Using cached detection results (Δt=0.58s)
+2025-10-12 00:16:53 [INFO] 🧹 Cleared active_faces cache after attendance mark
+2025-10-12 00:16:53 [INFO] ⚡ Using cached detection results (Δt=0.58s)
+2025-10-12 00:16:53 [INFO] 🧹 Cleared active_faces cache after attendance mark
+2025-10-12 00:21:35 [INFO] 🧠 Preloading ArcFace model into memory...
+2025-10-12 00:21:35 [INFO] ✅ ArcFace model loaded in 0.00 seconds
+2025-10-12 00:21:35 [INFO] ✅ MTCNN detector will auto-load on first use by DeepFace.represent()
+2025-10-12 00:21:35 [INFO] ✅ Loaded 21 embeddings for 2 users into cache.
+2025-10-12 00:21:35 [INFO] ✅ Loaded embeddings for 2 users.
+2025-10-12 00:21:36 [INFO] ✅ Loaded 21 embeddings for 2 users into cache.
+2025-10-12 00:21:36 [INFO] ✅ Embedding cache refreshed successfully.
+2025-10-12 00:21:48 [INFO] ⚡ New face face_1 recognized instantly as Kartikey (80.46%)
+2025-10-12 00:21:48 [INFO] ⚡ Recognition event in 6.375s | Active faces: 1
+2025-10-12 00:21:49 [INFO] 🔁 Internal recheck 2/3 for Kartikey (75.67%)
+2025-10-12 00:21:49 [INFO] ⚡ Recognition event in 0.947s | Active faces: 1
+2025-10-12 00:21:49 [INFO] ⚡ Using cached detection results (Δt=0.96s)
+2025-10-12 00:21:49 [INFO] ✅ Face face_1 verified internally as Kartikey (3x match, 75.67%)
+2025-10-12 00:21:49 [INFO] ⚡ Recognition event in 0.002s | Active faces: 1
+2025-10-12 00:21:49 [INFO] ⚡ Using cached detection results (Δt=0.96s)
+2025-10-12 00:21:49 [INFO] ✅ Skipping confirmed face Kartikey
+2025-10-12 00:21:49 [INFO] ⚡ Recognition event in 0.001s | Active faces: 1
+2025-10-12 00:21:49 [INFO] ⚡ Using cached detection results (Δt=0.97s)
+2025-10-12 00:21:49 [INFO] ✅ Skipping confirmed face Kartikey
+2025-10-12 00:21:49 [INFO] ⚡ Recognition event in 0.002s | Active faces: 1
+2025-10-12 00:21:49 [INFO] ⚡ Using cached detection results (Δt=0.97s)
+2025-10-12 00:21:49 [INFO] 🧹 Cleared active_faces cache after attendance mark
+2025-10-12 00:21:49 [INFO] ⚡ Using cached detection results (Δt=0.99s)
+2025-10-12 00:21:49 [INFO] 🧹 Cleared active_faces cache after attendance mark
+2025-10-12 00:21:49 [INFO] ⚡ Using cached detection results (Δt=0.99s)
+2025-10-12 00:21:49 [INFO] ⚡ New face face_1 recognized instantly as Kartikey (75.67%)
+2025-10-12 00:21:49 [INFO] ⚡ Recognition event in 0.001s | Active faces: 1
+2025-10-12 00:21:49 [INFO] ⚡ Using cached detection results (Δt=1.00s)
+2025-10-12 00:21:49 [INFO] 🧹 Cleared active_faces cache after attendance mark
+2025-10-12 00:21:49 [INFO] 🧹 Cleared active_faces cache after attendance mark
+2025-10-12 00:22:45 [INFO] ✅ Loaded 21 embeddings for 2 users into cache.
+2025-10-12 00:22:45 [INFO] ✅ Loaded embeddings for 2 users.
+2025-10-12 00:22:45 [INFO] ✅ Loaded 21 embeddings for 2 users into cache.
+2025-10-12 00:22:45 [INFO] ✅ Embedding cache refreshed successfully.
+2025-10-12 00:23:04 [INFO] ⚡ New face face_1 recognized instantly as Kartikey (75.63%)
+2025-10-12 00:23:04 [INFO] ⚡ Recognition event in 6.670s | Active faces: 1
+2025-10-12 00:23:05 [INFO] ⚡ New face face_1 recognized instantly as Kartikey (77.06%)
+2025-10-12 00:23:05 [INFO] ⚡ Recognition event in 0.620s | Active faces: 1
+2025-10-12 00:23:05 [INFO] ⚡ Using cached detection results (Δt=0.62s)
+2025-10-12 00:23:05 [INFO] 🔁 Internal recheck 2/3 for Kartikey (77.06%)
+2025-10-12 00:23:05 [INFO] ⚡ Recognition event in 0.001s | Active faces: 1
+2025-10-12 00:23:05 [INFO] ⚡ Using cached detection results (Δt=0.62s)
+2025-10-12 00:23:05 [INFO] ✅ Face face_1 verified internally as Kartikey (3x match, 77.06%)
+2025-10-12 00:23:05 [INFO] ⚡ Recognition event in 0.001s | Active faces: 1
+2025-10-12 00:23:05 [INFO] ⚡ Using cached detection results (Δt=0.63s)
+2025-10-12 00:23:05 [INFO] ✅ Skipping confirmed face Kartikey
+2025-10-12 00:23:05 [INFO] ⚡ Recognition event in 0.006s | Active faces: 1
+2025-10-12 00:23:05 [INFO] ⚡ Using cached detection results (Δt=0.64s)
+2025-10-12 00:23:05 [INFO] ✅ Skipping confirmed face Kartikey
+2025-10-12 00:23:05 [INFO] ⚡ Recognition event in 0.002s | Active faces: 1
+2025-10-12 00:23:05 [INFO] ⚡ Using cached detection results (Δt=0.64s)
+2025-10-12 00:23:05 [INFO] ✅ Skipping confirmed face Kartikey
+2025-10-12 00:23:05 [INFO] ⚡ Recognition event in 0.001s | Active faces: 1
+2025-10-12 00:23:05 [INFO] ⚡ Using cached detection results (Δt=0.65s)
+2025-10-12 00:23:05 [INFO] ✅ Skipping confirmed face Kartikey
+2025-10-12 00:23:05 [INFO] ⚡ Recognition event in 0.001s | Active faces: 1
+2025-10-12 00:23:05 [INFO] ⚡ Using cached detection results (Δt=0.65s)
+2025-10-12 00:23:05 [INFO] ✅ Skipping confirmed face Kartikey
+2025-10-12 00:23:05 [INFO] ⚡ Recognition event in 0.002s | Active faces: 1
+2025-10-12 00:23:08 [INFO] ✅ Skipping confirmed face Kartikey
+2025-10-12 00:23:08 [INFO] ⚡ Recognition event in 2.591s | Active faces: 1
+2025-10-12 00:23:10 [INFO] ✅ Skipping confirmed face Kartikey
+2025-10-12 00:23:10 [INFO] ⚡ Recognition event in 2.030s | Active faces: 1
+2025-10-12 00:23:13 [INFO] ✅ Skipping confirmed face Kartikey
+2025-10-12 00:23:13 [INFO] ⚡ Recognition event in 3.030s | Active faces: 1
+2025-10-12 00:23:15 [INFO] ✅ Skipping confirmed face Kartikey
+2025-10-12 00:23:15 [INFO] ⚡ Recognition event in 2.171s | Active faces: 1
+2025-10-12 00:23:18 [INFO] ✅ Skipping confirmed face Kartikey
+2025-10-12 00:23:18 [INFO] ⚡ Recognition event in 3.082s | Active faces: 1
+2025-10-12 00:23:19 [INFO] ⚡ New face face_1 recognized instantly as Kartikey (74.65%)
+2025-10-12 00:23:19 [INFO] ⚡ Recognition event in 0.499s | Active faces: 1
+2025-10-12 00:23:19 [INFO] ⚡ Using cached detection results (Δt=0.51s)
+2025-10-12 00:23:19 [INFO] 🔁 Internal recheck 2/3 for Kartikey (74.65%)
+2025-10-12 00:23:19 [INFO] ⚡ Recognition event in 0.002s | Active faces: 1
+2025-10-12 00:23:19 [INFO] ⚡ Using cached detection results (Δt=0.51s)
+2025-10-12 00:23:19 [INFO] ✅ Face face_1 verified internally as Kartikey (3x match, 74.65%)
+2025-10-12 00:23:19 [INFO] ⚡ Recognition event in 0.001s | Active faces: 1
+2025-10-12 00:23:19 [INFO] ⚡ Using cached detection results (Δt=0.52s)
+2025-10-12 00:23:19 [INFO] ✅ Skipping confirmed face Kartikey
+2025-10-12 00:23:19 [INFO] ⚡ Recognition event in 0.005s | Active faces: 1
+2025-10-12 00:23:19 [INFO] ⚡ Using cached detection results (Δt=0.53s)
+2025-10-12 00:23:19 [INFO] 🧹 Cleared active_faces cache after attendance mark
+2025-10-12 00:23:19 [INFO] ⚡ Using cached detection results (Δt=0.63s)
+2025-10-12 00:23:19 [INFO] 🧹 Cleared active_faces cache after attendance mark
+2025-10-12 00:23:19 [INFO] ⚡ Using cached detection results (Δt=0.64s)
+2025-10-12 00:23:19 [INFO] 🧹 Cleared active_faces cache after attendance mark
+2025-10-12 00:23:19 [INFO] ⚡ Using cached detection results (Δt=0.65s)
+2025-10-12 00:23:19 [INFO] 🧹 Cleared active_faces cache after attendance mark
+2025-10-12 00:23:19 [INFO] ⚡ Using cached detection results (Δt=0.69s)
+2025-10-12 00:23:19 [INFO] 🧹 Cleared active_faces cache after attendance mark
+2025-10-12 00:23:19 [INFO] ⚡ Using cached detection results (Δt=0.71s)
+2025-10-12 00:23:19 [INFO] 🧹 Cleared active_faces cache after attendance mark
+2025-10-12 00:23:19 [INFO] ⚡ Using cached detection results (Δt=0.72s)
+2025-10-12 00:23:19 [INFO] 🧹 Cleared active_faces cache after attendance mark
+2025-10-12 00:23:19 [INFO] ⚡ Using cached detection results (Δt=0.73s)
+2025-10-12 00:23:19 [INFO] ⚡ New face face_1 recognized instantly as Kartikey (74.65%)
+2025-10-12 00:23:19 [INFO] ⚡ Recognition event in 0.001s | Active faces: 1
+2025-10-12 00:23:19 [INFO] ⚡ Using cached detection results (Δt=0.73s)
+2025-10-12 00:23:19 [INFO] 🧹 Cleared active_faces cache after attendance mark
+2025-10-12 00:23:19 [INFO] ⚡ Using cached detection results (Δt=0.74s)
+2025-10-12 00:23:19 [INFO] 🧹 Cleared active_faces cache after attendance mark
+2025-10-12 00:23:19 [INFO] ⚡ Using cached detection results (Δt=0.74s)
+2025-10-12 00:23:19 [INFO] 🧹 Cleared active_faces cache after attendance mark
+2025-10-12 00:23:19 [INFO] ⚡ Using cached detection results (Δt=0.75s)
+2025-10-12 00:23:19 [INFO] 🧹 Cleared active_faces cache after attendance mark
+2025-10-12 00:23:19 [INFO] ⚡ Using cached detection results (Δt=0.76s)
+2025-10-12 00:23:19 [INFO] 🧹 Cleared active_faces cache after attendance mark
+2025-10-12 00:23:19 [INFO] ⚡ Using cached detection results (Δt=0.77s)
+2025-10-12 00:23:19 [INFO] 🧹 Cleared active_faces cache after attendance mark
+2025-10-12 00:23:19 [INFO] ⚡ Using cached detection results (Δt=0.77s)
+2025-10-12 00:23:19 [INFO] ⚡ New face face_1 recognized instantly as Kartikey (74.65%)
+2025-10-12 00:23:19 [INFO] ⚡ Recognition event in 0.001s | Active faces: 1
+2025-10-12 00:23:19 [INFO] ⚡ Using cached detection results (Δt=0.78s)
+2025-10-12 00:23:19 [INFO] 🧹 Cleared active_faces cache after attendance mark
+2025-10-12 00:23:19 [INFO] ⚡ Using cached detection results (Δt=0.79s)
+2025-10-12 00:23:19 [INFO] 🧹 Cleared active_faces cache after attendance mark
+2025-10-12 00:23:19 [INFO] ⚡ Using cached detection results (Δt=0.79s)
+2025-10-12 00:23:19 [INFO] 🧹 Cleared active_faces cache after attendance mark
+2025-10-12 00:23:19 [INFO] ⚡ Using cached detection results (Δt=0.80s)
+2025-10-12 00:23:19 [INFO] 🧹 Cleared active_faces cache after attendance mark
+2025-10-12 00:23:19 [INFO] ⚡ Using cached detection results (Δt=0.80s)
+2025-10-12 00:23:19 [INFO] 🧹 Cleared active_faces cache after attendance mark
+2025-10-12 00:23:19 [INFO] ⚡ Using cached detection results (Δt=0.82s)
+2025-10-12 00:23:19 [INFO] 🧹 Cleared active_faces cache after attendance mark
+2025-10-12 00:23:19 [INFO] ⚡ Using cached detection results (Δt=0.83s)
+2025-10-12 00:23:19 [INFO] 🧹 Cleared active_faces cache after attendance mark
+2025-10-12 00:23:19 [INFO] ⚡ Using cached detection results (Δt=0.83s)
+2025-10-12 00:23:19 [INFO] ⚡ New face face_1 recognized instantly as Kartikey (74.65%)
+2025-10-12 00:23:19 [INFO] ⚡ Recognition event in 0.001s | Active faces: 1
+2025-10-12 00:23:19 [INFO] ⚡ Using cached detection results (Δt=0.84s)
+2025-10-12 00:23:19 [INFO] 🧹 Cleared active_faces cache after attendance mark
+2025-10-12 00:23:19 [INFO] ⚡ Using cached detection results (Δt=0.84s)
+2025-10-12 00:23:19 [INFO] 🧹 Cleared active_faces cache after attendance mark
+2025-10-12 00:23:19 [INFO] ⚡ Using cached detection results (Δt=0.85s)
+2025-10-12 00:23:19 [INFO] 🧹 Cleared active_faces cache after attendance mark
+2025-10-12 00:23:19 [INFO] ⚡ Using cached detection results (Δt=0.86s)
+2025-10-12 00:23:19 [INFO] 🧹 Cleared active_faces cache after attendance mark
+2025-10-12 00:23:19 [INFO] ⚡ Using cached detection results (Δt=0.86s)
+2025-10-12 00:23:19 [INFO] 🧹 Cleared active_faces cache after attendance mark
+2025-10-12 00:23:19 [INFO] ⚡ Using cached detection results (Δt=0.88s)
+2025-10-12 00:23:19 [INFO] ⚡ New face face_1 recognized instantly as Kartikey (74.65%)
+2025-10-12 00:23:19 [INFO] ⚡ Recognition event in 0.002s | Active faces: 1
+2025-10-12 00:23:19 [INFO] ⚡ Using cached detection results (Δt=0.88s)
+2025-10-12 00:23:19 [INFO] 🧹 Cleared active_faces cache after attendance mark
+2025-10-12 00:23:19 [INFO] ⚡ Using cached detection results (Δt=0.89s)
+2025-10-12 00:23:19 [INFO] 🧹 Cleared active_faces cache after attendance mark
+2025-10-12 00:23:19 [INFO] ⚡ Using cached detection results (Δt=0.90s)
+2025-10-12 00:23:19 [INFO] 🧹 Cleared active_faces cache after attendance mark
+2025-10-12 00:23:19 [INFO] ⚡ Using cached detection results (Δt=0.90s)
+2025-10-12 00:23:19 [INFO] 🧹 Cleared active_faces cache after attendance mark
+2025-10-12 00:23:19 [INFO] ⚡ Using cached detection results (Δt=0.91s)
+2025-10-12 00:23:19 [INFO] 🧹 Cleared active_faces cache after attendance mark
+2025-10-12 00:23:19 [INFO] ⚡ Using cached detection results (Δt=0.92s)
+2025-10-12 00:23:19 [INFO] 🧹 Cleared active_faces cache after attendance mark
+2025-10-12 00:23:19 [INFO] ⚡ Using cached detection results (Δt=0.92s)
+2025-10-12 00:23:19 [INFO] ⚡ New face face_1 recognized instantly as Kartikey (74.65%)
+2025-10-12 00:23:19 [INFO] ⚡ Recognition event in 0.001s | Active faces: 1
+2025-10-12 00:23:33 [INFO] 🧹 Expired face removed: face_1 — will be rechecked if seen again
+2025-10-12 00:23:33 [INFO] ⚡ New face face_1 recognized instantly as Kartikey (71.26%)
+2025-10-12 00:23:33 [INFO] ⚡ Recognition event in 2.709s | Active faces: 1
+2025-10-12 00:23:37 [INFO] ⚡ New face face_1 recognized instantly as Kartikey (75.04%)
+2025-10-12 00:23:37 [INFO] ⚡ Recognition event in 3.330s | Active faces: 1
+2025-10-12 00:23:40 [INFO] ⚡ New face face_1 recognized instantly as Kartikey (63.04%)
+2025-10-12 00:23:40 [INFO] ⚡ Recognition event in 2.884s | Active faces: 1
+2025-10-12 00:23:41 [INFO] ⚡ New face face_1 recognized instantly as Kartikey (73.06%)
+2025-10-12 00:23:41 [INFO] ⚡ Recognition event in 1.133s | Active faces: 1
+2025-10-12 00:23:42 [INFO] ⚡ New face face_1 recognized instantly as Kartikey (62.26%)
+2025-10-12 00:23:42 [INFO] ⚡ Recognition event in 0.456s | Active faces: 1
+2025-10-12 00:23:42 [INFO] ⚡ Using cached detection results (Δt=0.46s)
+2025-10-12 00:23:42 [INFO] 🔁 Internal recheck 2/3 for Kartikey (62.26%)
+2025-10-12 00:23:42 [INFO] ⚡ Recognition event in 0.002s | Active faces: 1
+2025-10-12 00:23:42 [INFO] ⚡ Using cached detection results (Δt=0.46s)
+2025-10-12 00:23:42 [INFO] ✅ Face face_1 verified internally as Kartikey (3x match, 62.26%)
+2025-10-12 00:23:42 [INFO] ⚡ Recognition event in 0.001s | Active faces: 1
+2025-10-12 00:23:42 [INFO] ⚡ Using cached detection results (Δt=0.47s)
+2025-10-12 00:23:42 [INFO] 🧹 Cleared active_faces cache after attendance mark
+2025-10-12 00:23:42 [INFO] ⚡ Using cached detection results (Δt=0.52s)
+2025-10-12 00:23:42 [INFO] 🧹 Cleared active_faces cache after attendance mark
+2025-10-12 00:23:42 [INFO] ⚡ Using cached detection results (Δt=0.53s)
+2025-10-12 00:23:42 [INFO] 🧹 Cleared active_faces cache after attendance mark
+2025-10-12 00:23:42 [INFO] ⚡ Using cached detection results (Δt=0.54s)
+2025-10-12 00:23:42 [INFO] 🧹 Cleared active_faces cache after attendance mark
+2025-10-12 00:23:42 [INFO] ⚡ Using cached detection results (Δt=0.55s)
+2025-10-12 00:23:42 [INFO] 🧹 Cleared active_faces cache after attendance mark
+2025-10-12 00:23:42 [INFO] ⚡ Using cached detection results (Δt=0.55s)
+2025-10-12 00:23:42 [INFO] 🧹 Cleared active_faces cache after attendance mark
+2025-10-12 00:23:42 [INFO] ⚡ Using cached detection results (Δt=0.56s)
+2025-10-12 00:23:42 [INFO] ⚡ New face face_1 recognized instantly as Kartikey (62.26%)
+2025-10-12 00:23:42 [INFO] ⚡ Recognition event in 0.001s | Active faces: 1
+2025-10-12 00:23:42 [INFO] ⚡ Using cached detection results (Δt=0.57s)
+2025-10-12 00:23:42 [INFO] 🧹 Cleared active_faces cache after attendance mark
+2025-10-12 00:23:42 [INFO] ⚡ Using cached detection results (Δt=0.58s)
+2025-10-12 00:23:42 [INFO] 🧹 Cleared active_faces cache after attendance mark
+2025-10-12 00:23:42 [INFO] ⚡ Using cached detection results (Δt=0.58s)
+2025-10-12 00:23:42 [INFO] 🧹 Cleared active_faces cache after attendance mark
+2025-10-12 00:23:42 [INFO] ⚡ Using cached detection results (Δt=0.59s)
+2025-10-12 00:23:42 [INFO] 🧹 Cleared active_faces cache after attendance mark
+2025-10-12 00:23:42 [INFO] ⚡ Using cached detection results (Δt=0.59s)
+2025-10-12 00:23:42 [INFO] 🧹 Cleared active_faces cache after attendance mark
+2025-10-12 00:23:42 [INFO] ⚡ Using cached detection results (Δt=0.60s)
+2025-10-12 00:23:42 [INFO] 🧹 Cleared active_faces cache after attendance mark
+2025-10-12 00:23:42 [INFO] ⚡ Using cached detection results (Δt=0.61s)
+2025-10-12 00:23:42 [INFO] ⚡ New face face_1 recognized instantly as Kartikey (62.26%)
+2025-10-12 00:23:42 [INFO] ⚡ Recognition event in 0.001s | Active faces: 1
+2025-10-12 00:23:42 [INFO] ⚡ Using cached detection results (Δt=0.62s)
+2025-10-12 00:23:42 [INFO] 🧹 Cleared active_faces cache after attendance mark
+2025-10-12 00:23:42 [INFO] ⚡ Using cached detection results (Δt=0.62s)
+2025-10-12 00:23:42 [INFO] 🧹 Cleared active_faces cache after attendance mark
+2025-10-12 00:23:42 [INFO] ⚡ Using cached detection results (Δt=0.63s)
+2025-10-12 00:23:42 [INFO] 🧹 Cleared active_faces cache after attendance mark
+2025-10-12 00:23:42 [INFO] ⚡ Using cached detection results (Δt=0.64s)
+2025-10-12 00:23:42 [INFO] 🧹 Cleared active_faces cache after attendance mark
+2025-10-12 00:23:42 [INFO] ⚡ Using cached detection results (Δt=0.64s)
+2025-10-12 00:23:42 [INFO] 🧹 Cleared active_faces cache after attendance mark
+2025-10-12 00:23:42 [INFO] ⚡ Using cached detection results (Δt=0.65s)
+2025-10-12 00:23:42 [INFO] ⚡ New face face_1 recognized instantly as Kartikey (62.26%)
+2025-10-12 00:23:42 [INFO] ⚡ Recognition event in 0.001s | Active faces: 1
+2025-10-12 00:23:42 [INFO] ⚡ Using cached detection results (Δt=0.66s)
+2025-10-12 00:23:42 [INFO] 🧹 Cleared active_faces cache after attendance mark
+2025-10-12 00:23:42 [INFO] ⚡ Using cached detection results (Δt=0.67s)
+2025-10-12 00:23:42 [INFO] 🧹 Cleared active_faces cache after attendance mark
+2025-10-12 00:23:42 [INFO] ⚡ Using cached detection results (Δt=0.67s)
+2025-10-12 00:23:42 [INFO] 🧹 Cleared active_faces cache after attendance mark
+2025-10-12 00:23:42 [INFO] ⚡ Using cached detection results (Δt=0.67s)
+2025-10-12 00:23:42 [INFO] 🧹 Cleared active_faces cache after attendance mark
+2025-10-12 00:25:28 [INFO] ⚡ New face face_1 recognized instantly as Kartikey (76.07%)
+2025-10-12 00:25:28 [INFO] ⚡ Recognition event in 0.493s | Active faces: 1
+2025-10-12 00:25:30 [INFO] 🔁 Internal recheck 2/3 for Kartikey (74.81%)
+2025-10-12 00:25:30 [INFO] ⚡ Recognition event in 1.694s | Active faces: 1
+2025-10-12 00:25:34 [INFO] 🟢 Work Application login verified for Kartikey (ifnt031)
+2025-10-12 00:25:36 [INFO] 🧹 Expired face removed: face_1 — will be rechecked if seen again
+2025-10-12 00:25:36 [INFO] ⚡ New face face_1 recognized instantly as Kartikey (76.41%)
+2025-10-12 00:25:36 [INFO] ⚡ Recognition event in 2.203s | Active faces: 1
+2025-10-12 00:25:38 [INFO] 🟢 Work Application login verified for Kartikey (ifnt031)
+2025-10-12 00:25:40 [INFO] 🟢 Work Application login verified for Kartikey (ifnt031)
+2025-10-12 00:25:41 [INFO] 🟢 Work Application login verified for Kartikey (ifnt031)
+2025-10-12 00:25:41 [INFO] ⚡ Using cached detection results (Δt=0.69s)
+2025-10-12 00:25:41 [INFO] 🟢 Work Application login verified for Kartikey (ifnt031)
+2025-10-12 00:25:41 [INFO] ⚡ Using cached detection results (Δt=0.70s)
+2025-10-12 00:25:41 [INFO] 🟢 Work Application login verified for Kartikey (ifnt031)
+2025-10-12 00:25:41 [INFO] ⚡ Using cached detection results (Δt=0.70s)
+2025-10-12 00:25:41 [INFO] 🟢 Work Application login verified for Kartikey (ifnt031)
+2025-10-12 00:26:39 [INFO] ✅ Loaded 21 embeddings for 2 users into cache.
+2025-10-12 00:26:39 [INFO] ✅ Loaded embeddings for 2 users.
+2025-10-12 00:26:40 [INFO] ✅ Loaded 21 embeddings for 2 users into cache.
+2025-10-12 00:26:40 [INFO] ✅ Embedding cache refreshed successfully.
+2025-10-12 00:29:50 [INFO] ✅ Loaded 21 embeddings for 2 users into cache.
+2025-10-12 00:29:50 [INFO] ✅ Loaded embeddings for 2 users.
+2025-10-12 00:29:50 [INFO] ✅ Loaded 21 embeddings for 2 users into cache.
+2025-10-12 00:29:50 [INFO] ✅ Embedding cache refreshed successfully.
+2025-10-12 00:30:00 [INFO] ⚡ New face face_1 recognized instantly as Kartikey (75.50%)
+2025-10-12 00:30:00 [INFO] ⚡ Recognition event in 4.614s | Active faces: 1
+2025-10-12 00:30:00 [INFO] 🔁 Internal recheck 2/3 for Kartikey (77.38%)
+2025-10-12 00:30:00 [INFO] ⚡ Recognition event in 0.460s | Active faces: 1
+2025-10-12 00:30:00 [INFO] ⚡ Using cached detection results (Δt=0.46s)
+2025-10-12 00:30:00 [INFO] ✅ Face face_1 verified internally as Kartikey (3x match, 77.38%)
+2025-10-12 00:30:00 [INFO] ⚡ Recognition event in 0.001s | Active faces: 1
+2025-10-12 00:30:00 [INFO] ⚡ Using cached detection results (Δt=0.46s)
+2025-10-12 00:30:00 [INFO] ✅ Skipping confirmed face Kartikey
+2025-10-12 00:30:00 [INFO] ⚡ Recognition event in 0.001s | Active faces: 1
+2025-10-12 00:30:00 [INFO] ⚡ Using cached detection results (Δt=0.47s)
+2025-10-12 00:30:00 [INFO] ✅ Skipping confirmed face Kartikey
+2025-10-12 00:30:00 [INFO] ⚡ Recognition event in 0.001s | Active faces: 1
+2025-10-12 00:30:01 [INFO] ⚡ Using cached detection results (Δt=0.88s)
+2025-10-12 00:30:01 [INFO] ✅ Skipping confirmed face Kartikey
+2025-10-12 00:30:01 [INFO] ⚡ Recognition event in 0.001s | Active faces: 1
+2025-10-12 00:30:02 [INFO] ⚡ New face face_1 recognized instantly as Kartikey (71.97%)
+2025-10-12 00:30:02 [INFO] ⚡ Recognition event in 0.214s | Active faces: 1
+2025-10-12 00:30:03 [INFO] ⚡ Using cached detection results (Δt=0.89s)
+2025-10-12 00:30:03 [INFO] 🔁 Internal recheck 2/3 for Kartikey (71.97%)
+2025-10-12 00:30:03 [INFO] ⚡ Recognition event in 0.015s | Active faces: 1
+2025-10-12 00:30:07 [INFO] ✅ Face face_1 verified internally as Kartikey (3x match, 76.96%)
+2025-10-12 00:30:07 [INFO] ⚡ Recognition event in 3.417s | Active faces: 1
+2025-10-12 00:30:08 [INFO] ✅ Skipping confirmed face Kartikey
+2025-10-12 00:30:08 [INFO] ⚡ Recognition event in 1.232s | Active faces: 1
+2025-10-12 00:30:08 [INFO] ✅ Skipping confirmed face Kartikey
+2025-10-12 00:30:08 [INFO] ⚡ Recognition event in 0.263s | Active faces: 1
+2025-10-12 00:30:08 [INFO] ⚡ Using cached detection results (Δt=0.26s)
+2025-10-12 00:30:08 [INFO] ✅ Skipping confirmed face Kartikey
+2025-10-12 00:30:08 [INFO] ⚡ Recognition event in 0.001s | Active faces: 1
+2025-10-12 00:30:08 [INFO] ⚡ Using cached detection results (Δt=0.27s)
+2025-10-12 00:30:08 [INFO] ✅ Skipping confirmed face Kartikey
+2025-10-12 00:30:08 [INFO] ⚡ Recognition event in 0.001s | Active faces: 1
+2025-10-12 00:30:08 [INFO] ⚡ Using cached detection results (Δt=0.27s)
+2025-10-12 00:30:08 [INFO] 🧹 Cleared active_faces cache after attendance mark
+2025-10-12 00:30:12 [INFO] ⚡ New face face_1 recognized instantly as Kartikey (75.23%)
+2025-10-12 00:30:12 [INFO] ⚡ Recognition event in 2.550s | Active faces: 1
+2025-10-12 00:30:12 [INFO] 🔁 Internal recheck 2/3 for Kartikey (77.78%)
+2025-10-12 00:30:12 [INFO] ⚡ Recognition event in 0.522s | Active faces: 1
+2025-10-12 00:30:12 [INFO] ⚡ Using cached detection results (Δt=0.52s)
+2025-10-12 00:30:12 [INFO] ✅ Face face_1 verified internally as Kartikey (3x match, 77.78%)
+2025-10-12 00:30:12 [INFO] ⚡ Recognition event in 0.004s | Active faces: 1
+2025-10-12 00:30:12 [INFO] ⚡ Using cached detection results (Δt=0.54s)
+2025-10-12 00:30:12 [INFO] 🧹 Cleared active_faces cache after attendance mark
+2025-10-12 00:31:53 [INFO] ⚡ New face face_1 recognized instantly as Kartikey (72.83%)
+2025-10-12 00:31:53 [INFO] ⚡ Recognition event in 0.422s | Active faces: 1
+2025-10-12 00:31:53 [INFO] ⚡ Using cached detection results (Δt=0.77s)
+2025-10-12 00:31:53 [INFO] 🧹 Cleared active_faces cache after attendance mark
+2025-10-12 00:31:54 [INFO] ⚡ New face face_1 recognized instantly as Kartikey (74.70%)
+2025-10-12 00:31:54 [INFO] ⚡ Recognition event in 0.376s | Active faces: 1
+2025-10-12 00:33:11 [INFO] 🧹 Expired face removed: face_1 — will be rechecked if seen again
+2025-10-12 00:33:11 [INFO] ⚡ New face face_1 recognized instantly as Kartikey (77.70%)
+2025-10-12 00:33:11 [INFO] ⚡ Recognition event in 3.856s | Active faces: 1
+2025-10-12 00:33:16 [INFO] 🔁 Internal recheck 2/3 for Kartikey (73.68%)
+2025-10-12 00:33:16 [INFO] ⚡ Recognition event in 4.890s | Active faces: 1
+2025-10-12 00:33:18 [INFO] ✅ Face face_1 verified internally as Kartikey (3x match, 74.58%)
+2025-10-12 00:33:18 [INFO] ⚡ Recognition event in 1.599s | Active faces: 1
+2025-10-12 00:33:18 [INFO] ✅ Skipping confirmed face Kartikey
+2025-10-12 00:33:18 [INFO] ⚡ Recognition event in 0.514s | Active faces: 1
+2025-10-12 00:33:18 [INFO] ⚡ Using cached detection results (Δt=0.52s)
+2025-10-12 00:33:18 [INFO] ✅ Skipping confirmed face Kartikey
+2025-10-12 00:33:18 [INFO] ⚡ Recognition event in 0.001s | Active faces: 1
+2025-10-12 00:33:18 [INFO] ⚡ Using cached detection results (Δt=0.52s)
+2025-10-12 00:33:18 [INFO] ✅ Skipping confirmed face Kartikey
+2025-10-12 00:33:18 [INFO] ⚡ Recognition event in 0.001s | Active faces: 1
+2025-10-12 00:33:18 [INFO] ⚡ Using cached detection results (Δt=0.52s)
+2025-10-12 00:33:18 [INFO] ✅ Skipping confirmed face Kartikey
+2025-10-12 00:33:18 [INFO] ⚡ Recognition event in 0.001s | Active faces: 1
+2025-10-12 00:33:18 [INFO] ⚡ Using cached detection results (Δt=0.52s)
+2025-10-12 00:33:18 [INFO] ✅ Skipping confirmed face Kartikey
+2025-10-12 00:33:18 [INFO] ⚡ Recognition event in 0.001s | Active faces: 1
+2025-10-12 00:33:18 [INFO] ⚡ Using cached detection results (Δt=0.52s)
+2025-10-12 00:33:18 [INFO] ✅ Skipping confirmed face Kartikey
+2025-10-12 00:33:18 [INFO] ⚡ Recognition event in 0.001s | Active faces: 1
+2025-10-12 00:33:18 [INFO] ⚡ Using cached detection results (Δt=0.53s)
+2025-10-12 00:33:18 [INFO] ✅ Skipping confirmed face Kartikey
+2025-10-12 00:33:18 [INFO] ⚡ Recognition event in 0.001s | Active faces: 1
+2025-10-12 00:33:18 [INFO] ⚡ Using cached detection results (Δt=0.53s)
+2025-10-12 00:33:18 [INFO] ✅ Skipping confirmed face Kartikey
+2025-10-12 00:33:18 [INFO] ⚡ Recognition event in 0.001s | Active faces: 1
+2025-10-12 00:33:18 [INFO] ⚡ Using cached detection results (Δt=0.53s)
+2025-10-12 00:33:18 [INFO] 🧹 Cleared active_faces cache after attendance mark
+2025-10-12 00:33:18 [INFO] ⚡ Using cached detection results (Δt=0.59s)
+2025-10-12 00:33:18 [INFO] ⚡ New face face_1 recognized instantly as Kartikey (76.09%)
+2025-10-12 00:33:18 [INFO] ⚡ Recognition event in 0.001s | Active faces: 1
+2025-10-12 00:33:18 [INFO] ⚡ Using cached detection results (Δt=0.59s)
+2025-10-12 00:33:18 [INFO] 🧹 Cleared active_faces cache after attendance mark
+2025-10-12 00:33:18 [INFO] ⚡ Using cached detection results (Δt=0.60s)
+2025-10-12 00:33:19 [INFO] 🧹 Cleared active_faces cache after attendance mark
+2025-10-12 00:33:19 [INFO] ⚡ Using cached detection results (Δt=0.62s)
+2025-10-12 00:33:19 [INFO] 🧹 Cleared active_faces cache after attendance mark
+2025-10-12 00:36:38 [INFO] ⚡ New face face_1 recognized instantly as Kartikey (70.42%)
+2025-10-12 00:36:38 [INFO] ⚡ Recognition event in 0.377s | Active faces: 1
+2025-10-12 00:36:38 [INFO] ⚡ Using cached detection results (Δt=0.84s)
+2025-10-12 00:36:38 [INFO] 🔁 Internal recheck 2/3 for Kartikey (70.42%)
+2025-10-12 00:36:38 [INFO] ⚡ Recognition event in 0.013s | Active faces: 1
+2025-10-12 00:36:39 [INFO] 🧹 Cleared active_faces cache after attendance mark
+2025-10-12 00:36:39 [INFO] ⚡ Using cached detection results (Δt=0.62s)
+2025-10-12 00:36:39 [INFO] ⚡ New face face_1 recognized instantly as Kartikey (72.94%)
+2025-10-12 00:36:39 [INFO] ⚡ Recognition event in 0.013s | Active faces: 1
+2025-10-12 00:36:41 [INFO] 🔁 Internal recheck 2/3 for Kartikey (71.92%)
+2025-10-12 00:36:41 [INFO] ⚡ Recognition event in 0.569s | Active faces: 1
+2025-10-12 00:36:43 [INFO] ⚡ New face face_1 recognized instantly as Kartikey (72.83%)
+2025-10-12 00:36:43 [INFO] ⚡ Recognition event in 0.302s | Active faces: 1
+2025-10-12 00:36:44 [INFO] ⚡ Using cached detection results (Δt=0.77s)
+2025-10-12 00:36:44 [INFO] 🧹 Cleared active_faces cache after attendance mark
+2025-10-12 00:36:44 [INFO] ⚡ Using cached detection results (Δt=0.99s)
+2025-10-12 00:36:44 [INFO] ⚡ New face face_1 recognized instantly as Kartikey (72.83%)
+2025-10-12 00:36:44 [INFO] ⚡ Recognition event in 0.001s | Active faces: 1
+2025-10-12 00:36:46 [INFO] 🔁 Internal recheck 2/3 for Kartikey (71.31%)
+2025-10-12 00:36:46 [INFO] ⚡ Recognition event in 0.317s | Active faces: 1
+2025-10-12 00:36:47 [INFO] ⚡ Using cached detection results (Δt=0.60s)
+2025-10-12 00:36:47 [INFO] 🧹 Cleared active_faces cache after attendance mark
+2025-10-12 00:36:47 [INFO] ⚡ New face face_1 recognized instantly as Kartikey (74.73%)
+2025-10-12 00:36:47 [INFO] ⚡ Recognition event in 0.187s | Active faces: 1
+2025-10-12 00:36:48 [INFO] ⚡ Using cached detection results (Δt=0.66s)
+2025-10-12 00:36:48 [INFO] 🧹 Cleared active_faces cache after attendance mark
+2025-10-12 00:36:48 [INFO] ⚡ Using cached detection results (Δt=0.99s)
+2025-10-12 00:36:48 [INFO] ⚡ New face face_1 recognized instantly as Kartikey (74.73%)
+2025-10-12 00:36:48 [INFO] ⚡ Recognition event in 0.001s | Active faces: 1
+2025-10-12 00:36:49 [INFO] 🧹 Cleared active_faces cache after attendance mark
+2025-10-12 00:36:49 [INFO] ⚡ Using cached detection results (Δt=0.50s)
+2025-10-12 00:36:49 [INFO] ⚡ New face face_1 recognized instantly as Kartikey (74.44%)
+2025-10-12 00:36:49 [INFO] ⚡ Recognition event in 0.003s | Active faces: 1
+2025-10-12 00:36:50 [INFO] ⚡ Using cached detection results (Δt=0.85s)
+2025-10-12 00:36:50 [INFO] 🧹 Cleared active_faces cache after attendance mark
+2025-10-12 00:36:50 [INFO] ⚡ New face face_1 recognized instantly as Kartikey (73.00%)
+2025-10-12 00:36:50 [INFO] ⚡ Recognition event in 0.202s | Active faces: 1
+2025-10-12 00:36:50 [INFO] ⚡ Using cached detection results (Δt=0.20s)
+2025-10-12 00:36:50 [INFO] 🧹 Cleared active_faces cache after attendance mark
+2025-10-12 00:37:56 [INFO] ⚡ New face face_1 recognized instantly as Kartikey (74.19%)
+2025-10-12 00:37:56 [INFO] ⚡ Recognition event in 0.278s | Active faces: 1
+2025-10-12 00:37:57 [INFO] ⚡ Using cached detection results (Δt=0.63s)
+2025-10-12 00:37:57 [INFO] 🧹 Cleared active_faces cache after attendance mark
+2025-10-12 00:37:57 [INFO] ⚡ Using cached detection results (Δt=0.95s)
+2025-10-12 00:37:57 [INFO] ⚡ New face face_1 recognized instantly as Kartikey (74.19%)
+2025-10-12 00:37:57 [INFO] ⚡ Recognition event in 0.001s | Active faces: 1
+2025-10-12 00:38:00 [INFO] ⚡ New face face_1 recognized instantly as Kartikey (71.02%)
+2025-10-12 00:38:00 [INFO] ⚡ Recognition event in 0.229s | Active faces: 1
+2025-10-12 00:38:00 [INFO] ⚡ Using cached detection results (Δt=0.99s)
+2025-10-12 00:38:00 [INFO] 🔁 Internal recheck 2/3 for Kartikey (71.02%)
+2025-10-12 00:38:00 [INFO] ⚡ Recognition event in 0.013s | Active faces: 1
+2025-10-12 00:38:02 [INFO] ✅ Face face_1 verified internally as Kartikey (3x match, 78.03%)
+2025-10-12 00:38:02 [INFO] ⚡ Recognition event in 0.183s | Active faces: 1
+2025-10-12 00:38:02 [INFO] ⚡ Using cached detection results (Δt=0.99s)
+2025-10-12 00:38:02 [INFO] ✅ Skipping confirmed face Kartikey
+2025-10-12 00:38:02 [INFO] ⚡ Recognition event in 0.001s | Active faces: 1
+2025-10-12 00:38:04 [INFO] ✅ Skipping confirmed face Kartikey
+2025-10-12 00:38:04 [INFO] ⚡ Recognition event in 0.184s | Active faces: 1
+2025-10-12 00:38:04 [INFO] ⚡ Using cached detection results (Δt=0.49s)
+2025-10-12 00:38:05 [INFO] ⚡ New face face_1 recognized instantly as Kartikey (75.61%)
+2025-10-12 00:38:05 [INFO] ⚡ Recognition event in 0.213s | Active faces: 1
+2025-10-12 00:38:05 [INFO] ⚡ Using cached detection results (Δt=0.98s)
+2025-10-12 00:38:05 [INFO] 🔁 Internal recheck 2/3 for Kartikey (75.61%)
+2025-10-12 00:38:05 [INFO] ⚡ Recognition event in 0.013s | Active faces: 1
+2025-10-12 00:38:07 [INFO] ✅ Face face_1 verified internally as Kartikey (3x match, 73.91%)
+2025-10-12 00:38:07 [INFO] ⚡ Recognition event in 0.174s | Active faces: 1
+2025-10-12 00:38:07 [INFO] ⚡ Using cached detection results (Δt=0.98s)
+2025-10-12 00:38:07 [INFO] ✅ Skipping confirmed face Kartikey
+2025-10-12 00:38:07 [INFO] ⚡ Recognition event in 0.002s | Active faces: 1
+2025-10-12 00:38:09 [INFO] ✅ Skipping confirmed face Kartikey
+2025-10-12 00:38:09 [INFO] ⚡ Recognition event in 0.193s | Active faces: 1
+2025-10-12 00:38:31 [INFO] 🧹 Expired face removed: face_1 — will be rechecked if seen again
+2025-10-12 00:38:31 [INFO] ⚡ New face face_1 recognized instantly as Kartikey (73.33%)
+2025-10-12 00:38:31 [INFO] ⚡ Recognition event in 0.299s | Active faces: 1
+2025-10-12 00:38:32 [INFO] ⚡ Using cached detection results (Δt=0.98s)
+2025-10-12 00:38:32 [INFO] 🔁 Internal recheck 2/3 for Kartikey (73.33%)
+2025-10-12 00:38:32 [INFO] ⚡ Recognition event in 0.014s | Active faces: 1
+2025-10-12 00:38:33 [INFO] ⚡ New face face_1 recognized instantly as Kartikey (71.94%)
+2025-10-12 00:38:33 [INFO] ⚡ Recognition event in 0.180s | Active faces: 1
+2025-10-12 00:38:34 [INFO] 🔁 Internal recheck 2/3 for Kartikey (72.99%)
+2025-10-12 00:38:34 [INFO] ⚡ Recognition event in 0.194s | Active faces: 1
+2025-10-12 00:38:36 [INFO] ✅ Face face_1 verified internally as Kartikey (3x match, 75.24%)
+2025-10-12 00:38:36 [INFO] ⚡ Recognition event in 0.224s | Active faces: 1
+2025-10-12 00:38:37 [INFO] ⚡ Using cached detection results (Δt=0.98s)
+2025-10-12 00:38:37 [INFO] ✅ Skipping confirmed face Kartikey
+2025-10-12 00:38:37 [INFO] ⚡ Recognition event in 0.002s | Active faces: 1
+2025-10-12 00:38:38 [INFO] ✅ Skipping confirmed face Kartikey
+2025-10-12 00:38:38 [INFO] ⚡ Recognition event in 0.203s | Active faces: 1
+2025-10-12 00:38:39 [INFO] ✅ Skipping confirmed face Kartikey
+2025-10-12 00:38:39 [INFO] ⚡ Recognition event in 0.190s | Active faces: 1
+2025-10-12 00:38:40 [INFO] ⚡ Using cached detection results (Δt=0.99s)
+2025-10-12 00:38:40 [INFO] ✅ Skipping confirmed face Kartikey
+2025-10-12 00:38:40 [INFO] ⚡ Recognition event in 0.001s | Active faces: 1
+2025-10-12 00:38:41 [INFO] ⚡ New face face_1 recognized instantly as Kartikey (57.23%)
+2025-10-12 00:38:41 [INFO] ⚡ Recognition event in 0.187s | Active faces: 1
+2025-10-12 00:38:42 [INFO] ⚡ New face face_1 recognized instantly as Kartikey (75.09%)
+2025-10-12 00:38:42 [INFO] ⚡ Recognition event in 0.201s | Active faces: 1
+2025-10-12 00:38:43 [INFO] ⚡ Using cached detection results (Δt=0.99s)
+2025-10-12 00:38:43 [INFO] 🔁 Internal recheck 2/3 for Kartikey (75.09%)
+2025-10-12 00:38:43 [INFO] ⚡ Recognition event in 0.014s | Active faces: 1
+2025-10-12 00:38:44 [INFO] ✅ Face face_1 verified internally as Kartikey (3x match, 77.71%)
+2025-10-12 00:38:44 [INFO] ⚡ Recognition event in 0.213s | Active faces: 1
+2025-10-12 00:38:50 [INFO] 🧹 Expired face removed: face_1 — will be rechecked if seen again
+2025-10-12 00:38:50 [INFO] ⚡ New face face_1 recognized instantly as Kartikey (56.68%)
+2025-10-12 00:38:50 [INFO] ⚡ Recognition event in 0.265s | Active faces: 1
+2025-10-12 00:38:51 [INFO] ⚡ Using cached detection results (Δt=0.99s)
+2025-10-12 00:38:51 [INFO] 🔁 Internal recheck 2/3 for Kartikey (56.68%)
+2025-10-12 00:38:51 [INFO] ⚡ Recognition event in 0.014s | Active faces: 1
+2025-10-12 00:38:53 [INFO] ⚡ New face face_1 recognized instantly as Kartikey (70.06%)
+2025-10-12 00:38:53 [INFO] ⚡ Recognition event in 0.209s | Active faces: 1
+2025-10-12 00:38:54 [INFO] ⚡ Using cached detection results (Δt=1.00s)
+2025-10-12 00:38:54 [INFO] 🔁 Internal recheck 2/3 for Kartikey (70.06%)
+2025-10-12 00:38:54 [INFO] ⚡ Recognition event in 0.014s | Active faces: 1
+2025-10-12 00:38:55 [INFO] ⚡ New face face_1 recognized instantly as Kartikey (67.66%)
+2025-10-12 00:38:55 [INFO] ⚡ Recognition event in 0.208s | Active faces: 1
+2025-10-12 00:39:01 [INFO] 🧹 Expired face removed: face_1 — will be rechecked if seen again
+2025-10-12 00:39:01 [INFO] ⚡ New face face_1 recognized instantly as Kartikey (74.25%)
+2025-10-12 00:39:01 [INFO] ⚡ Recognition event in 0.192s | Active faces: 1
+2025-10-12 00:39:01 [INFO] ⚡ Using cached detection results (Δt=1.00s)
+2025-10-12 00:39:01 [INFO] 🔁 Internal recheck 2/3 for Kartikey (74.25%)
+2025-10-12 00:39:01 [INFO] ⚡ Recognition event in 0.013s | Active faces: 1
+2025-10-12 00:39:03 [INFO] ✅ Face face_1 verified internally as Kartikey (3x match, 70.56%)
+2025-10-12 00:39:03 [INFO] ⚡ Recognition event in 0.188s | Active faces: 1
+2025-10-12 00:39:06 [INFO] ⚡ New face face_1 recognized instantly as Kartikey (64.72%)
+2025-10-12 00:39:06 [INFO] ⚡ Recognition event in 0.179s | Active faces: 1
+2025-10-12 00:39:07 [INFO] ⚡ Using cached detection results (Δt=0.98s)
+2025-10-12 00:39:07 [INFO] 🔁 Internal recheck 2/3 for Kartikey (64.72%)
+2025-10-12 00:39:07 [INFO] ⚡ Recognition event in 0.012s | Active faces: 1
+2025-10-12 00:39:08 [INFO] ⚡ New face face_1 recognized instantly as Kartikey (70.65%)
+2025-10-12 00:39:08 [INFO] ⚡ Recognition event in 0.190s | Active faces: 1
+2025-10-12 00:40:19 [INFO] 🧹 Expired face removed: face_1 — will be rechecked if seen again
+2025-10-12 00:40:19 [INFO] ⚡ New face face_1 recognized instantly as Kartikey (73.57%)
+2025-10-12 00:40:19 [INFO] ⚡ Recognition event in 0.435s | Active faces: 1
+2025-10-12 00:40:20 [INFO] ⚡ Using cached detection results (Δt=0.97s)
+2025-10-12 00:40:20 [INFO] 🔁 Internal recheck 2/3 for Kartikey (73.57%)
+2025-10-12 00:40:20 [INFO] ⚡ Recognition event in 0.014s | Active faces: 1
+2025-10-12 00:40:21 [INFO] ✅ Face face_1 verified internally as Kartikey (3x match, 74.15%)
+2025-10-12 00:40:21 [INFO] ⚡ Recognition event in 0.188s | Active faces: 1
+2025-10-12 00:40:22 [INFO] ⚡ Using cached detection results (Δt=1.00s)
+2025-10-12 00:40:22 [INFO] ✅ Skipping confirmed face Kartikey
+2025-10-12 00:40:22 [INFO] ⚡ Recognition event in 0.001s | Active faces: 1
+2025-10-12 00:40:23 [INFO] ⚡ Using cached detection results (Δt=0.22s)
+2025-10-12 00:40:23 [INFO] ✅ Skipping confirmed face Kartikey
+2025-10-12 00:40:23 [INFO] ⚡ Recognition event in 0.001s | Active faces: 1
+2025-10-12 00:40:24 [INFO] ⚡ Using cached detection results (Δt=1.00s)
+2025-10-12 00:40:24 [INFO] ✅ Skipping confirmed face Kartikey
+2025-10-12 00:40:24 [INFO] ⚡ Recognition event in 0.002s | Active faces: 1
+2025-10-12 00:40:25 [INFO] ✅ Skipping confirmed face Kartikey
+2025-10-12 00:40:25 [INFO] ⚡ Recognition event in 0.189s | Active faces: 1
+2025-10-12 00:40:25 [INFO] ⚡ Using cached detection results (Δt=0.19s)
+2025-10-12 00:40:25 [INFO] 🟢 Work Application login verified for Kartikey (ifnt031)
+2025-10-12 00:40:26 [INFO] ✅ Skipping confirmed face Kartikey
+2025-10-12 00:40:26 [INFO] ⚡ Recognition event in 0.177s | Active faces: 1
+2025-10-12 00:40:29 [INFO] ✅ Skipping confirmed face Kartikey
+2025-10-12 00:40:29 [INFO] ⚡ Recognition event in 0.262s | Active faces: 1
+2025-10-12 00:40:30 [INFO] ✅ Skipping confirmed face Kartikey
+2025-10-12 00:40:30 [INFO] ⚡ Recognition event in 0.186s | Active faces: 1
+2025-10-12 00:40:31 [INFO] ⚡ Using cached detection results (Δt=1.00s)
+2025-10-12 00:40:31 [INFO] ✅ Skipping confirmed face Kartikey
+2025-10-12 00:40:31 [INFO] ⚡ Recognition event in 0.001s | Active faces: 1
+2025-10-12 00:40:32 [INFO] ⚡ Using cached detection results (Δt=0.44s)
+2025-10-12 00:40:32 [INFO] ✅ Skipping confirmed face Kartikey
+2025-10-12 00:40:32 [INFO] ⚡ Recognition event in 0.001s | Active faces: 1
+2025-10-12 00:40:33 [INFO] ✅ Skipping confirmed face Kartikey
+2025-10-12 00:40:33 [INFO] ⚡ Recognition event in 0.187s | Active faces: 1
+2025-10-12 00:40:33 [INFO] ⚡ Using cached detection results (Δt=0.30s)
+2025-10-12 00:40:34 [INFO] ⚡ Using cached detection results (Δt=0.99s)
+2025-10-12 00:40:34 [INFO] ✅ Skipping confirmed face Kartikey
+2025-10-12 00:40:34 [INFO] ⚡ Recognition event in 0.001s | Active faces: 1
+2025-10-12 00:40:35 [INFO] ✅ Skipping confirmed face Kartikey
+2025-10-12 00:40:35 [INFO] ⚡ Recognition event in 0.188s | Active faces: 1
+2025-10-12 00:40:35 [INFO] ⚡ Using cached detection results (Δt=0.19s)
+2025-10-12 00:40:35 [INFO] 🟢 Work Application login verified for Kartikey (ifnt031)
+2025-10-12 00:40:36 [INFO] ✅ Skipping confirmed face Kartikey
+2025-10-12 00:40:36 [INFO] ⚡ Recognition event in 0.198s | Active faces: 1
+2025-10-12 00:40:38 [INFO] ✅ Skipping confirmed face Kartikey
+2025-10-12 00:40:38 [INFO] ⚡ Recognition event in 0.329s | Active faces: 1
+2025-10-12 00:40:39 [INFO] ✅ Skipping confirmed face Kartikey
+2025-10-12 00:40:39 [INFO] ⚡ Recognition event in 0.162s | Active faces: 1
+2025-10-12 00:40:40 [INFO] ⚡ New face face_1 recognized instantly as Kartikey (70.09%)
+2025-10-12 00:40:40 [INFO] ⚡ Recognition event in 0.156s | Active faces: 1
+2025-10-12 00:40:41 [INFO] ⚡ Using cached detection results (Δt=1.00s)
+2025-10-12 00:40:41 [INFO] 🔁 Internal recheck 2/3 for Kartikey (70.09%)
+2025-10-12 00:40:41 [INFO] ⚡ Recognition event in 0.011s | Active faces: 1
+2025-10-12 00:40:42 [INFO] ✅ Face face_1 verified internally as Kartikey (3x match, 71.91%)
+2025-10-12 00:40:42 [INFO] ⚡ Recognition event in 0.159s | Active faces: 1
+2025-10-12 00:40:43 [INFO] ⚡ Using cached detection results (Δt=0.97s)
+2025-10-12 00:40:43 [INFO] ✅ Skipping confirmed face Kartikey
+2025-10-12 00:40:43 [INFO] ⚡ Recognition event in 0.001s | Active faces: 1
+2025-10-12 00:40:44 [INFO] ✅ Skipping confirmed face Kartikey
+2025-10-12 00:40:44 [INFO] ⚡ Recognition event in 0.157s | Active faces: 1
+2025-10-12 00:40:45 [INFO] ⚡ Using cached detection results (Δt=0.99s)
+2025-10-12 00:40:45 [INFO] ✅ Skipping confirmed face Kartikey
+2025-10-12 00:40:45 [INFO] ⚡ Recognition event in 0.002s | Active faces: 1
+2025-10-12 00:40:46 [INFO] ✅ Skipping confirmed face Kartikey
+2025-10-12 00:40:46 [INFO] ⚡ Recognition event in 0.159s | Active faces: 1
+2025-10-12 00:40:47 [INFO] ⚡ Using cached detection results (Δt=1.00s)
+2025-10-12 00:40:47 [INFO] ✅ Skipping confirmed face Kartikey
+2025-10-12 00:40:47 [INFO] ⚡ Recognition event in 0.001s | Active faces: 1
+2025-10-12 00:40:48 [INFO] ⚡ New face face_1 recognized instantly as Kartikey (68.83%)
+2025-10-12 00:40:48 [INFO] ⚡ Recognition event in 0.160s | Active faces: 1
+2025-10-12 00:40:49 [INFO] 🔁 Internal recheck 2/3 for Kartikey (72.43%)
+2025-10-12 00:40:49 [INFO] ⚡ Recognition event in 0.155s | Active faces: 1
+2025-10-12 00:40:50 [INFO] ⚡ Using cached detection results (Δt=1.00s)
+2025-10-12 00:40:50 [INFO] ✅ Face face_1 verified internally as Kartikey (3x match, 72.43%)
+2025-10-12 00:40:50 [INFO] ⚡ Recognition event in 0.010s | Active faces: 1
+2025-10-12 00:40:51 [INFO] ✅ Skipping confirmed face Kartikey
+2025-10-12 00:40:51 [INFO] ⚡ Recognition event in 0.158s | Active faces: 1
+2025-10-12 00:40:52 [INFO] ⚡ Using cached detection results (Δt=1.00s)
+2025-10-12 00:40:52 [INFO] ✅ Skipping confirmed face Kartikey
+2025-10-12 00:40:52 [INFO] ⚡ Recognition event in 0.002s | Active faces: 1
+2025-10-12 00:40:53 [INFO] ✅ Skipping confirmed face Kartikey
+2025-10-12 00:40:53 [INFO] ⚡ Recognition event in 0.158s | Active faces: 1
+2025-10-12 00:40:54 [INFO] ⚡ Using cached detection results (Δt=1.00s)
+2025-10-12 00:40:54 [INFO] ✅ Skipping confirmed face Kartikey
+2025-10-12 00:40:54 [INFO] ⚡ Recognition event in 0.002s | Active faces: 1
+2025-10-12 00:40:55 [INFO] ✅ Skipping confirmed face Kartikey
+2025-10-12 00:40:55 [INFO] ⚡ Recognition event in 0.154s | Active faces: 1
+2025-10-12 00:40:56 [INFO] ✅ Skipping confirmed face Kartikey
+2025-10-12 00:40:56 [INFO] ⚡ Recognition event in 0.159s | Active faces: 1
+2025-10-12 00:40:57 [INFO] ✅ Skipping confirmed face Kartikey
+2025-10-12 00:40:57 [INFO] ⚡ Recognition event in 0.158s | Active faces: 1
+2025-10-12 00:40:58 [INFO] ⚡ Using cached detection results (Δt=1.00s)
+2025-10-12 00:40:58 [INFO] ✅ Skipping confirmed face Kartikey
+2025-10-12 00:40:58 [INFO] ⚡ Recognition event in 0.002s | Active faces: 1
+2025-10-12 00:40:59 [INFO] ✅ Skipping confirmed face Kartikey
+2025-10-12 00:40:59 [INFO] ⚡ Recognition event in 0.155s | Active faces: 1
+2025-10-12 00:41:00 [INFO] ⚡ Using cached detection results (Δt=1.00s)
+2025-10-12 00:41:00 [INFO] ✅ Skipping confirmed face Kartikey
+2025-10-12 00:41:00 [INFO] ⚡ Recognition event in 0.002s | Active faces: 1
+2025-10-12 00:41:01 [INFO] ✅ Skipping confirmed face Kartikey
+2025-10-12 00:41:01 [INFO] ⚡ Recognition event in 0.158s | Active faces: 1
+2025-10-12 00:41:02 [INFO] ⚡ Using cached detection results (Δt=1.00s)
+2025-10-12 00:41:02 [INFO] ✅ Skipping confirmed face Kartikey
+2025-10-12 00:41:02 [INFO] ⚡ Recognition event in 0.002s | Active faces: 1
+2025-10-12 00:41:03 [INFO] ⚡ New face face_1 recognized instantly as Kartikey (70.14%)
+2025-10-12 00:41:03 [INFO] ⚡ Recognition event in 0.158s | Active faces: 1
+2025-10-12 00:41:04 [INFO] 🔁 Internal recheck 2/3 for Kartikey (68.71%)
+2025-10-12 00:41:04 [INFO] ⚡ Recognition event in 0.156s | Active faces: 1
+2025-10-12 00:41:05 [INFO] ⚡ Using cached detection results (Δt=1.00s)
+2025-10-12 00:41:05 [INFO] ✅ Face face_1 verified internally as Kartikey (3x match, 68.71%)
+2025-10-12 00:41:05 [INFO] ⚡ Recognition event in 0.013s | Active faces: 1
+2025-10-12 00:41:06 [INFO] ⚡ New face face_1 recognized instantly as Kartikey (61.86%)
+2025-10-12 00:41:06 [INFO] ⚡ Recognition event in 0.158s | Active faces: 1
+2025-10-12 00:41:07 [INFO] ⚡ Using cached detection results (Δt=0.74s)
+2025-10-12 00:41:07 [INFO] 🔁 Internal recheck 2/3 for Kartikey (61.86%)
+2025-10-12 00:41:07 [INFO] ⚡ Recognition event in 0.013s | Active faces: 1
+2025-10-12 00:41:08 [INFO] ✅ Face face_1 verified internally as Kartikey (3x match, 64.97%)
+2025-10-12 00:41:08 [INFO] ⚡ Recognition event in 0.191s | Active faces: 1
+2025-10-12 00:41:09 [INFO] ⚡ Using cached detection results (Δt=0.98s)
+2025-10-12 00:41:09 [INFO] ✅ Skipping confirmed face Kartikey
+2025-10-12 00:41:09 [INFO] ⚡ Recognition event in 0.001s | Active faces: 1
+2025-10-12 00:41:41 [INFO] 🧹 Expired face removed: face_1 — will be rechecked if seen again
+2025-10-12 00:41:41 [INFO] ⚡ New face face_1 recognized instantly as Kartikey (75.77%)
+2025-10-12 00:41:41 [INFO] ⚡ Recognition event in 0.262s | Active faces: 1
+2025-10-12 00:41:42 [INFO] 🔁 Internal recheck 2/3 for Kartikey (76.04%)
+2025-10-12 00:41:42 [INFO] ⚡ Recognition event in 0.185s | Active faces: 1
+2025-10-12 00:43:02 [INFO] 🧹 Expired face removed: face_1 — will be rechecked if seen again
+2025-10-12 00:43:02 [INFO] ⚡ New face face_1 recognized instantly as Kartikey (71.85%)
+2025-10-12 00:43:02 [INFO] ⚡ Recognition event in 0.376s | Active faces: 1
+2025-10-12 00:43:02 [INFO] ⚡ Using cached detection results (Δt=0.98s)
+2025-10-12 00:43:02 [INFO] 🔁 Internal recheck 2/3 for Kartikey (71.85%)
+2025-10-12 00:43:02 [INFO] ⚡ Recognition event in 0.015s | Active faces: 1
+2025-10-12 00:43:04 [INFO] ⚡ New face face_1 recognized instantly as Kartikey (67.08%)
+2025-10-12 00:43:04 [INFO] ⚡ Recognition event in 0.180s | Active faces: 1
+2025-10-12 00:43:05 [INFO] ⚡ New face face_1 recognized instantly as Kartikey (70.06%)
+2025-10-12 00:43:05 [INFO] ⚡ Recognition event in 0.163s | Active faces: 1
+2025-10-12 00:43:08 [INFO] 🔁 Internal recheck 2/3 for Kartikey (78.61%)
+2025-10-12 00:43:08 [INFO] ⚡ Recognition event in 0.178s | Active faces: 1
+2025-10-12 00:43:09 [INFO] ⚡ Using cached detection results (Δt=0.99s)
+2025-10-12 00:43:09 [INFO] ✅ Face face_1 verified internally as Kartikey (3x match, 78.61%)
+2025-10-12 00:43:09 [INFO] ⚡ Recognition event in 0.013s | Active faces: 1
+2025-10-12 00:43:10 [INFO] ⚡ New face face_1 recognized instantly as Kartikey (72.75%)
+2025-10-12 00:43:10 [INFO] ⚡ Recognition event in 0.175s | Active faces: 1
+2025-10-12 00:43:11 [INFO] ⚡ New face face_1 recognized instantly as Kartikey (66.50%)
+2025-10-12 00:43:11 [INFO] ⚡ Recognition event in 0.183s | Active faces: 1
+2025-10-12 00:43:12 [INFO] ⚡ Using cached detection results (Δt=0.99s)
+2025-10-12 00:43:12 [INFO] 🔁 Internal recheck 2/3 for Kartikey (66.50%)
+2025-10-12 00:43:12 [INFO] ⚡ Recognition event in 0.014s | Active faces: 1
+2025-10-12 00:43:13 [INFO] ✅ Face face_1 verified internally as Kartikey (3x match, 69.30%)
+2025-10-12 00:43:13 [INFO] ⚡ Recognition event in 0.188s | Active faces: 1
+2025-10-12 00:43:25 [INFO] 🧹 Expired face removed: face_1 — will be rechecked if seen again
+2025-10-12 00:43:25 [INFO] ⚡ New face face_1 recognized instantly as Kartikey (80.38%)
+2025-10-12 00:43:25 [INFO] ⚡ Recognition event in 0.245s | Active faces: 1
+2025-10-12 00:43:26 [INFO] ⚡ Using cached detection results (Δt=0.80s)
+2025-10-12 00:43:26 [INFO] 🧹 Cleared active_faces cache after attendance mark
+2025-10-12 00:43:26 [INFO] ⚡ Using cached detection results (Δt=0.98s)
+2025-10-12 00:43:26 [INFO] ⚡ New face face_1 recognized instantly as Kartikey (80.38%)
+2025-10-12 00:43:26 [INFO] ⚡ Recognition event in 0.001s | Active faces: 1
+2025-10-12 00:43:28 [INFO] 🔁 Internal recheck 2/3 for Kartikey (76.33%)
+2025-10-12 00:43:28 [INFO] ⚡ Recognition event in 0.213s | Active faces: 1
+2025-10-12 00:43:29 [INFO] ⚡ Using cached detection results (Δt=0.50s)
+2025-10-12 00:43:29 [INFO] 🧹 Cleared active_faces cache after attendance mark
+2025-10-12 00:43:29 [INFO] ⚡ Using cached detection results (Δt=0.99s)
+2025-10-12 00:43:29 [INFO] ⚡ New face face_1 recognized instantly as Kartikey (76.33%)
+2025-10-12 00:43:29 [INFO] ⚡ Recognition event in 0.014s | Active faces: 1
+2025-10-12 00:43:30 [INFO] 🔁 Internal recheck 2/3 for Kartikey (78.51%)
+2025-10-12 00:43:30 [INFO] ⚡ Recognition event in 0.178s | Active faces: 1
+2025-10-12 00:43:31 [INFO] ⚡ Using cached detection results (Δt=0.67s)
+2025-10-12 00:43:31 [INFO] 🧹 Cleared active_faces cache after attendance mark
+2025-10-12 00:43:31 [INFO] ⚡ Using cached detection results (Δt=0.99s)
+2025-10-12 00:43:31 [INFO] ⚡ New face face_1 recognized instantly as Kartikey (78.51%)
+2025-10-12 00:43:31 [INFO] ⚡ Recognition event in 0.001s | Active faces: 1
+2025-10-12 00:43:33 [INFO] 🔁 Internal recheck 2/3 for Kartikey (76.17%)
+2025-10-12 00:43:33 [INFO] ⚡ Recognition event in 0.186s | Active faces: 1
+2025-10-12 00:43:33 [INFO] ⚡ Using cached detection results (Δt=0.23s)
+2025-10-12 00:43:33 [INFO] 🧹 Cleared active_faces cache after attendance mark
+2025-10-12 00:43:34 [INFO] ⚡ New face face_1 recognized instantly as Kartikey (78.46%)
+2025-10-12 00:43:34 [INFO] ⚡ Recognition event in 0.178s | Active faces: 1
+2025-10-12 00:43:36 [INFO] ⚡ Recognition completed in 0.510s (no faces found)
+2025-10-12 00:43:36 [INFO] ⚡ Using cached detection results (Δt=0.51s)
+2025-10-12 00:43:36 [INFO] ⚡ Using cached detection results (Δt=0.99s)
+2025-10-12 00:43:36 [INFO] ⚡ Recognition completed in 0.001s (no faces found)
+2025-10-12 00:43:37 [INFO] 🔁 Internal recheck 2/3 for Kartikey (74.72%)
+2025-10-12 00:43:37 [INFO] ⚡ Recognition event in 0.197s | Active faces: 1
+2025-10-12 00:43:38 [INFO] ✅ Face face_1 verified internally as Kartikey (3x match, 74.51%)
+2025-10-12 00:43:38 [INFO] ⚡ Recognition event in 0.188s | Active faces: 1
+2025-10-12 00:43:39 [INFO] ✅ Skipping confirmed face Kartikey
+2025-10-12 00:43:39 [INFO] ⚡ Recognition event in 0.187s | Active faces: 1
+2025-10-12 00:43:43 [INFO] ✅ Skipping confirmed face Kartikey
+2025-10-12 00:43:43 [INFO] ⚡ Recognition event in 0.179s | Active faces: 1
+2025-10-12 00:43:45 [INFO] 🧹 Cleared active_faces cache after attendance mark
+2025-10-12 00:43:45 [INFO] ⚡ Using cached detection results (Δt=0.20s)
+2025-10-12 00:43:45 [INFO] ⚡ New face face_1 recognized instantly as Kartikey (78.72%)
+2025-10-12 00:43:45 [INFO] ⚡ Recognition event in 0.001s | Active faces: 1
+2025-10-12 00:43:46 [INFO] 🔁 Internal recheck 2/3 for Kartikey (76.23%)
+2025-10-12 00:43:46 [INFO] ⚡ Recognition event in 0.186s | Active faces: 1
+2025-10-12 00:43:47 [INFO] ✅ Face face_1 verified internally as Kartikey (3x match, 76.39%)
+2025-10-12 00:43:47 [INFO] ⚡ Recognition event in 0.178s | Active faces: 1
+2025-10-12 00:43:48 [INFO] ⚡ Using cached detection results (Δt=0.68s)
+2025-10-12 00:43:48 [INFO] 🧹 Cleared active_faces cache after attendance mark
+2025-10-12 00:43:48 [INFO] ⚡ New face face_1 recognized instantly as Kartikey (73.93%)
+2025-10-12 00:43:48 [INFO] ⚡ Recognition event in 0.162s | Active faces: 1
+2025-10-12 00:43:49 [INFO] ⚡ Using cached detection results (Δt=0.57s)
+2025-10-12 00:43:49 [INFO] 🧹 Cleared active_faces cache after attendance mark
+2025-10-12 00:43:49 [INFO] ⚡ New face face_1 recognized instantly as Kartikey (72.32%)
+2025-10-12 00:43:49 [INFO] ⚡ Recognition event in 0.170s | Active faces: 1
+2025-10-12 00:43:50 [INFO] ⚡ Using cached detection results (Δt=0.27s)
+2025-10-12 00:43:50 [INFO] 🧹 Cleared active_faces cache after attendance mark
+2025-10-12 00:43:52 [INFO] ⚡ New face face_1 recognized instantly as Kartikey (76.03%)
+2025-10-12 00:43:52 [INFO] ⚡ Recognition event in 0.188s | Active faces: 1
+2025-10-12 00:43:53 [INFO] ⚡ Using cached detection results (Δt=0.83s)
+2025-10-12 00:43:53 [INFO] 🧹 Cleared active_faces cache after attendance mark
+2025-10-12 00:43:53 [INFO] ⚡ Using cached detection results (Δt=0.98s)
+2025-10-12 00:43:53 [INFO] ⚡ New face face_1 recognized instantly as Kartikey (76.03%)
+2025-10-12 00:43:53 [INFO] ⚡ Recognition event in 0.001s | Active faces: 1
+2025-10-12 00:43:56 [INFO] 🔁 Internal recheck 2/3 for Kartikey (74.00%)
+2025-10-12 00:43:56 [INFO] ⚡ Recognition event in 0.245s | Active faces: 1
+2025-10-12 00:43:56 [INFO] ⚡ Using cached detection results (Δt=0.25s)
+2025-10-12 00:43:56 [INFO] 🧹 Cleared active_faces cache after attendance mark
+2025-10-12 00:43:56 [INFO] ⚡ Using cached detection results (Δt=0.98s)
+2025-10-12 00:43:56 [INFO] ⚡ New face face_1 recognized instantly as Kartikey (74.00%)
+2025-10-12 00:43:56 [INFO] ⚡ Recognition event in 0.013s | Active faces: 1
+2025-10-12 00:43:58 [INFO] 🧹 Cleared active_faces cache after attendance mark
+2025-10-12 00:43:58 [INFO] ⚡ Using cached detection results (Δt=0.23s)
+2025-10-12 00:43:58 [INFO] ⚡ New face face_1 recognized instantly as Kartikey (74.03%)
+2025-10-12 00:43:58 [INFO] ⚡ Recognition event in 0.001s | Active faces: 1
+2025-10-12 00:43:59 [INFO] ⚡ Using cached detection results (Δt=0.92s)
+2025-10-12 00:43:59 [INFO] 🧹 Cleared active_faces cache after attendance mark
+2025-10-12 00:43:59 [INFO] ⚡ New face face_1 recognized instantly as Kartikey (77.31%)
+2025-10-12 00:43:59 [INFO] ⚡ Recognition event in 0.178s | Active faces: 1
+2025-10-12 00:47:28 [INFO] 🧹 Expired face removed: face_1 — will be rechecked if seen again
+2025-10-12 00:47:28 [INFO] ⚡ New face face_1 recognized instantly as Kartikey (69.63%)
+2025-10-12 00:47:28 [INFO] ⚡ Recognition event in 0.262s | Active faces: 1
+2025-10-12 00:47:28 [INFO] ⚡ Using cached detection results (Δt=1.00s)
+2025-10-12 00:47:28 [INFO] 🔁 Internal recheck 2/3 for Kartikey (69.63%)
+2025-10-12 00:47:28 [INFO] ⚡ Recognition event in 0.013s | Active faces: 1
+2025-10-12 00:47:31 [INFO] ⚡ New face face_1 recognized instantly as Kartikey (74.05%)
+2025-10-12 00:47:31 [INFO] ⚡ Recognition event in 0.198s | Active faces: 1
+2025-10-12 00:47:31 [INFO] ⚡ Using cached detection results (Δt=0.98s)
+2025-10-12 00:47:31 [INFO] 🔁 Internal recheck 2/3 for Kartikey (74.05%)
+2025-10-12 00:47:31 [INFO] ⚡ Recognition event in 0.016s | Active faces: 1
+2025-10-12 00:47:33 [INFO] ✅ Face face_1 verified internally as Kartikey (3x match, 75.48%)
+2025-10-12 00:47:33 [INFO] ⚡ Recognition event in 0.197s | Active faces: 1

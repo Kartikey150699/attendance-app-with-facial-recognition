@@ -15,11 +15,81 @@ from calendar import monthrange
 import time 
 from sqlalchemy import inspect
 import os
+import gc
+import threading
+import tensorflow as tf
+import psutil # type: ignore
 os.environ["TF_CPP_MIN_LOG_LEVEL"] = "3"
 import tensorflow as tf
 tf.get_logger().setLevel('ERROR')
 
 router = APIRouter(prefix="/attendance", tags=["Attendance"])
+
+import logging, threading, os, time
+from datetime import datetime
+
+# -------------------------
+# Smart Log Management (auto-truncate when file > 5 MB)
+# -------------------------
+LOG_FILE = "server.log"
+LOG_MAX_SIZE_MB = 5  # truncate after this size
+
+logger = logging.getLogger("attendance_app")
+logger.setLevel(logging.INFO)
+
+# file output
+file_handler = logging.FileHandler(LOG_FILE, mode="a", encoding="utf-8")
+formatter = logging.Formatter("%(asctime)s [%(levelname)s] %(message)s", "%Y-%m-%d %H:%M:%S")
+file_handler.setFormatter(formatter)
+logger.addHandler(file_handler)
+
+# optional console output
+console_handler = logging.StreamHandler()
+console_handler.setFormatter(formatter)
+logger.addHandler(console_handler)
+
+# -------------------------
+# Background thread to clean log if it grows too large
+# -------------------------
+def _clean_large_logs():
+    while True:
+        try:
+            if os.path.exists(LOG_FILE):
+                size_mb = os.path.getsize(LOG_FILE) / (1024 * 1024)
+                if size_mb > LOG_MAX_SIZE_MB:
+                    # safely truncate the log file without restarting backend
+                    open(LOG_FILE, "w").close()
+                    logger.info("🧹 Log file cleared automatically (exceeded 5 MB).")
+            time.sleep(60)  # check every 1 minute
+        except Exception as e:
+            logger.warning(f"⚠️ Log cleanup error: {e}")
+            time.sleep(120)
+
+threading.Thread(target=_clean_large_logs, daemon=True).start()
+
+# =====================================================
+# Automatic Memory Cleaner (TensorFlow + Python + OS)
+# =====================================================
+def _auto_clear_memory():
+    while True:
+        try:
+            process = psutil.Process(os.getpid())
+            mem_mb = process.memory_info().rss / (1024 * 1024)
+
+            # Trigger cleanup if backend RAM > 1500 MB (adjust as needed)
+            if mem_mb > 1500:
+                logger.info(f"🧠 Memory high ({mem_mb:.1f} MB) — running cleanup...")
+                gc.collect()
+                tf.keras.backend.clear_session()
+                logger.info("✅ TensorFlow session and Python GC cleared.")
+
+            time.sleep(300)  # check every 5 minutes
+        except Exception as e:
+            logger.warning(f"⚠️ Memory cleaner error: {e}")
+            time.sleep(120)
+
+# Start background thread
+threading.Thread(target=_auto_clear_memory, daemon=True).start()
 
 # -------------------------
 # DB session dependency
@@ -79,7 +149,7 @@ def calculate_total_work(record: Attendance):
             record.actual_work = f"{ah:02d}:{am:02d}"
 
         except Exception as e:
-            print("⚠️ Error calculating work:", e)
+            logger.warning("⚠️ Error calculating work:", e)
             record.total_work = "-"
             record.break_time = "-"
             record.actual_work = "-"
@@ -91,7 +161,20 @@ def calculate_total_work(record: Attendance):
 # -------------------------
 # Detect faces using Neural Networks (MTCNN + ArcFace, fallback OpenCV Haar for masks and sunglasses)
 # -------------------------
+
+# Detection cache to skip redundant MTCNN runs
+LAST_DETECTION = {"time": 0, "faces": []}
+DETECTION_INTERVAL = 1.0  # seconds to reuse last detection
+
 def detect_faces(tmp_path):
+    global LAST_DETECTION
+
+    now = time.time()
+    # ⏳ If last detection was recent, reuse results
+    if (now - LAST_DETECTION["time"]) < DETECTION_INTERVAL:
+        logger.info(f"⚡ Using cached detection results (Δt={now - LAST_DETECTION['time']:.2f}s)")
+        return LAST_DETECTION["faces"]
+
     faces = []
     try:
         # Step 1: Preprocess image (lighting normalization)
@@ -102,7 +185,7 @@ def detect_faces(tmp_path):
             # Slight brightness & contrast boost
             img = cv2.convertScaleAbs(img, alpha=1.2, beta=10)
 
-            # Optional: CLAHE (Adaptive histogram equalization) — helps in uneven lighting
+            # Optional: CLAHE (Adaptive histogram equalization)
             lab = cv2.cvtColor(img, cv2.COLOR_RGB2LAB)
             l, a, b = cv2.split(lab)
             clahe = cv2.createCLAHE(clipLimit=2.0, tileGridSize=(8, 8))
@@ -125,16 +208,18 @@ def detect_faces(tmp_path):
             enforce_detection=False
         )
 
+        # Normalize output
         if isinstance(reps, dict):
             reps = [reps]
 
+        # Step 3: Process each detected face
         for rep in reps:
             embedding = rep.get("embedding")
             box = rep.get("facial_area", {})
             w, h = box.get("w", 0), box.get("h", 0)
             confidence = rep.get("confidence", 1.0)
 
-            # Step 3: Basic filtering
+            # Basic filters
             if w < 50 or h < 50:
                 continue
             ratio = w / (h + 1e-6)
@@ -152,8 +237,9 @@ def detect_faces(tmp_path):
                     "h": int(h)
                 }
             })
+
     except Exception as e:
-        print("⚠️ MTCNN failed:", e)
+        logger.warning(f"⚠️ MTCNN failed: {e}")
 
     # Step 4: Fallback to OpenCV Haar if DeepFace fails
     if not faces:
@@ -191,7 +277,11 @@ def detect_faces(tmp_path):
                         }
                     })
         except Exception as e:
-            print("❌ OpenCV fallback failed:", e)
+            logger.warning(f"❌ OpenCV fallback failed: {e}")
+
+    # Save to cache
+    LAST_DETECTION["time"] = now
+    LAST_DETECTION["faces"] = faces
 
     return faces
 
@@ -240,14 +330,14 @@ def load_embeddings(db: Session):
                 names.append(user.name)
 
         except Exception as e:
-            print(f"⚠️ Failed to load embeddings for {user.name}: {e}")
+            logger.warning(f"⚠️ Failed to load embeddings for {user.name}: {e}")
 
     embedding_cache = cache
     user_ids = ids
     user_names = names
     all_embeddings = np.vstack(np_list) if np_list else None
 
-    print(f"✅ Loaded {len(user_ids)} embeddings for {len(users)} users into cache.")
+    logger.info(f"✅ Loaded {len(user_ids)} embeddings for {len(users)} users into cache.")
 
 def refresh_embeddings():
     """Safely refresh the embedding cache — skips if tables not ready."""
@@ -255,12 +345,12 @@ def refresh_embeddings():
         with SessionLocal() as db:
             inspector = inspect(db.bind)
             if "users" not in inspector.get_table_names():
-                print("⚠️ Skipping embedding refresh — 'users' table not found yet.")
+                logger.warning("⚠️ Skipping embedding refresh — 'users' table not found yet.")
                 return
             load_embeddings(db)
-            print("✅ Embedding cache refreshed successfully.")
+            logger.info("✅ Embedding cache refreshed successfully.")
     except Exception as e:
-        print(f"⚠️ Safe refresh skipped: {e}")
+        logger.warning(f"⚠️ Safe refresh skipped: {e}")
 
 # =====================================================
 # Safe Embedding Load on Import (macOS + Windows compatible)
@@ -275,14 +365,14 @@ try:
             user_count = db.query(User).count()
             if user_count > 0:
                 load_embeddings(db)
-                print(f"Loaded embeddings for {user_count} users.")
+                logger.info(f"✅ Loaded embeddings for {user_count} users.")
             else:
-                print("No users found — embedding cache empty.")
+                logger.warning("⚠️ No users found — embedding cache empty.")
     else:
-        print("⚠️ Skipped embedding load — 'users' table not found.")
+        logger.warning("⚠️ Skipped embedding load — 'users' table not found.")
 
 except Exception as e:
-    print(f"⚠️ Embedding preload skipped: {e}")
+    logger.warning(f"⚠️ Embedding preload skipped: {e}")
 
 
 # -------------------------
@@ -356,7 +446,7 @@ async def preview_faces(file: UploadFile = None):
     faces = detect_faces(tmp_path)
     if not faces:
         duration = time.time() - start_time
-        print(f"⚡ Recognition completed in {duration:.3f}s (no faces found)")
+        logger.info(f"⚡ Recognition completed in {duration:.3f}s (no faces found)")
         return {"results": []}
 
     # --- Cleanup expired faces ---
@@ -367,7 +457,7 @@ async def preview_faces(file: UploadFile = None):
     ]
     for fid in expired:
         del active_faces[fid]
-        print(f"🧹 Expired face removed: {fid} — will be rechecked if seen again")
+        logger.info(f"🧹 Expired face removed: {fid} — will be rechecked if seen again")
 
     results = []
     threshold = 40
@@ -401,13 +491,13 @@ async def preview_faces(file: UploadFile = None):
                 name = data["name"]
                 confidence = 100.0
                 result_status = "known"
-                print(f"✅ Skipping confirmed face {name}")
+                logger.info(f"✅ Skipping confirmed face {name}")
 
             elif data.get("permanent_unknown"):
                 name = "Unknown"
                 confidence = 0.0
                 result_status = "unknown"
-                print(f"🛑 Skipping permanently unknown face {matched_id}")
+                logger.warning(f"🛑 Skipping permanently unknown face {matched_id}")
 
             else:
                 # --- Silent internal verification (until 3x) ---
@@ -422,12 +512,12 @@ async def preview_faces(file: UploadFile = None):
                     if data["confirm_count"] >= 3:
                         data["confirmed"] = True
                         data["name"] = best_match["name"]
-                        print(
+                        logger.info(
                             f"✅ Face {matched_id} verified internally as {data['name']} "
                             f"(3x match, {confidence:.2f}%)"
                         )
                     else:
-                        print(
+                        logger.info(
                             f"🔁 Internal recheck {data['confirm_count']}/3 for "
                             f"{data['pending_name']} ({confidence:.2f}%)"
                         )
@@ -441,14 +531,14 @@ async def preview_faces(file: UploadFile = None):
                     if data["unknown_count"] >= 3:
                         data["permanent_unknown"] = True
                         data["name"] = "Unknown"
-                        print(
+                        logger.warning(
                             f"🚫 Face {matched_id} locked as Unknown after 3 failed checks"
                         )
                         name = "Unknown"
                         confidence = 0.0
                         result_status = "unknown"
                     else:
-                        print(
+                        logger.warning(
                             f"🔁 Unknown recheck {data['unknown_count']}/3 "
                             f"({confidence:.2f}%)"
                         )
@@ -475,7 +565,7 @@ async def preview_faces(file: UploadFile = None):
                 "last_seen": now,
             }
 
-            print(
+            logger.info(
                 f"⚡ New face {face_id} recognized instantly as {pending_name} "
                 f"({confidence:.2f}%)"
             )
@@ -506,9 +596,8 @@ async def preview_faces(file: UploadFile = None):
     )
 
     duration = time.time() - start_time
-    print(
-        f"⚡ Recognition completed in {duration:.3f}s | Active faces: {len(active_faces)}"
-    )
+    if any(r["status"] in ("new_face", "verifying", "known") for r in results):
+        logger.info(f"⚡ Recognition event in {duration:.3f}s | Active faces: {len(active_faces)}")
 
     return {"results": results, "stop_preview": all_done}
 
@@ -520,7 +609,7 @@ async def toggle_auto_train():
     global AUTO_TRAIN_ENABLED
     AUTO_TRAIN_ENABLED = not AUTO_TRAIN_ENABLED
     status = "ON" if AUTO_TRAIN_ENABLED else "OFF"
-    print(f"[AUTO-TRAIN] Toggled → {status}")
+    logger.info(f"[AUTO-TRAIN] Toggled → {status}")
     return {"auto_train_enabled": AUTO_TRAIN_ENABLED}
 
 # -------------------------
@@ -529,7 +618,7 @@ async def toggle_auto_train():
 @router.get("/auto-train-status")
 async def get_auto_train_status():
     status = "ON" if AUTO_TRAIN_ENABLED else "OFF"
-    print(f"[AUTO-TRAIN] Status checked → {status}")
+    logger.info(f"[AUTO-TRAIN] Status checked → {status}")
     return {"auto_train_enabled": AUTO_TRAIN_ENABLED}
 
 # -------------------------
@@ -608,13 +697,13 @@ def maybe_update_user_embedding(db: Session, user_id: int, new_embedding, simila
         db.refresh(user)
 
         refresh_embeddings()
-        print(
+        logger.info(
             f"🧠 Auto-Train updated {user.name}: "
             f"{len(stored_embeddings)} samples, threshold={user_threshold:.2f}"
         )
 
     except Exception as e:
-        print(f"⚠️ Could not auto-update embedding for {user_id}: {e}")
+        logger.warning(f"⚠️ Could not auto-update embedding for {user_id}: {e}")
 
 
 # -------------------------
@@ -698,8 +787,8 @@ async def mark_attendance(
                     ]
                 }
 
-            # ✅ Face and Employee ID match
-            print(f"🟢 Work Application login verified for {user.name} ({employee_id})")
+            # Face and Employee ID match
+            logger.info(f"🟢 Work Application login verified for {user.name} ({employee_id})")
             return {
                 "results": [
                     {
@@ -836,9 +925,9 @@ async def mark_attendance(
     try:
         global active_faces
         active_faces.clear()
-        print("🧹 Cleared active_faces cache after attendance mark")
+        logger.info("🧹 Cleared active_faces cache after attendance mark")
     except Exception as e:
-        print(f"⚠️ Cache clear skipped: {e}")
+        logger.warning(f"⚠️ Cache clear skipped: {e}")
 
     return {"results": results}
 

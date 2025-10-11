@@ -203,6 +203,24 @@ useEffect(() => {
   return () => clearInterval(interval);
 }, [showCamera, action, captureAndSendFrame]);
 
+const handleInstantCapture = async (subAction = null) => {
+  // 1️Instantly show the most recent detected face
+  const instantFaces = previewFacesRef.current || [];
+  if (instantFaces.length > 0) {
+    const face = instantFaces[0];
+    if (face.name && face.name !== "Unknown") {
+      setStatusMessages([`✅ ${face.name} detected — verifying...`]);
+    } else {
+      setStatusMessages(["❌ Unknown face — verifying..."]);
+    }
+  } else {
+    setStatusMessages(["🔍 Scanning face..."]);
+  }
+
+  // 2️⃣ Trigger backend verification asynchronously
+  captureAndSendFrame("mark", subAction);
+};
+
   return (
 <div className="relative flex flex-col min-h-screen overflow-x-hidden bg-gradient-to-br from-cyan-100 via-sky-200 to-blue-300 text-gray-900">
   {/* Soft glow blobs for ambient light */}
@@ -365,7 +383,7 @@ useEffect(() => {
                   {action === "break" ? (
                     <>
                       <button
-                        onClick={() => captureAndSendFrame("mark", "break_start")}
+                        onClick={() => handleInstantCapture("break_start")}
                         className="px-6 py-3 bg-yellow-500 hover:bg-yellow-600 hover:scale-105 active:scale-95 
                                  transition-transform duration-200 text-white font-bold rounded-lg shadow flex items-center gap-2"
                       >
@@ -373,7 +391,7 @@ useEffect(() => {
                         Start Break
                       </button>
                       <button
-                        onClick={() => captureAndSendFrame("mark", "break_end")}
+                        onClick={() => handleInstantCapture("break_end")}
                         className="px-6 py-3 bg-blue-500 hover:bg-blue-600 hover:scale-105 active:scale-95 
                                  transition-transform duration-200 text-white font-bold rounded-lg shadow flex items-center gap-2"
                       >
@@ -383,7 +401,7 @@ useEffect(() => {
                     </>
                   ) : (
                     <button
-                      onClick={() => captureAndSendFrame("mark")}
+                      onClick={() => handleInstantCapture()}
                       className="px-6 py-3 bg-green-500 hover:bg-green-600 hover:scale-105 active:scale-95 
                                transition-transform duration-200 text-white font-bold rounded-lg shadow flex items-center gap-2"
                     >

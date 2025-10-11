@@ -136,6 +136,24 @@ useEffect(() => {
   return () => clearInterval(interval);
 }, [selectedCamera]);
 
+const handleInstantLogin = async () => {
+  // Show instant detection result from the preview
+  const instantFaces = previewFacesRef.current || [];
+  if (instantFaces.length > 0) {
+    const face = instantFaces[0];
+    if (face.name && face.name !== "Unknown") {
+      setStatusMessages([`✅ ${face.name} detected — verifying...`]);
+    } else {
+      setStatusMessages(["❌ Unknown face — verifying..."]);
+    }
+  } else {
+    setStatusMessages(["🔍 Scanning face..."]);
+  }
+
+  // Trigger the real backend login verification asynchronously
+  captureAndSendFrame();
+};
+
   return (
     <div className="flex flex-col min-h-screen bg-gradient-to-tr from-gray-100 via-indigo-100 to-blue-200">
       {/* Header */}
@@ -264,16 +282,17 @@ useEffect(() => {
 
   {/* Buttons under Camera */}
 <div className="flex justify-center w-full mt-6 sm:mt-8 mb-4">
-  <button
-    type="submit"
-    className="px-8 py-3 sm:px-10 sm:py-3.5 bg-green-500 hover:bg-green-600 
-               hover:scale-105 active:scale-95 transition-transform duration-200 
-               text-white font-bold rounded-xl shadow-md flex items-center gap-2 
-               text-lg sm:text-xl"
-  >
-    <ArrowRightOnRectangleIcon className="h-6 w-6" />
-    Login
-  </button>
+<button
+  type="button"
+  onClick={handleInstantLogin}
+  className="px-8 py-3 sm:px-10 sm:py-3.5 bg-green-500 hover:bg-green-600 
+             hover:scale-105 active:scale-95 transition-transform duration-200 
+             text-white font-bold rounded-xl shadow-md flex items-center gap-2 
+             text-lg sm:text-xl"
+>
+  <ArrowRightOnRectangleIcon className="h-6 w-6" />
+  Login
+</button>
 </div>
 </div>
 

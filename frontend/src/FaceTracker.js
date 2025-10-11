@@ -10,10 +10,9 @@ function FaceTracker({ selectedCamera, onDetectionsChange, facesRef }, ref) {
   const [videoReady, setVideoReady] = useState(false);
   const [fps, setFps] = useState(0);
   const lastTimeRef = useRef(performance.now());
-  const localCache = useRef({});
+  const faceCache = useRef({}); // position + time cache
 
   useImperativeHandle(ref, () => ({
-    // eslint-disable-next-line react-hooks/exhaustive-deps
     getScreenshot: () => webcamRef.current?.getScreenshot(),
   }));
 
@@ -43,7 +42,6 @@ function FaceTracker({ selectedCamera, onDetectionsChange, facesRef }, ref) {
 
     return () => {
       cancelled = true;
-      // eslint-disable-next-line react-hooks/exhaustive-deps
       const localWebcam = webcamRef.current;
       if (detectorRef.current) {
         try {
@@ -64,38 +62,33 @@ function FaceTracker({ selectedCamera, onDetectionsChange, facesRef }, ref) {
   useEffect(() => {
     if (!videoReady || !detectorRef.current) return;
 
-    // eslint-disable-next-line react-hooks/exhaustive-deps
     const video = webcamRef.current.video;
     const canvas = canvasRef.current;
     const ctx = canvas.getContext("2d");
+    const MEMORY_MS = 500; // hold face label for 0.5s
+    const MOVE_TOLERANCE = 120; // px tolerance for movement continuity
 
     const drawDetections = (detections, backendFaces) => {
       if (!video) return;
 
       const rect = video.getBoundingClientRect();
       const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
-
-      // always clear
       ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-      // 🔧 dynamic canvas sizing
       if (isMobile) {
         canvas.width = rect.width;
         canvas.height = rect.height;
-      } else {
-        if (canvas.width !== video.videoWidth || canvas.height !== video.videoHeight) {
-          canvas.width = video.videoWidth;
-          canvas.height = video.videoHeight;
-        }
+      } else if (canvas.width !== video.videoWidth || canvas.height !== video.videoHeight) {
+        canvas.width = video.videoWidth;
+        canvas.height = video.videoHeight;
       }
 
       const scaleX = isMobile ? rect.width / video.videoWidth : 1;
       const scaleY = isMobile ? rect.height / video.videoHeight : 1;
+      const now = Date.now();
 
       detections.forEach((d, i) => {
         const b = d.boundingBox;
-
-        // mirrored X coordinate
         const mirroredX = isMobile
           ? rect.width - (b.originX + b.width) * scaleX
           : canvas.width - (b.originX + b.width);
@@ -103,12 +96,7 @@ function FaceTracker({ selectedCamera, onDetectionsChange, facesRef }, ref) {
         const w = isMobile ? b.width * scaleX : b.width;
         const h = isMobile ? b.height * scaleY : b.height;
 
-        // Base rectangle
-        ctx.lineWidth = 2;
-        ctx.strokeStyle = "rgba(56,189,248,0.9)";
-        ctx.strokeRect(mirroredX, y, w, h);
-
-        // match with backend faces
+        // find matching backend face
         let face = null;
         if (backendFaces && backendFaces.length > 0) {
           face =
@@ -118,90 +106,51 @@ function FaceTracker({ selectedCamera, onDetectionsChange, facesRef }, ref) {
             }) || null;
         }
 
-// --- Ultra-stable cache (handles z-movement & resizing) ---
-const now = Date.now();
-let foundKey = null;
-// eslint-disable-next-line no-unused-vars
-let foundBox = null;
+        const cx = mirroredX + w / 2;
+        const cy = y + h / 2;
+        const box = { x: cx, y: cy, w, h };
 
-// Calculate box center
-const cx = mirroredX + b.width / 2;
-const cy = b.originY + b.height / 2;
-
-// Try to find a cached face near this position *and* similar size
-for (const k of Object.keys(localCache.current)) {
-  const cached = localCache.current[k];
-  const { x: kx, y: ky, w: kw} = cached.box || {};
-  if (!kx) continue;
-
-  const dist = Math.sqrt((kx - cx) ** 2 + (ky - cy) ** 2);
-  const sizeRatio = Math.min(b.width / (kw || 1), kw / (b.width || 1));
-
-  // Within ~80px center distance & within 40% size change
-  if (dist < 80 && sizeRatio > 0.6) {
-    foundKey = k;
-    // eslint-disable-next-line no-unused-vars
-    foundBox = cached.box;
-    break;
-  }
-}
-
-// fallback key
-const key = foundKey || `${Math.round(cx)}-${Math.round(cy)}`;
-const cached = localCache.current[key] || {
-  seen: 0,
-  name: null,
-  confidence: 0,
-  lastSeen: 0,
-  box: { x: cx, y: cy, w: b.width, h: b.height },
-};
-
-if (face && face.name && face.name !== "Unknown") {
-  cached.name = face.name;
-  cached.confidence = face.confidence;
-  cached.box = { x: cx, y: cy, w: b.width, h: b.height };
-  cached.seen = Math.min((cached.seen || 0) + 1, 6);
-  cached.lastSeen = now;
-  localCache.current[key] = cached;
-} else if (cached.name && now - cached.lastSeen < 500) {
-  // keep showing last name for 0.5s if tracking lost
-  localCache.current[key] = cached;
-} else {
-  cached.lastSeen = now;
-  cached.box = { x: cx, y: cy, w: b.width, h: b.height };
-  localCache.current[key] = cached;
-}
-
-        // expire cache
-        Object.keys(localCache.current).forEach((k) => {
-          if (Date.now() - localCache.current[k].lastSeen > 5000) delete localCache.current[k];
-        });
-
-        // label
-        let label = "Face";
+        // --- smart movement-aware caching ---
+        let label = "Scanning...";
         let color = "rgba(56,189,248,0.9)";
-        let percent = 0;
+        let confidence = 0;
+        let foundKey = null;
 
-        const cachedFace = localCache.current[key];
-        if (cachedFace && cachedFace.seen >= 3) {
-          label = `${cachedFace.name} (${Math.round(
-            (cachedFace.confidence || 0) * (cachedFace.confidence <= 1 ? 100 : 1)
-          )}%)`;
-          color = "rgba(34,197,94,0.9)";
-        } else if (face) {
-          const isKnown =
-            face.status === "known" ||
-            (face.name && face.name !== "Unknown" && (face.confidence || 0) > 0.4);
-          color = isKnown ? "rgba(34,197,94,0.9)" : "rgba(239,68,68,0.9)";
-          percent = Math.round(
-            (face.confidence || 0) * (face.confidence <= 1 ? 100 : 1)
-          );
-          label = isKnown ? `${face.name} (${percent}%)` : "Unknown";
-        } else {
-          label = `Face ${i + 1}`;
+        // look for a cached face near this position
+        for (const key of Object.keys(faceCache.current)) {
+          const cached = faceCache.current[key];
+          const dist = Math.sqrt((cached.box.x - cx) ** 2 + (cached.box.y - cy) ** 2);
+          if (dist < MOVE_TOLERANCE) {
+            foundKey = key;
+            break;
+          }
         }
 
-        // draw final label
+        if (face && face.name && face.name !== "Unknown") {
+          confidence = Math.round(
+            (face.confidence || 0) * (face.confidence <= 1 ? 100 : 1)
+          );
+          label = `${face.name} (${confidence}%)`;
+          color = "rgba(34,197,94,0.9)";
+          faceCache.current[foundKey || `${cx}-${cy}`] = { label, color, time: now, box };
+        } else if (face && face.name === "Unknown") {
+          label = "Unknown";
+          color = "rgba(239,68,68,0.9)";
+          faceCache.current[foundKey || `${cx}-${cy}`] = { label, color, time: now, box };
+        } else if (foundKey && now - faceCache.current[foundKey].time < MEMORY_MS) {
+          // reuse last known label if movement is continuous
+          const cached = faceCache.current[foundKey];
+          label = cached.label;
+          color = cached.color;
+          faceCache.current[foundKey] = { ...cached, box, time: now };
+        }
+
+        // cleanup old entries
+        for (const key of Object.keys(faceCache.current)) {
+          if (now - faceCache.current[key].time > MEMORY_MS) delete faceCache.current[key];
+        }
+
+        // draw box + label
         ctx.strokeStyle = color;
         ctx.lineWidth = 3;
         ctx.strokeRect(mirroredX, y, w, h);
