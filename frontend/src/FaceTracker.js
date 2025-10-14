@@ -402,7 +402,7 @@ function FaceTracker({ selectedCamera, onDetectionsChange, facesRef }, ref) {
 </div>
       <div className="absolute top-2 right-2 bg-white/10 backdrop-blur-md text-white text-[11px] px-3 py-2 rounded-lg shadow-md border border-white/20 leading-tight font-mono">
   <div>Faces: {hudStats.faces}</div>
-  <div>Model: ArcFace + Distance</div>
+  <div>Core: ArcFace-Depth v1.1</div>
   <div>
   Lighting:{" "}
   <span
