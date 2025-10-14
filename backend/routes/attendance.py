@@ -106,6 +106,38 @@ def get_db():
 # -------------------------
 JST = timezone(timedelta(hours=9))
 
+# =====================================================
+# Export Embeddings for Frontend Hybrid Recognition
+# =====================================================
+def get_embeddings_cache():
+    """
+    Returns all user embeddings as a dictionary {name: [embedding]}.
+    Used by app.py for frontend ONNX instant recognition.
+    """
+    from models.User import User
+    from utils.db import SessionLocal
+    import json
+
+    embeddings = {}
+    try:
+        with SessionLocal() as db:
+            users = db.query(User).all()
+            for user in users:
+                if user.embedding is not None:
+                    try:
+                        emb = json.loads(user.embedding) if isinstance(user.embedding, str) else user.embedding
+                        # If stored as list of embeddings, take mean
+                        if isinstance(emb[0], list):
+                            emb = np.mean(np.array(emb), axis=0).tolist()
+                        embeddings[user.name] = emb
+                    except Exception as e:
+                        logger.info(f"⚠️ Failed to parse embedding for {user.name}: {e}")
+                        continue
+    except Exception as e:
+        logger.warning(f"⚠️ get_embeddings_cache() failed: {e}")
+
+    return embeddings
+
 # -------------------------
 # Auto-Training Toggle Flag
 # -------------------------
@@ -586,6 +618,7 @@ async def preview_faces(file: UploadFile = None):
                 "status": result_status,
                 "gender": gender,
                 "age": age,
+                "embedding": embedding,
             }
         )
 
@@ -814,7 +847,8 @@ async def mark_attendance(
                     "status": "unknown",
                     "confidence": confidence,
                     "gender": gender,
-                    "age": age
+                    "age": age,
+                    "embedding": embedding,
                 })
                 continue
 
@@ -896,7 +930,8 @@ async def mark_attendance(
                 "confidence": confidence,
                 "total_work": record.total_work,
                 "gender": gender,
-                "age": age
+                "age": age,
+                "embedding": embedding,
             })
 
         elif status == "maybe":
@@ -907,7 +942,8 @@ async def mark_attendance(
                 "status": "maybe_match",
                 "confidence": confidence,
                 "gender": gender,
-                "age": age
+                "age": age,
+                "embedding": embedding,
             })
 
         else:
@@ -918,7 +954,8 @@ async def mark_attendance(
                 "status": "unknown",
                 "confidence": confidence,
                 "gender": gender,
-                "age": age
+                "age": age,
+                "embedding": embedding,
             })
 
     # --- Reset preview cache after mark ---

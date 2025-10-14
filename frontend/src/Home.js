@@ -16,17 +16,22 @@ import Footer from "./Footer";
 import HeaderDateTime from "./HeaderDateTime";
 import { API_BASE } from "./config";
 import FaceTracker from "./FaceTracker";
+import { useEmbeddingsCache } from "./hooks/useEmbeddingsCache";
+import { strictMatch } from "./hooks/cosineMatcher";
 
 function Home() {
   const [dateTime, setDateTime] = useState(new Date());
   const [showCamera, setShowCamera] = useState(false);
   const [statusMessages, setStatusMessages] = useState([]);
+  const [backendConfirmed, setBackendConfirmed] = useState(false);
   const [action, setAction] = useState("checkin");
   const [cameras, setCameras] = useState([]);
   const [selectedCamera, setSelectedCamera] = useState(null);
+  // Load all embeddings once (frontend cache)
+  const { embeddings: frontendCache, loading: cacheLoading } = useEmbeddingsCache();
   //const [previewFaces, setPreviewFaces] = useState([]);
   const previewFacesRef = useRef([]);
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+  // eslint-disable-next-line
 
 
   
@@ -57,32 +62,60 @@ function Home() {
     getCameras();
   }, []);
 
+  useEffect(() => {
+  if (!cacheLoading) {
+    console.log("✅ Frontend cache loaded:", frontendCache.length, "users");
+    console.log(frontendCache); // See all cached users + embeddings
+  }
+}, [cacheLoading, frontendCache]);
 
-  // Handle backend response (wrapped in useCallback)
+
+// Handle backend response (wrapped in useCallback)
 const handleBackendResponse = useCallback(
   (data, mode) => {
+    // --- FRONTEND COSINE MATCHING (console only, no UI messages) ---
+    if (!backendConfirmed && data.embedding && frontendCache.length > 0) {
+      console.log("🧠 Using frontend cosine similarity for instant recognition...");
+      const match = strictMatch(data.embedding, frontendCache, 0.40);
+
+      if (match.name !== "Unknown") {
+        console.log(
+          `⚡ Local match: ${match.name} (${(match.confidence * 100).toFixed(2)}%)`
+        );
+        // No UI message — console only
+      } else {
+        console.log("❌ Unknown face (frontend) — verifying with backend...");
+      }
+    }
+
+    // --- Handle backend errors ---
     if (data.error) {
+      console.warn("❌ Backend error:", data.error);
       setStatusMessages(["❌ Unknown face detected"]);
       return;
     }
 
+    // --- Handle backend verified results ---
     if (data.results && Array.isArray(data.results)) {
       const mappedFaces = data.results.map((face) => ({
         name: face.name,
         status: face.status,
         box: face.box,
-        gender: face.gender, 
+        gender: face.gender,
         age: face.age,
         confidence: face.confidence,
       }));
 
-      // Update live preview faces when mode is "preview"
+      // Update live preview faces (for cosine loop)
       if (mode === "preview") {
         previewFacesRef.current = data.results || [];
       }
-      
-      // Only show messages when capturing (mark mode)
+
+      // Only show messages when capturing (final backend confirmation)
       if (mode === "mark" && mappedFaces.length > 0) {
+        console.log("✅ Backend confirmed — switching off local cosine matching");
+        setBackendConfirmed(true);
+
         const currentDateTime = dateTime.toLocaleString("en-US", {
           year: "numeric",
           month: "short",
@@ -108,11 +141,11 @@ const handleBackendResponse = useCallback(
           if (face.status === "already_checked_out")
             return `⚠️ ${face.name} already Checked Out — ${currentDateTime}`;
           if (face.status === "break_started")
-            return `⏸️ ${face.name} started Break — ${currentDateTime}`;
+            return `⏸✅ ${face.name} started Break — ${currentDateTime}`;
           if (face.status === "already_on_break")
             return `⚠️ ${face.name} is already on Break — ${currentDateTime}`;
           if (face.status === "break_ended")
-            return `▶️ ${face.name} ended Break — ${currentDateTime}`;
+            return `✅ ${face.name} ended Break — ${currentDateTime}`;
           if (face.status === "already_break_ended")
             return `⚠️ ${face.name} already ended Break — ${currentDateTime}`;
           if (face.status === "break_not_started")
@@ -123,20 +156,23 @@ const handleBackendResponse = useCallback(
             return `⚠️ ${face.name} cannot Check Out while on Break — ${currentDateTime}`;
           if (face.status === "spoof")
             return `❌ Spoof attempt detected (photo) — ${currentDateTime}`;
-          if (face.status === "unknown") return `❌ Unknown face detected`;
+          if (face.status === "unknown")
+            return `❌ Unknown face detected — ${currentDateTime}`;
           return `ℹ️ ${face.name} action processed — ${currentDateTime}`;
         });
 
+        // Show only final backend-confirmed messages in status panel
         setStatusMessages(msgs);
-
         if (action !== "work-application") {
-          setTimeout(() => setStatusMessages([]), 1500);
-        }
+  setTimeout(() => setStatusMessages([]), 1000);
+}
       }
     }
   },
-  [action, dateTime, navigate]
+  [action, dateTime, navigate, backendConfirmed, frontendCache]
 );
+
+
 // Capture frame function wrapped in useCallback
 const captureAndSendFrame = useCallback(
   async (mode = "preview", subAction = null) => {
@@ -203,8 +239,39 @@ useEffect(() => {
   return () => clearInterval(interval);
 }, [showCamera, action, captureAndSendFrame]);
 
+// --- Frontend cosine similarity loop (instant recognition) ---
+useEffect(() => {
+  if (!showCamera || cacheLoading || frontendCache.length === 0) return;
+
+  console.log("🧠 Starting frontend cosine loop...");
+  let active = true;
+  const intervalMs = 400; // adjust if you want smoother/faster (e.g., 250ms)
+
+const runLocalCosine = () => {
+  if (!active || backendConfirmed) return;
+
+  const lastFace = previewFacesRef.current?.[0];
+  if (lastFace?.embedding) {
+    // Use strict default (0.46)
+    const match = strictMatch(lastFace.embedding, frontendCache);
+    if (match.name !== "Unknown") {
+      console.log(`⚡ Frontend instant match: ${match.name} (${(match.confidence * 100).toFixed(2)}%)`);
+    }
+  }
+};
+
+  const cosineLoop = setInterval(runLocalCosine, intervalMs);
+
+  return () => {
+    active = false;
+    clearInterval(cosineLoop);
+    console.log("🧹 Stopped frontend cosine loop");
+  };
+}, [showCamera, backendConfirmed, cacheLoading, frontendCache]);
+
+// handle capture 
 const handleInstantCapture = async (subAction = null) => {
-  // 1️Instantly show the most recent detected face
+  // Instantly show the most recent detected face
   const instantFaces = previewFacesRef.current || [];
   if (instantFaces.length > 0) {
     const face = instantFaces[0];
@@ -412,7 +479,7 @@ const handleInstantCapture = async (subAction = null) => {
                   <button
                     onClick={() => {
                       setShowCamera(false);
-                      setStatusMessages([]);
+                      setBackendConfirmed(false);
                     }}
                     className="px-6 py-3 bg-red-500 hover:bg-red-600 hover:scale-105 active:scale-95 
                              transition-transform duration-200 text-white font-bold rounded-lg shadow"

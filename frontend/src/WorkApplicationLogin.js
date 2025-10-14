@@ -15,7 +15,6 @@ function WorkApplicationLogin() {
   const [cameras, setCameras] = useState([]);
   const [selectedCamera, setSelectedCamera] = useState(null);
   const [employeeId, setEmployeeId] = useState("");
-
   const webcamRef = useRef(null);
   const previewFacesRef = useRef([]);
   const navigate = useNavigate();
@@ -33,61 +32,87 @@ function WorkApplicationLogin() {
     getCameras();
   }, []);
 
-  // capture frame for login (face + employee ID)
-  const captureAndSendFrame = async () => {
-  // command: "DevCon"
-  if (employeeId.trim().toLowerCase() === "devcon") {
-    navigate("/devcon");
-    return;
-  }
-
-  // Normal flow below
-  if (!webcamRef.current || !employeeId) {
-    setStatusMessages(["⚠️ Please enter Employee ID and try again"]);
-    return;
-  }
-
-  const imageSrc = webcamRef.current.getScreenshot();
-  if (!imageSrc) return;
-
-  const blob = await (await fetch(imageSrc)).blob();
-  const formData = new FormData();
-  formData.append("file", blob, "frame.jpg");
-  formData.append("action", "work-application");
-  formData.append("employee_id", employeeId);
-
+// capture frame for recognition (Work Application auto-confirm)
+const captureAndSendFrame = async () => {
   try {
+    if (!webcamRef.current) {
+      setStatusMessages(["⚠️ Camera not available"]);
+      setTimeout(() => setStatusMessages([]), 1000);
+      return;
+    }
+
+// Validation — check Employee ID before sending anything
+const trimmedId = employeeId.trim();
+
+// Check empty
+if (!trimmedId) {
+  setStatusMessages(["⚠️ Please enter Employee ID and try again"]);
+  setTimeout(() => setStatusMessages([]), 1000);
+  return;
+}
+
+// Check uppercase format
+if (trimmedId !== trimmedId.toUpperCase()) {
+  setStatusMessages(["❌ Employee ID must be in CAPITAL letters (e.g., IFNT032)"]);
+  setTimeout(() => setStatusMessages([]), 2000);
+  return;
+}
+
+    const imageSrc = webcamRef.current.getScreenshot();
+    if (!imageSrc) {
+      console.log("⚠️ No frame captured yet");
+      return;
+    }
+
+    const blob = await (await fetch(imageSrc)).blob();
+    const formData = new FormData();
+    formData.append("file", blob, "frame.jpg");
+    formData.append("action", "work-application");
+    formData.append("employee_id", employeeId.trim());
+
     const response = await fetch(`${API_BASE}/attendance/mark`, {
       method: "POST",
       body: formData,
     });
+
     const data = await response.json();
 
     if (data.results && data.results.length > 0) {
       const face = data.results[0];
 
-      if (face.status === "logged_in") {
-        setStatusMessages([`✅ Welcome ${face.name}`]);
+      // Backend confirmed recognition
+      if (face.embedding || (face.name && face.name !== "Unknown")) {
+        console.log("✅ Backend confirmed recognition (WorkApp)");
+      }
 
-        // Persist user in localStorage
-        localStorage.setItem("user", face.name);
-        localStorage.setItem("employeeId", employeeId);
-
-        setTimeout(() => {
-          navigate("/work-application");
-        }, 500);
-      } else if (face.status === "invalid_employee_id") {
-        setStatusMessages([`❌ Invalid Employee ID`]);
+      // Handle result cases cleanly
+      if (face.status === "invalid_employee_id") {
+        setStatusMessages(["❌ Invalid Employee ID"]);
       } else if (face.status === "face_mismatch") {
         setStatusMessages([
-          `❌ Face does not match to Employee ID ${employeeId}`,
+          `❌ Face does not match Employee ID ${employeeId.trim()}`,
         ]);
+      } else if (face.name && face.name !== "Unknown") {
+        setStatusMessages([`✅ Welcome ${face.name}`]);
+        localStorage.setItem("user", face.name);
+        localStorage.setItem("employeeId", employeeId.trim());
+
+        // Redirect after short delay
+        setTimeout(() => navigate("/work-application"), 800);
       } else {
-        setStatusMessages([`⚠️ ${face.name}: ${face.status}`]);
+        setStatusMessages(["❌ Unknown face detected"]);
       }
+
+      // Auto-clear message after 2 seconds
+      setTimeout(() => setStatusMessages([]), 2000);
+    } else if (data.error) {
+      setStatusMessages(["❌ Recognition failed — backend error"]);
+      setTimeout(() => setStatusMessages([]), 2000);
     }
   } catch (error) {
     console.error("Error sending frame:", error);
+    setStatusMessages(["⚠️ Network or server error"]);
+    setTimeout(() => setStatusMessages([]), 2000);
   }
 };
 
@@ -136,19 +161,21 @@ useEffect(() => {
   return () => clearInterval(interval);
 }, [selectedCamera]);
 
+
+// Login Handler
 const handleInstantLogin = async () => {
   // Show instant detection result from the preview
   const instantFaces = previewFacesRef.current || [];
-  if (instantFaces.length > 0) {
-    const face = instantFaces[0];
-    if (face.name && face.name !== "Unknown") {
-      setStatusMessages([`✅ ${face.name} detected — verifying...`]);
-    } else {
-      setStatusMessages(["❌ Unknown face — verifying..."]);
-    }
+if (instantFaces.length > 0) {
+  const face = instantFaces[0];
+  if (face.name && face.name !== "Unknown") {
+    console.log(`✅ ${face.name} detected — sending to backend...`);
   } else {
-    setStatusMessages(["🔍 Scanning face..."]);
+    console.log("❌ Unknown face — sending to backend...");
   }
+} else {
+  console.log("🔍 Scanning face...");
+}
 
   // Trigger the real backend login verification asynchronously
   captureAndSendFrame();
@@ -188,15 +215,17 @@ const handleInstantLogin = async () => {
       </div>
 
       {/* Back Button */}
-      <button
-        onClick={() => navigate("/")}
-        className="order-1 sm:order-2 px-5 sm:px-6 py-2.5 rounded-xl bg-gradient-to-r from-red-500 via-pink-500 to-rose-500 
-                   hover:from-red-600 hover:to-rose-600 text-white font-semibold shadow-lg hover:shadow-xl 
-                   transition-all duration-300 flex items-center gap-2"
-      >
-        <ArrowUturnLeftIcon className="h-5 w-5" />
-        Back
-      </button>
+<button
+  onClick={() => {
+    navigate("/");              // go back to home
+  }}
+  className="order-1 sm:order-2 px-5 sm:px-6 py-2.5 rounded-xl bg-gradient-to-r from-red-500 via-pink-500 to-rose-500 
+             hover:from-red-600 hover:to-rose-600 text-white font-semibold shadow-lg hover:shadow-xl 
+             transition-all duration-300 flex items-center gap-2"
+>
+  <ArrowUturnLeftIcon className="h-5 w-5" />
+  Back
+</button>
     </div>
   </div>
 </header>
@@ -217,14 +246,14 @@ const handleInstantLogin = async () => {
     <label className="text-lg sm:text-xl font-semibold text-indigo-700 mb-2">
       Enter Employee ID
     </label>
-    <input
-      type="text"
-      value={employeeId}
-      onChange={(e) => setEmployeeId(e.target.value)}
-      placeholder="e.g., IFNT001"
-      className="px-4 py-2 border-2 border-indigo-400 rounded-lg shadow-md text-base w-64 sm:w-72 
-                 text-center focus:outline-none focus:ring-2 focus:ring-indigo-500"
-    />
+<input
+  type="text"
+  value={employeeId}
+  onChange={(e) => setEmployeeId(e.target.value.toUpperCase())}
+  placeholder="e.g., IFNT001"
+  className="px-4 py-2 border-2 border-indigo-400 rounded-lg shadow-md text-base w-64 sm:w-72 
+             text-center focus:outline-none focus:ring-2 focus:ring-indigo-500"
+/>
   </div>
 
 {/* Right: Camera Selection */}

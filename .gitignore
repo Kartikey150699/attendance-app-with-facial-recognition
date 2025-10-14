@@ -1,17 +1,37 @@
-# Ignore Python cache and compiled files
+# ===============================
+# Python / FastAPI
+# ===============================
 __pycache__/
 *.pyc
-
-# Ignore Mac system files
-.DS_Store
-
-# Ignore virtual environments
 venv/
 
-# Ignore VS Code workspace settings
+# ===============================
+# Mac system files
+# ===============================
+.DS_Store
+
+# ===============================
+# VS Code workspace settings
+# ===============================
 *.code-workspace
 
-# Ignore Node.js dependencies
+# ===============================
+# Node.js / React frontend
+# ===============================
 frontend/node_modules/
-.gitignoretouch
+
+# ===============================
+# Machine Learning weights / large files
+# ===============================
 *.h5
+
+# ===============================
+# Logs and generated files
+# ===============================
+*.log
+backend/server.log
+
+# ===============================
+# Mistaken temporary files
+# ===============================
+.gitignoretouch

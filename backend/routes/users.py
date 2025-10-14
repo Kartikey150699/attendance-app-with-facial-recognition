@@ -12,8 +12,20 @@ from typing import List, Optional
 
 # Import refresh function from attendance
 from routes.attendance import refresh_embeddings
-
 router = APIRouter(prefix="/users", tags=["Users"])
+
+# -------------------------
+# Unified cache refresh helper (backend + frontend)
+# -------------------------
+def refresh_all_caches():
+    """Refresh both backend and frontend embedding caches."""
+    try:
+        from app import refresh_embedding_cache  # lazy import avoids circular dependency
+        refresh_embeddings()
+        refresh_embedding_cache()
+        print("✅ Embedding caches refreshed successfully (users.py)")
+    except Exception as e:
+        print(f"⚠️ Cache refresh skipped: {e}")
 
 # -------------------------
 # Dependency: DB session
@@ -367,7 +379,7 @@ async def register_user(
     # ------------------------------------------------------
     # (8) Refresh embeddings cache
     # ------------------------------------------------------
-    refresh_embeddings()
+    refresh_all_caches()
 
     return {
         "message": f"✅ User {name} registered successfully!",
@@ -404,7 +416,7 @@ async def update_user(payload: UpdateUserRequest, db: Session = Depends(get_db))
     db.commit()
     db.refresh(user)
 
-    refresh_embeddings()
+    refresh_all_caches()
 
     return {
         "message": "✅ User updated successfully",
@@ -433,7 +445,7 @@ async def delete_user_by_id(employee_id: str, db: Session = Depends(get_db)):
     db.delete(user)
     db.commit()
 
-    refresh_embeddings()
+    refresh_all_caches()
 
     return {"message": f"🗑️ User {user.name} deleted successfully (attendance preserved)."}
 
@@ -456,7 +468,7 @@ async def delete_user_by_name(name: str, db: Session = Depends(get_db)):
     db.delete(user)
     db.commit()
 
-    refresh_embeddings()
+    refresh_all_caches()
 
     return {"message": f"🗑️ User {user.name} deleted successfully (attendance preserved)."}
 
@@ -529,3 +541,26 @@ def get_deleted_users(db: Session = Depends(get_db)):
         }
         for u in users
     ]
+
+# -------------------------
+# Export embeddings for frontend (Hybrid Mode)
+# -------------------------
+@router.get("/embeddings")
+async def get_embeddings_for_frontend(db: Session = Depends(get_db)):
+    """
+    Returns cached user embeddings for frontend instant recognition.
+    """
+    users = db.query(User).all()
+    data = []
+    for u in users:
+        try:
+            emb = json.loads(u.embedding)
+            data.append({
+                "employee_id": u.employee_id,
+                "name": u.name,
+                "embedding": emb,
+                "threshold": u.threshold
+            })
+        except Exception as e:
+            print(f"⚠️ Skipped user {u.name}: {e}")
+    return {"count": len(data), "users": data}

@@ -403,7 +403,7 @@ const handleSubmit = async () => {
       )}
 
       <div className="absolute top-2 right-2 text-sm sm:text-base text-white bg-black/60 px-3 py-1 rounded-lg shadow-lg border border-white/20">
-  {captureStage === "front" && "🟢 Capturing Front..."}
+  {captureStage === "front" && "🟢 Capturing Face..."}
   {captureStage === "right" && "↪️ Turn Right"}
   {captureStage === "left" && "↩️ Turn Left"}
   {captureStage === "done" && "✅ All Angles Captured"}
