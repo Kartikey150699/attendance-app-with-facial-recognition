@@ -979,7 +979,7 @@ async def mark_attendance(
     try:
         global active_faces
         active_faces.clear()
-        logger.info("🧹 Cleared active_faces cache after attendance mark")
+        logger.info("Cleared active_faces cache after attendance mark")
     except Exception as e:
         logger.warning(f"⚠️ Cache clear skipped: {e}")
 
