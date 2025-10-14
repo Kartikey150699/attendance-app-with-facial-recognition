@@ -240,35 +240,42 @@ def detect_faces(tmp_path):
             enforce_detection=False
         )
 
-        # Normalize output
+        # Always wrap in list for consistency
         if isinstance(reps, dict):
             reps = [reps]
 
-        # Step 3: Process each detected face
+        # Step 3: Process each detected face safely (deep-copied embeddings)
         for rep in reps:
-            embedding = rep.get("embedding")
-            box = rep.get("facial_area", {})
-            w, h = box.get("w", 0), box.get("h", 0)
-            confidence = rep.get("confidence", 1.0)
+            try:
+                box = rep.get("facial_area", {})
+                w, h = box.get("w", 0), box.get("h", 0)
+                confidence = rep.get("confidence", 1.0)
+                emb = rep.get("embedding")
 
-            # Basic filters
-            if w < 50 or h < 50:
-                continue
-            ratio = w / (h + 1e-6)
-            if ratio < 0.6 or ratio > 1.6:
-                continue
-            if confidence < 0.90:
-                continue
+                # Basic filters
+                if emb is None or w < 50 or h < 50 or confidence < 0.90:
+                    continue
+                ratio = w / (h + 1e-6)
+                if ratio < 0.6 or ratio > 1.6:
+                    continue
 
-            faces.append({
-                "embedding": embedding,
-                "facial_area": {
-                    "x": int(box.get("x", 0)),
-                    "y": int(box.get("y", 0)),
-                    "w": int(w),
-                    "h": int(h)
-                }
-            })
+                # Deep-copy embedding so each face has its own array
+                emb_array = np.array(emb, dtype=np.float32).copy()
+                emb_list = emb_array.tolist()
+
+                faces.append({
+                    "embedding": emb_list,
+                    "facial_area": {
+                        "x": int(box.get("x", 0)),
+                        "y": int(box.get("y", 0)),
+                        "w": int(w),
+                        "h": int(h)
+                    }
+                })
+
+            except Exception as e:
+                logger.warning(f"⚠️ Error processing detected face: {e}")
+                continue
 
     except Exception as e:
         logger.warning(f"⚠️ MTCNN failed: {e}")
@@ -299,8 +306,14 @@ def detect_faces(tmp_path):
                     rep = [rep]
 
                 for r in rep:
+                    emb = r.get("embedding")
+                    if emb is None:
+                        continue
+                    emb_array = np.array(emb, dtype=np.float32).copy()
+                    emb_list = emb_array.tolist()
+
                     faces.append({
-                        "embedding": r.get("embedding"),
+                        "embedding": emb_list,
                         "facial_area": {
                             "x": int(x),
                             "y": int(y),
@@ -314,6 +327,10 @@ def detect_faces(tmp_path):
     # Save to cache
     LAST_DETECTION["time"] = now
     LAST_DETECTION["faces"] = faces
+
+    # Release any temporary TensorFlow sessions
+    gc.collect()
+    tf.keras.backend.clear_session()
 
     return faces
 
