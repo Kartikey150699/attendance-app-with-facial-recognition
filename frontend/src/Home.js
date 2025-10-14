@@ -141,7 +141,7 @@ const handleBackendResponse = useCallback(
           if (face.status === "already_checked_out")
             return `⚠️ ${face.name} already Checked Out — ${currentDateTime}`;
           if (face.status === "break_started")
-            return `⏸✅ ${face.name} started Break — ${currentDateTime}`;
+            return `✅ ${face.name} started Break — ${currentDateTime}`;
           if (face.status === "already_on_break")
             return `⚠️ ${face.name} is already on Break — ${currentDateTime}`;
           if (face.status === "break_ended")
