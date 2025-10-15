@@ -64,7 +64,7 @@ function FaceTracker({ selectedCamera, onDetectionsChange, facesRef }, ref) {
   const video = webcamRef.current.video;
   const canvas = canvasRef.current;
   const ctx = canvas.getContext("2d");
-  const MEMORY_MS = 4000; // keep face box longer
+  const MEMORY_MS = 7000; // keep face box longer
   const SMOOTH_ALPHA = 0.7; // smoothing for motion
 
   // Intersection-over-Union (IoU) — checks if boxes overlap (face area only)
@@ -201,121 +201,187 @@ for (const key of Object.keys(faceCache.current)) {
     // --- Distance-based label override (adaptive by device type) ---
     const cached = faceCache.current[foundKey];
 
-    // --- Adaptive distance range ---
-    let MIN_DISTANCE = 35;
-    let MAX_DISTANCE = 90;
-    const ua = navigator.userAgent.toLowerCase();
-    if (/iphone|android/i.test(ua)) {
-      MIN_DISTANCE = 15;
-      MAX_DISTANCE = 55; // phone
-    } else if (/ipad|tablet/i.test(ua)) {
-      MIN_DISTANCE = 25;
-      MAX_DISTANCE = 70; // tablet / iPad
-    } else {
-      MIN_DISTANCE = 35;
-      MAX_DISTANCE = 90; // laptop / desktop
-    }
+// --- Adaptive distance range ---
+let MIN_DISTANCE = 35;
+let MAX_DISTANCE = 90;
+const ua = navigator.userAgent.toLowerCase();
+if (/iphone|android/i.test(ua)) {
+  MIN_DISTANCE = 15;
+  MAX_DISTANCE = 55;
+} else if (/ipad|tablet/i.test(ua)) {
+  MIN_DISTANCE = 25;
+  MAX_DISTANCE = 70;
+} else {
+  MIN_DISTANCE = 35;
+  MAX_DISTANCE = 90;
+}
 
-    if (distanceCm < MIN_DISTANCE) {
-      label = "Move further";
-      color = "rgba(59,130,246,0.9)"; // blue
-      confidence = 0;
-    } else if (distanceCm > MAX_DISTANCE) {
-      label = "Move closer";
-      color = "rgba(239,68,68,0.9)"; // red
-      confidence = 0;
-    } else if (face && face.name && face.name !== "Unknown") {
-      const rawConf = (face.confidence || 0) * (face.confidence <= 1 ? 100 : 1);
-      const prevConf = cached.smoothedConf ?? rawConf;
-      const SMOOTH_FACTOR = 0.85;
-      const smoothed = SMOOTH_FACTOR * prevConf + (1 - SMOOTH_FACTOR) * rawConf;
-      confidence = Math.round(smoothed);
-      label = `${face.name} (${confidence}%)`;
-      color = "rgba(34,197,94,0.9)";
-      cached.streak = Math.min(cached.streak + 1, 10);
-      cached.lastSeenName = face.name;
-      cached.smoothedConf = smoothed;
-    } else if (face && face.name === "Unknown") {
-      if (cached.lastSeenName !== "Unknown" && cached.streak > 2) {
-        label = `${cached.lastSeenName}`;
-        color = "rgba(34,197,94,0.9)";
-      } else {
-        label = "Unknown";
-        color = "rgba(239,68,68,0.9)";
-      }
-    } else if (foundKey && now - cached.time < MEMORY_MS) {
-      label = cached.label;
-      color = cached.color;
-    }
+// Persistent global continuity memory (per-face)
+if (!window.__FACE_CONTINUITY__) window.__FACE_CONTINUITY__ = new Map();
+const continuity = window.__FACE_CONTINUITY__;
 
-    faceCache.current[foundKey] = { ...cached, label, color, time: now, box };
+const HOLD_TIME_MS = 10000;     // hold name for 10s
+const GAP_TOLERANCE_MS = 1500;  // tolerate short loss
+const FORGET_TIME_MS = 20000;   // forget after 20s idle
+const REGION_RADIUS = 260;      // how far movement counts as same region
 
-    // draw box + label
-    ctx.strokeStyle = color;
-    ctx.lineWidth = 3;
-    ctx.strokeRect(mirroredX, y, w, h);
-    ctx.font = "bold 14px sans-serif";
-    const textWidth = ctx.measureText(label).width;
-    ctx.fillStyle = color;
-    ctx.fillRect(mirroredX - 2, y - 22, textWidth + 6, 18);
-    ctx.fillStyle = "#fff";
-    ctx.fillText(label, mirroredX + 2, y - 8);
+// Clean stale memory
+for (const [name, info] of continuity.entries()) {
+  if (now - info.lastSeen > FORGET_TIME_MS) continuity.delete(name);
+}
 
-    // --- draw distance below box ---
-    ctx.font = "bold 13px sans-serif";
-    ctx.fillStyle = "rgba(0,0,0,0.6)";
-    const distText = `${Math.round(distanceCm)} cm`;
-    const distWidth = ctx.measureText(distText).width;
-    ctx.fillStyle = "rgba(34,34,34,0.7)";
-    ctx.fillRect(mirroredX + w / 2 - distWidth / 2 - 4, y + h + 6, distWidth + 8, 18);
-    ctx.fillStyle = "#fff";
-    ctx.fillText(distText, mirroredX + w / 2 - distWidth / 2, y + h + 20);
+if (distanceCm < MIN_DISTANCE) {
+  label = "Move further";
+  color = "rgba(59,130,246,0.9)";
+  confidence = 0;
+} else if (distanceCm > MAX_DISTANCE) {
+  label = "Move closer";
+  color = "rgba(239,68,68,0.9)";
+  confidence = 0;
+} else if (face && face.name && face.name !== "Unknown") {
+  // Face recognized → update stable continuity
+  const rawConf = (face.confidence || 0) * (face.confidence <= 1 ? 100 : 1);
+  const prevConf = cached.smoothedConf ?? rawConf;
+  const SMOOTH_FACTOR = 0.9;
+  const smoothed = SMOOTH_FACTOR * prevConf + (1 - SMOOTH_FACTOR) * rawConf;
 
-    // --- Focus Depth Hint Bar (Cinematic HUD) ---
-    const BAR_WIDTH = 120;
-    const BAR_HEIGHT = 6;
-    const barX = mirroredX + w / 2 - BAR_WIDTH / 2;
-    const barY = y + h + 30;
+  confidence = Math.round(smoothed);
+  label = `${face.name} (${confidence}%)`;
+  color = "rgba(34,197,94,0.9)";
 
-    // Base outline
-    ctx.strokeStyle = "rgba(255,255,255,0.4)";
-    ctx.lineWidth = 1.2;
-    ctx.strokeRect(barX, barY, BAR_WIDTH, BAR_HEIGHT);
+  cached.streak = Math.min(cached.streak + 1, 12);
+  cached.lastSeenName = face.name;
+  cached.smoothedConf = smoothed;
+  cached.lastVisible = now;
 
-    // Gradient heat bar (green → yellow → red)
-    const grad = ctx.createLinearGradient(barX, 0, barX + BAR_WIDTH, 0);
-    grad.addColorStop(0, "rgba(34,197,94,0.9)");
-    grad.addColorStop(0.5, "rgba(234,179,8,0.9)");
-    grad.addColorStop(1, "rgba(239,68,68,0.9)");
-    ctx.fillStyle = grad;
-    ctx.fillRect(barX, barY, BAR_WIDTH, BAR_HEIGHT);
-
-    // Compute normalized marker position (0→1)
-    const normalized = Math.max(0, Math.min(1, (distanceCm - MIN_DISTANCE) / (MAX_DISTANCE - MIN_DISTANCE)));
-    const targetMarkerX = barX + normalized * BAR_WIDTH;
-
-    // Smooth transition for marker
-    if (!window.__prevMarkerX) window.__prevMarkerX = targetMarkerX;
-    window.__prevMarkerX = 0.8 * window.__prevMarkerX + 0.2 * targetMarkerX;
-
-    // Adaptive glow color (based on distance)
-    let glowColor = "rgba(255,255,255,0.9)";
-    if (distanceCm < MIN_DISTANCE) glowColor = "rgba(59,130,246,0.9)";
-    else if (distanceCm > MAX_DISTANCE) glowColor = "rgba(239,68,68,0.9)";
-    else glowColor = "rgba(34,197,94,0.9)";
-
-    // Draw marker (triangle with glow)
-    ctx.shadowColor = glowColor;
-    ctx.shadowBlur = 10;
-    ctx.fillStyle = "#fff";
-    ctx.beginPath();
-    ctx.moveTo(window.__prevMarkerX, barY + BAR_HEIGHT + 2);
-    ctx.lineTo(window.__prevMarkerX - 4, barY + BAR_HEIGHT + 10);
-    ctx.lineTo(window.__prevMarkerX + 4, barY + BAR_HEIGHT + 10);
-    ctx.closePath();
-    ctx.fill();
-    ctx.shadowBlur = 0; // reset shadow
+  continuity.set(face.name, {
+    lastSeen: now,
+    confidence,
+    x: box.x,
+    y: box.y,
   });
+} else {
+  // Unknown or lost face → region-aware anti-leak logic
+  const nowFaceCenter = { x: box.x, y: box.y };
+  let nearestPrev = null;
+  let nearestDist = Infinity;
+
+  for (const [name, info] of continuity.entries()) {
+    const dx = info.x - nowFaceCenter.x;
+    const dy = info.y - nowFaceCenter.y;
+    const dist = Math.sqrt(dx * dx + dy * dy);
+    const age = now - info.lastSeen;
+    if (dist < REGION_RADIUS && age < HOLD_TIME_MS && dist < nearestDist) {
+      nearestPrev = { name, info };
+      nearestDist = dist;
+    }
+  }
+
+  const movedFar = cached.box
+    ? Math.sqrt((cached.box.x - box.x) ** 2 + (cached.box.y - box.y) ** 2)
+    : Infinity;
+  const recent = now - (cached.lastVisible || 0) < 4000;
+  const stable = cached.streak >= 2;
+
+  const isNewRegion =
+    !nearestPrev ||
+    (movedFar > REGION_RADIUS && !(recent && stable)) ||
+    cached.lastSeenName === "Unknown";
+
+  if (isNewRegion) {
+    // New region — force fresh scan
+    label = "Scanning...";
+    color = "rgba(56,189,248,0.9)";
+  } else if (
+    nearestPrev &&
+    now - nearestPrev.info.lastSeen < HOLD_TIME_MS + GAP_TOLERANCE_MS
+  ) {
+    // Maintain stable name
+    label = `${nearestPrev.name}`;
+    color = "rgba(34,197,94,0.9)";
+  } else if (
+    cached.lastSeenName &&
+    cached.lastSeenName !== "Unknown" &&
+    now - (cached.lastVisible || 0) < HOLD_TIME_MS + GAP_TOLERANCE_MS
+  ) {
+    // Retain last name briefly
+    label = `${cached.lastSeenName}`;
+    color = "rgba(34,197,94,0.8)";
+  } else {
+    label = "Scanning...";
+    color = "rgba(56,189,248,0.9)";
+  }
+}
+
+faceCache.current[foundKey] = { ...cached, label, color, time: now, box };
+
+// ---------------- Draw HUD ----------------
+ctx.strokeStyle = color;
+ctx.lineWidth = 3;
+ctx.strokeRect(mirroredX, y, w, h);
+ctx.font = "bold 14px sans-serif";
+const textWidth = ctx.measureText(label).width;
+ctx.fillStyle = color;
+ctx.fillRect(mirroredX - 2, y - 22, textWidth + 6, 18);
+ctx.fillStyle = "#fff";
+ctx.fillText(label, mirroredX + 2, y - 8);
+
+ctx.font = "bold 13px sans-serif";
+const distText = `${Math.round(distanceCm)} cm`;
+const distWidth = ctx.measureText(distText).width;
+ctx.fillStyle = "rgba(34,34,34,0.7)";
+ctx.fillRect(
+  mirroredX + w / 2 - distWidth / 2 - 4,
+  y + h + 6,
+  distWidth + 8,
+  18
+);
+ctx.fillStyle = "#fff";
+ctx.fillText(distText, mirroredX + w / 2 - distWidth / 2, y + h + 20);
+
+const BAR_WIDTH = 120;
+const BAR_HEIGHT = 6;
+const barX = mirroredX + w / 2 - BAR_WIDTH / 2;
+const barY = y + h + 30;
+
+ctx.strokeStyle = "rgba(255,255,255,0.4)";
+ctx.lineWidth = 1.2;
+ctx.strokeRect(barX, barY, BAR_WIDTH, BAR_HEIGHT);
+
+const grad = ctx.createLinearGradient(barX, 0, barX + BAR_WIDTH, 0);
+grad.addColorStop(0, "rgba(34,197,94,0.9)");
+grad.addColorStop(0.5, "rgba(234,179,8,0.9)");
+grad.addColorStop(1, "rgba(239,68,68,0.9)");
+ctx.fillStyle = grad;
+ctx.fillRect(barX, barY, BAR_WIDTH, BAR_HEIGHT);
+
+const normalized = Math.max(
+  0,
+  Math.min(1, (distanceCm - MIN_DISTANCE) / (MAX_DISTANCE - MIN_DISTANCE))
+);
+const targetMarkerX = barX + normalized * BAR_WIDTH;
+
+if (!window.__markerPositions) window.__markerPositions = new Map();
+let prevMarkerX = window.__markerPositions.get(foundKey) ?? targetMarkerX;
+const newMarkerX = 0.85 * prevMarkerX + 0.15 * targetMarkerX;
+window.__markerPositions.set(foundKey, newMarkerX);
+
+let glowColor = "rgba(255,255,255,0.9)";
+if (distanceCm < MIN_DISTANCE) glowColor = "rgba(59,130,246,0.9)";
+else if (distanceCm > MAX_DISTANCE) glowColor = "rgba(239,68,68,0.9)";
+else glowColor = "rgba(34,197,94,0.9)";
+
+ctx.shadowColor = glowColor;
+ctx.shadowBlur = 10;
+ctx.fillStyle = "#fff";
+ctx.beginPath();
+ctx.moveTo(newMarkerX, barY + BAR_HEIGHT + 2);
+ctx.lineTo(newMarkerX - 4, barY + BAR_HEIGHT + 10);
+ctx.lineTo(newMarkerX + 4, barY + BAR_HEIGHT + 10);
+ctx.closePath();
+ctx.fill();
+ctx.shadowBlur = 0;
+});
 };
 
   let running = true;
@@ -378,13 +444,13 @@ for (const key of Object.keys(faceCache.current)) {
 }, [videoReady, onDetectionsChange, facesRef, loading, embeddings]);
 
 // ======================================================
-// 🧠 Expose recognized face info for parent (via ref)
+// Expose recognized face info for parent (via ref)
 // ======================================================
 useImperativeHandle(ref, () => ({
-  // ✅ Capture snapshot image
+  // Capture snapshot image
   getScreenshot: () => webcamRef.current?.getScreenshot(),
 
-  // ✅ Get the best (highest-confidence) face (used for single-person logic)
+  // Get the best (highest-confidence) face (used for single-person logic)
   getCurrentFace: () => {
     const faces = [];
     for (const key in faceCache.current) {
@@ -407,8 +473,8 @@ useImperativeHandle(ref, () => ({
     return faces.reduce((a, b) => (a.confidence > b.confidence ? a : b));
   },
 
-// ✅ Get all recognized faces (multi-person, stable & unique)
-// ✅ Get all recognized faces (multi-person, stable, unique)
+
+// Get all recognized faces (multi-person, stable, unique)
 getAllFaces: () => {
   const uniqueFaces = new Map();
   const now = Date.now();
@@ -477,7 +543,7 @@ return (
     />
     <canvas ref={canvasRef} className="absolute inset-0 pointer-events-none" />
 
-    {/* 🧠 HUD (FPS / Faces / Lighting) */}
+    {/* HUD (FPS / Faces / Lighting) */}
     <div className="absolute top-2 left-2 bg-black/50 text-white text-[11px] px-2 py-1 rounded-md shadow font-mono">
       FPS: {fps}
     </div>

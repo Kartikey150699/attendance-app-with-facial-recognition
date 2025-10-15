@@ -441,21 +441,6 @@ const handleInstantCapture = async (subAction = null) => {
   </span>
 </button>
 
-{/* Check Out */}
-<button
-  onClick={() => {
-    setAction("checkout");
-    setShowCamera(true);
-  }}
-  className="relative w-[85%] md:w-[90%] lg:w-[70%] h-40 sm:h-48 bg-gradient-to-r from-red-700 via-rose-400 to-pink-300 hover:from-red-400 hover:to-rose-500 shadow-[0_0_20px_rgba(244,63,94,0.4)] hover:shadow-[0_0_35px_rgba(244,63,94,0.6)] hover:scale-105 active:scale-95 
-             transition-transform duration-300 text-white text-4xl font-semibold rounded-xl flex flex-col items-center justify-center overflow-hidden">
-  <div className="absolute inset-0 bg-[repeating-linear-gradient(45deg,rgba(255,255,255,0.08)_0,rgba(255,255,255,0.08)_2px,transparent_2px,transparent_6px)]"></div>
-  <span className="relative flex flex-col items-center justify-center">
-    <ClockIcon className="h-16 w-16 mb-4" />
-    <span>Check Out</span>
-  </span>
-</button>
-
 {/* Break */}
 <button
   onClick={() => {
@@ -468,6 +453,21 @@ const handleInstantCapture = async (subAction = null) => {
   <span className="relative flex flex-col items-center justify-center">
     <PauseCircleIcon className="h-16 w-16 mb-4" />
     <span>Break</span>
+  </span>
+</button>
+
+{/* Check Out */}
+<button
+  onClick={() => {
+    setAction("checkout");
+    setShowCamera(true);
+  }}
+  className="relative w-[85%] md:w-[90%] lg:w-[70%] h-40 sm:h-48 bg-gradient-to-r from-red-700 via-rose-400 to-pink-300 hover:from-red-400 hover:to-rose-500 shadow-[0_0_20px_rgba(244,63,94,0.4)] hover:shadow-[0_0_35px_rgba(244,63,94,0.6)] hover:scale-105 active:scale-95 
+             transition-transform duration-300 text-white text-4xl font-semibold rounded-xl flex flex-col items-center justify-center overflow-hidden">
+  <div className="absolute inset-0 bg-[repeating-linear-gradient(45deg,rgba(255,255,255,0.08)_0,rgba(255,255,255,0.08)_2px,transparent_2px,transparent_6px)]"></div>
+  <span className="relative flex flex-col items-center justify-center">
+    <ClockIcon className="h-16 w-16 mb-4" />
+    <span>Check Out</span>
   </span>
 </button>
 

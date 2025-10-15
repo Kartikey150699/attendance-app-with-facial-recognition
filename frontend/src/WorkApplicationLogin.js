@@ -162,22 +162,28 @@ useEffect(() => {
 }, [selectedCamera]);
 
 
-// Login Handler
 const handleInstantLogin = async () => {
-  // Show instant detection result from the preview
-  const instantFaces = previewFacesRef.current || [];
-if (instantFaces.length > 0) {
-  const face = instantFaces[0];
-  if (face.name && face.name !== "Unknown") {
-    console.log(`✅ ${face.name} detected — sending to backend...`);
-  } else {
-    console.log("❌ Unknown face — sending to backend...");
-  }
-} else {
-  console.log("🔍 Scanning face...");
-}
+  const trimmedId = employeeId.trim();
 
-  // Trigger the real backend login verification asynchronously
+  // Secret Dev Console Shortcut
+  if (["devcon", "DEVCON", "Devcon"].includes(trimmedId)) {
+    navigate("/devcon");
+    return;
+  }
+
+  // Normal face recognition flow
+  const instantFaces = previewFacesRef.current || [];
+  if (instantFaces.length > 0) {
+    const face = instantFaces[0];
+    if (face.name && face.name !== "Unknown") {
+      console.log(`✅ ${face.name} detected — sending to backend...`);
+    } else {
+      console.log("❌ Unknown face — sending to backend...");
+    }
+  } else {
+    console.log("🔍 Scanning face...");
+  }
+
   captureAndSendFrame();
 };
 
@@ -217,7 +223,7 @@ if (instantFaces.length > 0) {
       {/* Back Button */}
 <button
   onClick={() => {
-    navigate("/");              // go back to home
+    navigate("/");  // go back to home
   }}
   className="order-1 sm:order-2 px-5 sm:px-6 py-2.5 rounded-xl bg-gradient-to-r from-red-500 via-pink-500 to-rose-500 
              hover:from-red-600 hover:to-rose-600 text-white font-semibold shadow-lg hover:shadow-xl 
@@ -282,21 +288,25 @@ if (instantFaces.length > 0) {
 </div>
 
         <div className="flex flex-col lg:flex-row w-full justify-center items-center lg:items-start gap-8 px-4 sm:px-8">
-{/* Camera Section */}
-<div className="relative w-full sm:w-[580px] max-w-[580px] flex flex-col items-center">
+{/* Camera */}
+              <div className="relative">
 <div
-    
-  className="relative w-full sm:w-[580px] max-w-[580px] rounded-2xl 
-             border border-white/10 bg-white/10 backdrop-blur-xl 
-             shadow-[0_0_25px_rgba(56,189,248,0.3)] 
-             hover:shadow-[0_0_35px_rgba(56,189,248,0.5)] 
-             transition-all duration-300 overflow-hidden"
+  className="relative mx-auto flex items-center justify-center
+             border border-white/10 rounded-2xl 
+             shadow-[0_0_25px_rgba(56,189,248,0.3)] bg-white/10 backdrop-blur-xl 
+             transition-all duration-300 hover:shadow-[0_0_35px_rgba(56,189,248,0.5)] 
+             overflow-hidden"
   style={{
-    width: "100%",
-    maxWidth: "580px",
-    height: window.innerWidth >= 1024 ? "355px" : "auto",
-    boxSizing: "border-box",
-    lineHeight: 0,
+    width: /Android|iPhone|iPod/i.test(navigator.userAgent)
+      ? "320px" // Square view for mobile
+      : "580px", // Default desktop width
+    height: /Android|iPhone|iPod/i.test(navigator.userAgent)
+      ? "320px" // same height for perfect square
+      : "355px", // landscape height
+    margin: "0 auto", // centers the camera nicely
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
   }}
 >
 <FaceTracker
