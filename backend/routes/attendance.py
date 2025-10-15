@@ -25,8 +25,57 @@ tf.get_logger().setLevel('ERROR')
 
 router = APIRouter(prefix="/attendance", tags=["Attendance"])
 
-import logging, threading, os, time
+import logging, os, time
 from datetime import datetime
+
+from queue import Queue
+attendance_queue = Queue()
+
+def background_attendance_writer():
+    """Handles DB commits asynchronously in the background (duplicate-safe)."""
+    from models.Attendance import Attendance
+    from utils.db import SessionLocal
+    import threading
+
+    db = SessionLocal()
+    lock = threading.Lock()  # 🧱 ensures thread safety
+
+    while True:
+        item = attendance_queue.get()
+        if item is None:
+            break
+
+        try:
+            record_data, user_id = item
+
+            with lock:
+                # 🧠 Check if record already exists (same user + date)
+                existing = db.query(Attendance).filter(
+                    Attendance.user_id == user_id,
+                    Attendance.date == record_data["date"]
+                ).first()
+
+                if existing:
+                    # Update existing record fields (in-place)
+                    for k, v in record_data.items():
+                        setattr(existing, k, v)
+                    db.commit()
+                    print(f"🔁 Updated record for user {user_id} ({record_data['date']})")
+                else:
+                    # Create a new record if not present
+                    record = Attendance(**record_data)
+                    db.add(record)
+                    db.commit()
+                    print(f"🆕 Created new record for user {user_id} ({record_data['date']})")
+
+        except Exception as e:
+            print(f"⚠️ Background DB write failed: {e}")
+            db.rollback()
+        finally:
+            attendance_queue.task_done()
+
+# Start the background writer thread (runs forever in daemon mode)
+threading.Thread(target=background_attendance_writer, daemon=True).start()
 
 # -------------------------
 # Smart Log Management (auto-truncate when file > 5 MB)
@@ -932,8 +981,20 @@ async def mark_attendance(
             else:
                 status = "invalid_action"
 
-            db.commit()
-            db.refresh(record)
+            # db.commit()
+            # db.refresh(record)
+
+            # Instant async write to background queue
+            record_data = {
+                "user_id": record.user_id,
+                "user_name_snapshot": record.user_name_snapshot,
+                "date": record.date,
+                "check_in": record.check_in,
+                "check_out": record.check_out,
+                "break_start": record.break_start,
+                "break_end": record.break_end,
+            }
+            attendance_queue.put((record_data, record.user_id))
 
             # --- Auto-Train (median + threshold update) ---
             if AUTO_TRAIN_ENABLED and best_score >= aging_update_threshold:
@@ -1138,3 +1199,170 @@ async def get_my_attendance(
         })
 
     return results
+
+# =====================================================
+# ⚡ Ultra-Fast Instant Mark API (Frontend JSON only)
+# =====================================================
+@router.post("/mark-instant")
+async def mark_instant(data: dict):
+    """
+    Instant attendance mark — supports multiple faces at once.
+
+    Accepts:
+      {
+        "faces": [
+          { "employee_id": "IFNT032", "action": "checkin", "confidence": 97 },
+          { "employee_id": "IFNT036", "action": "checkout", "confidence": 93 }
+        ]
+      }
+
+    Returns:
+      { "results": [ {...}, {...} ] }
+    """
+    from utils.db import SessionLocal
+
+    faces = data.get("faces", [])
+    if not faces:
+        faces = [{
+            "employee_id": data.get("employee_id"),
+            "action": data.get("action"),
+            "confidence": data.get("confidence", 0),
+        }]
+
+    results = []
+    today = date.today()
+
+    with SessionLocal() as db:
+        print("🧠 Faces received from frontend:", faces)
+        for face in faces:
+            try:
+                employee_id = (face.get("employee_id") or "").strip()
+                action = (face.get("action") or "").lower().strip()
+                confidence = face.get("confidence", 0)
+                now_jst = datetime.now(JST)
+
+                # --- Missing ID ---
+                if not employee_id:
+                    results.append({
+                        "name": "Unknown",
+                        "employee_id": None,
+                        "status": "missing_employee_id",
+                        "confidence": confidence,
+                        "timestamp": now_jst.strftime("%Y-%m-%d %H:%M:%S"),
+                    })
+                    continue
+
+                # --- Find user ---
+                user = db.query(User).filter(
+                    (User.employee_id == employee_id) | (User.name == employee_id)
+                ).first()
+
+                if not user:
+                    results.append({
+                        "name": "Unknown",
+                        "employee_id": employee_id,
+                        "status": "invalid_user",
+                        "confidence": confidence,
+                        "timestamp": now_jst.strftime("%Y-%m-%d %H:%M:%S"),
+                    })
+                    continue
+
+                # --- Find or create record ---
+                record = db.query(Attendance).filter(
+                    Attendance.user_id == user.id,
+                    Attendance.date == today
+                ).first()
+
+                if not record:
+                    record = Attendance(
+                        user_id=user.id,
+                        user_name_snapshot=user.name,
+                        date=today
+                    )
+                    db.add(record)
+                    db.flush()
+
+                # =====================================================
+                # 🧠 MAIN ATTENDANCE LOGIC
+                # =====================================================
+                if action == "checkin":
+                    if record.check_out:
+                        status = "already_checked_out"
+                    elif record.check_in:
+                        status = "already_checked_in"
+                    else:
+                        record.check_in = now_jst
+                        record.status = "checked_in"
+                        status = "checked_in"
+
+                elif action == "break_start":
+                    if not record.check_in:
+                        status = "checkin_missing"
+                    elif record.check_out:
+                        status = "already_checked_out"
+                    elif record.break_start and not record.break_end:
+                        status = "already_on_break"
+                    else:
+                        record.break_start = now_jst
+                        record.break_end = None
+                        record.status = "on_break"
+                        status = "break_started"
+
+                elif action == "break_end":
+                    if not record.check_in:
+                        # 🔹 new case: ending break without check-in
+                        status = "cannot_end_break_no_checkin"
+                    elif record.check_out:
+                        status = "already_checked_out"
+                    elif not record.break_start:
+                        # 🔹 new case: ending break without starting it
+                        status = "break_not_started"
+                    elif record.break_end:
+                        status = "already_break_ended"
+                    else:
+                        record.break_end = now_jst
+                        record.status = "checked_in"
+                        calculate_total_work(record)
+                        status = "break_ended"
+
+                elif action == "checkout":
+                    if not record.check_in:
+                        status = "checkin_missing"
+                    elif record.check_out:
+                        status = "already_checked_out"
+                    elif record.break_start and not record.break_end:
+                        status = "cannot_checkout_on_break"
+                    else:
+                        record.check_out = now_jst
+                        record.status = "checked_out"
+                        calculate_total_work(record)
+                        status = "checked_out"
+
+                else:
+                    status = "invalid_action"
+
+                # --- Commit after each ---
+                db.commit()
+                db.flush()
+
+                results.append({
+                    "name": user.name,
+                    "employee_id": user.employee_id,
+                    "status": status,
+                    "confidence": confidence,
+                    "timestamp": now_jst.strftime("%Y-%m-%d %H:%M:%S"),
+                })
+
+            except Exception as e:
+                db.rollback()
+                print(f"⚠️ Error processing {face}: {e}")
+                results.append({
+                    "name": "Unknown",
+                    "employee_id": face.get("employee_id"),
+                    "status": "db_error",
+                    "confidence": face.get("confidence", 0),
+                    "timestamp": datetime.now(JST).strftime("%Y-%m-%d %H:%M:%S"),
+                })
+
+    print("✅ Results prepared for frontend:", results)
+    return {"results": results}

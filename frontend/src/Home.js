@@ -20,6 +20,7 @@ import { useEmbeddingsCache } from "./hooks/useEmbeddingsCache";
 import { strictMatch } from "./hooks/cosineMatcher";
 
 function Home() {
+  // eslint-disable-next-line
   const [dateTime, setDateTime] = useState(new Date());
   const [showCamera, setShowCamera] = useState(false);
   const [statusMessages, setStatusMessages] = useState([]);
@@ -73,16 +74,11 @@ function Home() {
 // Handle backend response (wrapped in useCallback)
 const handleBackendResponse = useCallback(
   (data, mode) => {
-    // --- FRONTEND COSINE MATCHING (console only, no UI messages) ---
+    // --- FRONTEND COSINE MATCHING (console only) ---
     if (!backendConfirmed && data.embedding && frontendCache.length > 0) {
-      console.log("🧠 Using frontend cosine similarity for instant recognition...");
       const match = strictMatch(data.embedding, frontendCache, 0.40);
-
       if (match.name !== "Unknown") {
-        console.log(
-          `⚡ Local match: ${match.name} (${(match.confidence * 100).toFixed(2)}%)`
-        );
-        // No UI message — console only
+        console.log(`⚡ Local match: ${match.name} (${(match.confidence * 100).toFixed(2)}%)`);
       } else {
         console.log("❌ Unknown face (frontend) — verifying with backend...");
       }
@@ -100,23 +96,21 @@ const handleBackendResponse = useCallback(
       const mappedFaces = data.results.map((face) => ({
         name: face.name,
         status: face.status,
-        box: face.box,
-        gender: face.gender,
-        age: face.age,
         confidence: face.confidence,
       }));
 
       // Update live preview faces (for cosine loop)
       if (mode === "preview") {
         previewFacesRef.current = data.results || [];
+        return;
       }
 
-      // Only show messages when capturing (final backend confirmation)
+      // --- Final backend confirmation phase ---
       if (mode === "mark" && mappedFaces.length > 0) {
         console.log("✅ Backend confirmed — switching off local cosine matching");
         setBackendConfirmed(true);
 
-        const currentDateTime = dateTime.toLocaleString("en-US", {
+        const currentDateTime = new Date().toLocaleString("en-US", {
           year: "numeric",
           month: "short",
           day: "numeric",
@@ -126,50 +120,58 @@ const handleBackendResponse = useCallback(
           hour12: true,
         });
 
-        const msgs = mappedFaces.map((face) => {
-          if (action === "work-application" && face.status === "logged_in") {
-            navigate("/work-application", { state: { user: face.name } });
-            return `✅ ${face.name} logged in to Work Application — ${currentDateTime}`;
-          }
+        // Build new messages
+        const newMsgs = mappedFaces.map((face) => {
+          const name = face.name || "Unknown";
+          const s = face.status;
 
-          if (face.status === "checked_in")
-            return `✅ ${face.name} marked Present — ${currentDateTime}`;
-          if (face.status === "already_checked_in")
-            return `⚠️ ${face.name} already Checked In — ${currentDateTime}`;
-          if (face.status === "checked_out")
-            return `✅ ${face.name} Checked Out — ${currentDateTime}`;
-          if (face.status === "already_checked_out")
-            return `⚠️ ${face.name} already Checked Out — ${currentDateTime}`;
-          if (face.status === "break_started")
-            return `✅ ${face.name} started Break — ${currentDateTime}`;
-          if (face.status === "already_on_break")
-            return `⚠️ ${face.name} is already on Break — ${currentDateTime}`;
-          if (face.status === "break_ended")
-            return `✅ ${face.name} ended Break — ${currentDateTime}`;
-          if (face.status === "already_break_ended")
-            return `⚠️ ${face.name} already ended Break — ${currentDateTime}`;
-          if (face.status === "break_not_started")
-            return `⚠️ ${face.name} cannot end Break (not started) — ${currentDateTime}`;
-          if (face.status === "checkin_missing")
-            return `⚠️ ${face.name} cannot proceed → No Check-In found — ${currentDateTime}`;
-          if (face.status === "cannot_checkout_on_break")
-            return `⚠️ ${face.name} cannot Check Out while on Break — ${currentDateTime}`;
-          if (face.status === "spoof")
-            return `❌ Spoof attempt detected (photo) — ${currentDateTime}`;
-          if (face.status === "unknown")
-            return `❌ Unknown face detected — ${currentDateTime}`;
-          return `ℹ️ ${face.name} action processed — ${currentDateTime}`;
+          if (action === "work-application" && s === "logged_in") {
+            navigate("/work-application", { state: { user: face.name } });
+            return `✅ ${name} logged in to Work Application — ${currentDateTime}`;
+          }
+          if (s === "checked_in") return `✅ ${name} marked Present — ${currentDateTime}`;
+          if (s === "already_checked_in") return `⚠️ ${name} already Checked In — ${currentDateTime}`;
+          if (s === "checked_out") return `✅ ${name} Checked Out — ${currentDateTime}`;
+          if (s === "already_checked_out") return `⚠️ ${name} already Checked Out — ${currentDateTime}`;
+          if (s === "break_started") return `✅ ${name} started Break — ${currentDateTime}`;
+          if (s === "already_on_break") return `⚠️ ${name} is already on Break — ${currentDateTime}`;
+          if (s === "break_ended") return `✅ ${name} ended Break — ${currentDateTime}`;
+          if (s === "already_break_ended") return `⚠️ ${name} already ended Break — ${currentDateTime}`;
+          if (s === "break_not_started") return `⚠️ ${name} cannot end Break (not started) — ${currentDateTime}`;
+          if (s === "checkin_missing") return `⚠️ ${name} cannot proceed → No Check-In found — ${currentDateTime}`;
+          if (s === "cannot_checkout_on_break") return `⚠️ ${name} cannot Check Out while on Break — ${currentDateTime}`;
+          if (s === "spoof") return `❌ Spoof attempt detected — ${currentDateTime}`;
+          if (s === "unknown") return `❌ Unknown face detected — ${currentDateTime}`;
+          return `ℹ️ ${name} action processed — ${currentDateTime}`;
         });
 
-        // Show only final backend-confirmed messages in status panel
-        setStatusMessages(msgs);
-        if (action !== "work-application") {
-  setTimeout(() => setStatusMessages([]), 1000);
-}
+        // ✅ Merge messages (multi-person support) without duplicates
+        setStatusMessages((prev) => {
+          const combined = [...prev];
+          newMsgs.forEach((msg) => {
+            // Extract the name from the message (after emoji and before next space)
+            const nameMatch = msg.match(/[✅⚠️❌ℹ️]\s(.+?)\s(marked|already|logged|started|ended|cannot|Check|action)/);
+            const name = nameMatch ? nameMatch[1].trim() : null;
+
+            // Replace old message for the same name, or add if new
+            const existingIndex = combined.findIndex((m) => name && m.includes(name));
+            if (existingIndex !== -1) {
+              combined[existingIndex] = msg; // update
+            } else {
+              combined.push(msg); // add new person
+            }
+          });
+          return combined;
+        });
+
+        // ✅ Clear messages after 3 seconds for attendance actions only
+        if (["checkin", "checkout", "break"].includes(action)) {
+          setTimeout(() => setStatusMessages([]), 3000);
+        }
       }
     }
   },
-  [action, dateTime, navigate, backendConfirmed, frontendCache]
+  [action, navigate, backendConfirmed, frontendCache]
 );
 
 
@@ -269,23 +271,99 @@ const runLocalCosine = () => {
   };
 }, [showCamera, backendConfirmed, cacheLoading, frontendCache]);
 
-// handle capture 
+// =====================================================
+// ⚡ Super-fast capture — supports multiple people simultaneously (fixed)
+// =====================================================
 const handleInstantCapture = async (subAction = null) => {
-  // Instantly show the most recent detected face
-  const instantFaces = previewFacesRef.current || [];
-  if (instantFaces.length > 0) {
-    const face = instantFaces[0];
-    if (face.name && face.name !== "Unknown") {
-      setStatusMessages([`✅ ${face.name} detected — verifying...`]);
-    } else {
-      setStatusMessages(["❌ Unknown face — verifying..."]);
-    }
-  } else {
-    setStatusMessages(["🔍 Scanning face..."]);
+  if (!webcamRef.current) return;
+
+  // ✅ Get all recognized faces — must return array of all current faces
+  const allFaces =
+    (webcamRef.current.getAllFaces && webcamRef.current.getAllFaces()) || [];
+  
+  // Fallback to single-face if necessary
+  const faces =
+    allFaces.length > 0
+      ? allFaces
+      : [webcamRef.current?.getCurrentFace()].filter(Boolean);
+
+  console.log("📸 Sending faces to backend:", faces); // <— DEBUG LINE
+
+  if (!faces || faces.length === 0) {
+    setStatusMessages(["🔍 No face detected — please align properly."]);
+    setTimeout(() => setStatusMessages([]), 1000);
+    return;
   }
 
-  // 2️⃣ Trigger backend verification asynchronously
-  captureAndSendFrame("mark", subAction);
+  // ✅ Build the payload with all faces in one go
+  const payload = {
+    faces: faces.map((f) => ({
+      employee_id: f.name,
+      action: subAction || action,
+      confidence: f.confidence,
+    })),
+  };
+
+  try {
+    const res = await fetch(`${API_BASE}/attendance/mark-instant`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+    });
+
+    const data = await res.json();
+    console.log("🧠 Backend response:", data);
+
+    if (!data.results || !Array.isArray(data.results) || data.results.length === 0) {
+      setStatusMessages(["⚠️ Unexpected response from server."]);
+      setTimeout(() => setStatusMessages([]), 1000);
+      return;
+    }
+
+    const currentDateTime = new Date().toLocaleString("en-US", {
+      year: "numeric",
+      month: "short",
+      day: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
+      second: "2-digit",
+      hour12: true,
+    });
+
+    // ✅ Build separate lines for every recognized person
+    const msgs = data.results.map((face) => {
+      const name = face.name || "Unknown";
+      const s = face.status;
+      if (s === "checked_in") return `✅ ${name} marked Present — ${currentDateTime}`;
+      if (s === "already_checked_in") return `⚠️ ${name} already Checked In — ${currentDateTime}`;
+      if (s === "checked_out") return `✅ ${name} Checked Out — ${currentDateTime}`;
+      if (s === "already_checked_out") return `⚠️ ${name} already Checked Out — ${currentDateTime}`;
+      if (s === "break_started") return `✅ ${name} started Break — ${currentDateTime}`;
+      if (s === "already_on_break") return `⚠️ ${name} is already on Break — ${currentDateTime}`;
+      if (s === "break_ended") return `✅ ${name} ended Break — ${currentDateTime}`;
+      if (s === "already_break_ended") return `⚠️ ${name} already ended Break — ${currentDateTime}`;
+      if (s === "checkin_missing") return `⚠️ ${name} cannot proceed → No Check-In found — ${currentDateTime}`;
+      if (s === "cannot_checkout_on_break") return `⚠️ ${name} cannot Check Out while on Break — ${currentDateTime}`;
+      if (s === "cannot_end_break_no_checkin") return `⚠️ ${name} cannot end Break (no Check-In found) — ${currentDateTime}`;
+      if (s === "break_not_started") return `⚠️ ${name} cannot end Break (not started) — ${currentDateTime}`;
+      if (s === "spoof") return `❌ Spoof attempt detected — ${currentDateTime}`;
+      if (s === "unknown") return `❌ Unknown face detected — ${currentDateTime}`;
+      return `ℹ️ ${name} action processed — ${currentDateTime}`;
+    });
+
+    // ✅ Show all lines together
+    setStatusMessages(msgs);
+
+    // ✅ Auto-clear
+    if (["checkin", "checkout", "break"].includes(action)) {
+      setTimeout(() => setStatusMessages([]), 3000);
+    }
+
+  } catch (err) {
+    console.error("❌ Network error:", err);
+    setStatusMessages(["❌ Network error — please retry."]);
+    setTimeout(() => setStatusMessages([]), 1000);
+  }
 };
 
   return (
@@ -530,20 +608,51 @@ style={{ minHeight: "355px" }}
                   )}
                 </h2>
 
-                {statusMessages.length > 0 ? (
-                  <div className="space-y-2 text-center">
-                    {statusMessages.map((msg, idx) => (
-                      <p key={idx} className="text-lg font-semibold">
-                        {msg}
-                      </p>
-                    ))}
-                  </div>
-                ) : (
-                  <p className="text-gray-500 flex items-center justify-center gap-2">
-                    <ClipboardDocumentListIcon className="h-5 w-5 text-gray-500" />
-                    Capture to see status
-                  </p>
-                )}
+{statusMessages.length > 0 ? (
+  <div
+    className="status-message-panel flex flex-col items-start space-y-2 text-left p-2 overflow-y-auto max-h-64 transition-all duration-500"
+    style={{ whiteSpace: "pre-line", lineHeight: "1.6" }}
+  >
+    {statusMessages.map((msg, idx) => {
+      // background color logic
+      let bgColor = "bg-gray-200/90"; // default
+      if (
+        msg.includes("marked Present") ||
+        msg.includes("started Break") ||
+        msg.includes("ended Break")
+      ) {
+        bgColor = "bg-green-300/90";
+      } else if (
+        msg.includes("already Checked Out") ||
+        msg.includes("already") ||
+        msg.includes("cannot")
+      ) {
+        bgColor = "bg-yellow-300/90";
+      } else if (
+        msg.includes("Checked Out") ||
+        msg.includes("spoof") ||
+        msg.includes("Unknown") ||
+        msg.includes("error")
+      ) {
+        bgColor = "bg-red-300/90";
+      }
+
+      return (
+        <p
+          key={idx}
+          className={`text-base sm:text-lg font-semibold text-black rounded-md px-4 py-2 w-full shadow-md border border-black/10 ${bgColor}`}
+        >
+          {msg}
+        </p>
+      );
+    })}
+  </div>
+) : (
+  <p className="text-gray-600 flex items-center justify-center gap-2 italic">
+    <ClipboardDocumentListIcon className="h-5 w-5 text-gray-600" />
+    Capture to see status
+  </p>
+)}
               </div>
             </div>
           </div>

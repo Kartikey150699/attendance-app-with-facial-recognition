@@ -64,10 +64,11 @@ function FaceTracker({ selectedCamera, onDetectionsChange, facesRef }, ref) {
   const video = webcamRef.current.video;
   const canvas = canvasRef.current;
   const ctx = canvas.getContext("2d");
-  const MEMORY_MS = 800; // keep face box longer
+  const MEMORY_MS = 4000; // keep face box longer
   const SMOOTH_ALPHA = 0.7; // smoothing for motion
 
   // Intersection-over-Union (IoU) — checks if boxes overlap (face area only)
+  // eslint-disable-next-line
   const iou = (boxA, boxB) => {
     const xA = Math.max(boxA.x - boxA.w / 2, boxB.x - boxB.w / 2);
     const yA = Math.max(boxA.y - boxA.h / 2, boxB.y - boxB.h / 2);
@@ -148,14 +149,11 @@ const drawDetections = (detections, backendFaces) => {
     let confidence = 0;
     let foundKey = null;
 
-    for (const key of Object.keys(faceCache.current)) {
-      const cached = faceCache.current[key];
-      const overlap = iou(cached.box, { x: cx, y: cy, w, h });
-      if (overlap > 0.25) {
-        foundKey = key;
-        break;
-      }
-    }
+for (const key of Object.keys(faceCache.current)) {
+  if (now - faceCache.current[key].time > MEMORY_MS) {
+    delete faceCache.current[key];
+  }
+}
 
     if (foundKey && faceCache.current[foundKey]?.box) {
       const prev = faceCache.current[foundKey].box;
@@ -251,16 +249,6 @@ const drawDetections = (detections, backendFaces) => {
     }
 
     faceCache.current[foundKey] = { ...cached, label, color, time: now, box };
-
-    for (const key of Object.keys(faceCache.current)) {
-      if (now - faceCache.current[key].time > MEMORY_MS) delete faceCache.current[key];
-      else {
-        const cached = faceCache.current[key];
-        const dx = Math.abs(cached.box.x - cx);
-        const dy = Math.abs(cached.box.y - cy);
-        if (dx > 150 || dy > 150) delete faceCache.current[key];
-      }
-    }
 
     // draw box + label
     ctx.strokeStyle = color;
@@ -388,6 +376,75 @@ const drawDetections = (detections, backendFaces) => {
     cancelAnimationFrame(rafRef.current);
   };
 }, [videoReady, onDetectionsChange, facesRef, loading, embeddings]);
+
+// ======================================================
+// 🧠 Expose recognized face info for parent (via ref)
+// ======================================================
+useImperativeHandle(ref, () => ({
+  // ✅ Capture snapshot image
+  getScreenshot: () => webcamRef.current?.getScreenshot(),
+
+  // ✅ Get the best (highest-confidence) face (used for single-person logic)
+  getCurrentFace: () => {
+    const faces = [];
+    for (const key in faceCache.current) {
+      const f = faceCache.current[key];
+      if (
+        f.label &&
+        f.label !== "Scanning..." &&
+        f.label !== "Unknown" &&
+        (f.smoothedConf || 0) > 50
+      ) {
+        faces.push({
+          name: f.label.replace(/\(\d+%\)/, "").trim(),
+          confidence: Math.round(f.smoothedConf || 0),
+        });
+      }
+    }
+
+    if (faces.length === 0) return null;
+    // Return the one with highest confidence
+    return faces.reduce((a, b) => (a.confidence > b.confidence ? a : b));
+  },
+
+// ✅ Get all recognized faces (multi-person, stable & unique)
+// ✅ Get all recognized faces (multi-person, stable, unique)
+getAllFaces: () => {
+  const uniqueFaces = new Map();
+  const now = Date.now();
+
+  Object.entries(faceCache.current).forEach(([key, f]) => {
+    if (
+      f &&
+      f.label &&
+      f.label !== "Scanning..." &&
+      f.label !== "Unknown" &&
+      (f.smoothedConf || 0) >= 50 &&
+      now - f.time < 3500 // only keep fresh (3.5 sec)
+    ) {
+      const name = f.label.replace(/\(\d+%\)/, "").trim();
+      if (!uniqueFaces.has(name)) {
+        uniqueFaces.set(name, {
+          name,
+          confidence: Math.round(f.smoothedConf || 0),
+        });
+      } else {
+        const existing = uniqueFaces.get(name);
+        if (f.smoothedConf > existing.confidence) {
+          uniqueFaces.set(name, {
+            name,
+            confidence: Math.round(f.smoothedConf || 0),
+          });
+        }
+      }
+    }
+  });
+
+  const allFaces = Array.from(uniqueFaces.values());
+  console.log("🎭 Multi-face output →", allFaces);
+  return allFaces;
+},
+}));
 
   return (
     <div className="relative w-full max-w-[580px] rounded-2xl overflow-hidden shadow-lg border border-white/20 bg-white/5">

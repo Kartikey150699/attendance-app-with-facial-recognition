@@ -18,6 +18,13 @@ body {
   }
 }
 
+/* ========== Fade-out animation for status messages ========== */
+.fade-out {
+  opacity: 0;
+  transition: opacity 0.8s ease; /* fade duration 0.8s */
+}
+
+
 .bg-animated {
   background: linear-gradient(270deg, #a7c5eb, #c2f0fc, #d4fc79, #96e6a1);
   background-size: 800% 800%;
