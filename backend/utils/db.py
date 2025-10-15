@@ -1,7 +1,7 @@
 from sqlalchemy import create_engine
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
-from sqlalchemy_utils import database_exists, create_database # type: ignore
+from sqlalchemy_utils import database_exists, create_database  # type: ignore
 
 # ==========================================================
 # Database URL
@@ -9,8 +9,21 @@ from sqlalchemy_utils import database_exists, create_database # type: ignore
 # Adjust username/password if needed
 DATABASE_URL = "mysql+pymysql://root:root@localhost:3306/facetrack"
 
-# Create engine (no echo for cleaner logs)
-engine = create_engine(DATABASE_URL, echo=False, pool_pre_ping=True)
+# ==========================================================
+# Create engine with Connection Pooling
+# ==========================================================
+# pool_size → number of persistent connections
+# max_overflow → how many extra connections allowed temporarily
+# pool_pre_ping → checks if connection is alive before using
+# pool_recycle → prevents timeout disconnects from MySQL
+engine = create_engine(
+    DATABASE_URL,
+    echo=False,
+    pool_pre_ping=True,
+    pool_size=10,
+    max_overflow=20,
+    pool_recycle=1800,
+)
 
 # ==========================================================
 # Auto-create database if missing
@@ -62,7 +75,6 @@ def get_db():
         yield db
     finally:
         db.close()
-
 
 # ==========================================================
 # Initialize tables automatically when this file is imported

@@ -208,7 +208,7 @@ const drawDetections = (detections, backendFaces) => {
     let MAX_DISTANCE = 90;
     const ua = navigator.userAgent.toLowerCase();
     if (/iphone|android/i.test(ua)) {
-      MIN_DISTANCE = 20;
+      MIN_DISTANCE = 15;
       MAX_DISTANCE = 55; // phone
     } else if (/ipad|tablet/i.test(ua)) {
       MIN_DISTANCE = 25;

@@ -430,20 +430,32 @@ const handleInstantCapture = async (subAction = null) => {
               {/* Camera */}
               <div className="relative">
 <div
-  className="relative border border-white/10 rounded-2xl shadow-[0_0_25px_rgba(56,189,248,0.3)] bg-white/10 backdrop-blur-xl transition-all duration-300 hover:shadow-[0_0_35px_rgba(56,189,248,0.5)] inline-block w-full sm:w-auto max-w-full"
+  className="relative mx-auto flex items-center justify-center
+             border border-white/10 rounded-2xl 
+             shadow-[0_0_25px_rgba(56,189,248,0.3)] bg-white/10 backdrop-blur-xl 
+             transition-all duration-300 hover:shadow-[0_0_35px_rgba(56,189,248,0.5)] 
+             overflow-hidden"
   style={{
-    width: "100%",
-    maxWidth: "580px",
-    height: window.innerWidth >= 1024 ? "355px" : "auto", // fixed for balanced look
+    width: /Android|iPhone|iPod/i.test(navigator.userAgent)
+      ? "320px" // Square view for mobile
+      : "580px", // Default desktop width
+    height: /Android|iPhone|iPod/i.test(navigator.userAgent)
+      ? "320px" // same height for perfect square
+      : "355px", // landscape height
+    margin: "0 auto", // centers the camera nicely
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
   }}
 >
-  {/* Replaced old webcam + face boxes with FaceTracker */}
-<FaceTracker
-  ref={webcamRef}
-  selectedCamera={selectedCamera}
-  facesRef={previewFacesRef}
-  onDetectionsChange={(detections) => console.log("Detected faces:", detections.length)}
-/>
+  <FaceTracker
+    ref={webcamRef}
+    selectedCamera={selectedCamera}
+    facesRef={previewFacesRef}
+    onDetectionsChange={(detections) =>
+      console.log("Detected faces:", detections.length)
+    }
+  />
 </div>
                 {/* Buttons under Camera */}
                 <div className="flex flex-wrap gap-3 sm:gap-4 mt-4 mb-4 justify-center px-2">
