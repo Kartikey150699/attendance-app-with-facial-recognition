@@ -446,53 +446,64 @@ getAllFaces: () => {
 },
 }));
 
-  return (
-    <div className="relative w-full max-w-[580px] rounded-2xl overflow-hidden shadow-lg border border-white/20 bg-white/5">
-      <Webcam
-        key={selectedCamera}
-        // eslint-disable-next-line
-        ref={webcamRef}
-        mirrored
-        audio={false}
-        onUserMedia={() => {
-          console.log("🎥 Video ready");
-          setVideoReady(true);
-        }}
-        screenshotFormat="image/jpeg"
-        className="w-full h-full object-cover"
-        videoConstraints={{
-          width: 580,
-          height: 355,
-          deviceId: selectedCamera ? { exact: selectedCamera } : undefined,
-        }}
-      />
-      <canvas ref={canvasRef} className="absolute inset-0 pointer-events-none" />
-<div className="absolute top-2 left-2 bg-white/10 backdrop-blur-md text-white text-[11px] px-3 py-1.5 rounded-lg shadow-md border border-white/20 font-mono">
-  FPS: {fps}
-</div>
-      <div className="absolute top-2 right-2 bg-white/10 backdrop-blur-md text-white text-[11px] px-3 py-2 rounded-lg shadow-md border border-white/20 leading-tight font-mono">
-  <div>Faces: {hudStats.faces}</div>
-  <div>Core: ArcFace-Depth v1.1</div>
-  <div>
-  Lighting:{" "}
-  <span
+return (
+  <div
+    className="relative rounded-2xl overflow-hidden shadow-lg border border-white/20 bg-white/5"
     style={{
-      color:
-        hudStats.lighting === "Too Dark"
-          ? "#f87171" // red
-          : hudStats.lighting === "Too Bright"
-          ? "#facc15" // yellow
-          : hudStats.lighting === "Slightly Uneven"
-          ? "#fbbf24" // amber
-          : "#4ade80", // green
+      width: /Android|iPhone|iPod/i.test(navigator.userAgent)
+        ? "320px" // 📱 square for phones
+        : "580px", // 💻 keep Mac/iPad as-is
+      height: /Android|iPhone|iPod/i.test(navigator.userAgent)
+        ? "320px"
+        : "355px",
     }}
   >
-    {hudStats.lighting}
-  </span>
-</div>
-</div>
+    <Webcam
+      key={selectedCamera}
+      ref={webcamRef}
+      mirrored
+      audio={false}
+      onUserMedia={() => {
+        console.log("🎥 Video ready");
+        setVideoReady(true);
+      }}
+      screenshotFormat="image/jpeg"
+      className="w-full h-full object-cover"
+      videoConstraints={{
+        width: /Android|iPhone|iPod/i.test(navigator.userAgent) ? 320 : 580,
+        height: /Android|iPhone|iPod/i.test(navigator.userAgent) ? 320 : 355,
+        deviceId: selectedCamera ? { exact: selectedCamera } : undefined,
+      }}
+    />
+    <canvas ref={canvasRef} className="absolute inset-0 pointer-events-none" />
+
+    {/* 🧠 HUD (FPS / Faces / Lighting) */}
+    <div className="absolute top-2 left-2 bg-black/50 text-white text-[11px] px-2 py-1 rounded-md shadow font-mono">
+      FPS: {fps}
     </div>
-  );
+
+    <div className="absolute top-2 right-2 bg-black/50 text-white text-[11px] px-2 py-1 rounded-md shadow font-mono text-right leading-tight">
+      <div>Faces: {hudStats.faces}</div>
+      <div>Core: ArcFace</div>
+      <div>
+        Lighting:{" "}
+        <span
+          className={
+            hudStats.lighting === "Too Dark"
+              ? "text-red-400"
+              : hudStats.lighting === "Too Bright"
+              ? "text-yellow-300"
+              : hudStats.lighting === "Slightly Uneven"
+              ? "text-amber-300"
+              : "text-green-400"
+          }
+        >
+          {hudStats.lighting}
+        </span>
+      </div>
+    </div>
+  </div>
+);
 }
 
 export default forwardRef(FaceTracker);
