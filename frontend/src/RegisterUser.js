@@ -56,6 +56,8 @@ function RegisterUser() {
   // Multi face restriction
   const [multiFaceDetected, setMultiFaceDetected] = useState(false);
 
+  const isMobile = /Android|iPhone|iPod/i.test(navigator.userAgent);
+
   const intervalRef = useRef(null);
   const animationRef = useRef(null);
 
@@ -188,34 +190,44 @@ if (/Android|iPhone|iPod/i.test(navigator.userAgent)) {
         setDistance(dist.toFixed(1));
 
         // --- Distance feedback ---
-        let feedbackText = "";
-        let boxColor = "rgba(56,189,248,0.95)"; // default blue
+let feedbackText = "";
+let boxColor = "rgba(56,189,248,0.95)"; // default blue
 
-        if (dist < 27) {
-          feedbackText = "Too Close";
-          boxColor = "rgba(239,68,68,0.95)";
-          if (isSubmitting) {
-            cancelCaptureRef.current = true;
-            resetRegistrationState();
-            setPopupMessage("⚠️ Registration cancelled — too close. Move slightly back.");
-            setShowPopup(true);
-          }
-        } else if (dist > 42) {
-          feedbackText = "Too Far";
-          boxColor = "rgba(239,68,68,0.95)";
-          if (isSubmitting) {
-            cancelCaptureRef.current = true;
-            resetRegistrationState();
-            setPopupMessage("⚠️ Registration cancelled — too far. Move closer to the camera.");
-            setShowPopup(true);
-          }
-        } else {
-          feedbackText = "Good";
-          boxColor = "rgba(56,189,248,0.95)";
-        }
+// 📱 Detect if device is mobile
+const isMobile = /Android|iPhone|iPod/i.test(navigator.userAgent);
 
-        setDistanceFeedback(feedbackText);
+// 📏 Set distance thresholds dynamically
+const minDist = isMobile ? 18 : 27;
+const maxDist = isMobile ? 32 : 42;
 
+if (dist < minDist) {
+  feedbackText = "Too Close";
+  boxColor = "rgba(239,68,68,0.95)";
+  if (isSubmitting) {
+    cancelCaptureRef.current = true;
+    resetRegistrationState();
+    setPopupMessage(
+      "⚠️ Registration cancelled — too close. Move slightly back."
+    );
+    setShowPopup(true);
+  }
+} else if (dist > maxDist) {
+  feedbackText = "Too Far";
+  boxColor = "rgba(239,68,68,0.95)";
+  if (isSubmitting) {
+    cancelCaptureRef.current = true;
+    resetRegistrationState();
+    setPopupMessage(
+      "⚠️ Registration cancelled — too far. Move closer to the camera."
+    );
+    setShowPopup(true);
+  }
+} else {
+  feedbackText = "Good";
+  boxColor = "rgba(56,189,248,0.95)";
+}
+
+setDistanceFeedback(feedbackText);
         // --- Draw 4-corner box ---
         ctx.save();
         ctx.lineWidth = 3;
@@ -636,13 +648,18 @@ const resetRegistrationState = () => {
 
               {/* === Alignment + Grid Overlays === */}
 
-              {/* 🧠 Center Target Ring (alignment guide) */}
-              <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-[5]">
-                <div className="w-[60%] aspect-square rounded-full border-2 border-white/40 
-                                shadow-[0_0_25px_rgba(255,255,255,0.2)] animate-pulse"></div>
-              </div>
+{/* Center Target Ring (alignment guide) */}
+<div className="absolute inset-0 flex items-center justify-center pointer-events-none z-[5]">
+  <div
+    className={`aspect-square rounded-full border-2 border-white/40 shadow-[0_0_25px_rgba(255,255,255,0.2)] animate-pulse ${
+      /Android|iPhone|iPod/i.test(navigator.userAgent)
+        ? "w-[80%]" // larger for phones
+        : "w-[60%]" // normal for desktop/iPad
+    }`}
+  ></div>
+</div>
 
-              {/* 🟦 Animated Grid Overlay (face-scan look) */}
+              {/* Animated Grid Overlay (face-scan look) */}
               <div className="absolute inset-0 pointer-events-none 
                               bg-[linear-gradient(rgba(255,255,255,0.08)_1px,transparent_1px),
                                   linear-gradient(90deg,rgba(255,255,255,0.08)_1px,transparent_1px)]
@@ -770,7 +787,7 @@ const resetRegistrationState = () => {
       </li>
       <li className="flex items-center gap-2">
         <FaceSmileIcon className="h-4 w-4 text-indigo-600" />
-        <span>Keep your face between <strong>30–40 cm</strong> from the camera</span>
+        <span>Keep your face between{" "}<strong>{isMobile ? "20–30 cm" : "30–40 cm"}</strong> from the camera</span>
       </li>
       <li className="flex items-center gap-2">
         <UserIcon className="h-4 w-4 text-pink-600" />
@@ -803,7 +820,7 @@ const resetRegistrationState = () => {
       </li>
       <li className="flex items-center gap-2">
         <FaceSmileIcon className="h-4 w-4 text-indigo-600" />
-        <span>カメラから<strong>30〜40 cm</strong>の距離を保つ</span>
+        <span>カメラから<strong>{isMobile ? "20〜30 cm" : "30〜40 cm"}</strong>の距離を保つ</span>
       </li>
       <li className="flex items-center gap-2">
         <UserIcon className="h-4 w-4 text-pink-600" />
