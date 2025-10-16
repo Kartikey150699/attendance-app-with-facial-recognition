@@ -446,7 +446,7 @@ setAlignmentMessage("📸 Capturing complete — registering...");
     setDepartment("");
   } catch (error) {
     console.error("❌ Error registering user:", error);
-    setPopupMessage("❌ Failed to register user.");
+    setPopupMessage("❌ Failed to register user - No Backend response!!!");
     setShowPopup(true);
   } finally {
     setIsSubmitting(false);
