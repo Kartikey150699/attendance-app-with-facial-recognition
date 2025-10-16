@@ -119,47 +119,15 @@ def apply_synthetic_mask(image_path):
 
 
 # -------------------------
-# Correct alignment during registration 
+# Simplified alignment endpoint (frontend handles alignment)
 # -------------------------
 @router.post("/preview-align")
 async def preview_align(file: UploadFile = File(...)):
-    import cv2, numpy as np, tempfile
-
-    contents = await file.read()
-    with tempfile.NamedTemporaryFile(delete=False, suffix=".jpg") as tmp:
-        tmp.write(contents)
-        tmp_path = tmp.name
-
-    img = cv2.imread(tmp_path)
-    if img is None:
-        return {"alignment": "bad", "message": "No face detected"}
-
-    gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
-    detector = cv2.CascadeClassifier(cv2.data.haarcascades + "haarcascade_frontalface_default.xml")
-    faces = detector.detectMultiScale(gray, 1.1, 5)
-
-    if len(faces) == 0:
-        return {"alignment": "bad", "message": "No face detected"}
-
-    (x, y, w, h) = faces[0]
-    h_img, w_img, _ = img.shape
-    face_center_x = x + w / 2
-    face_center_y = y + h / 2
-    frame_center_x = w_img / 2
-    frame_center_y = h_img / 2
-
-    offset_x = abs(face_center_x - frame_center_x) / w_img
-    offset_y = abs(face_center_y - frame_center_y) / h_img
-    face_area_ratio = (w * h) / (w_img * h_img)
-
-    if offset_x > 0.25 or offset_y > 0.25:
-        return {"alignment": "bad", "message": "Move to the center"}
-    if face_area_ratio < 0.15:
-        return {"alignment": "bad", "message": "Move closer"}
-    if face_area_ratio > 0.50:
-        return {"alignment": "bad", "message": "Move slightly back"}
-
-    return {"alignment": "perfect", "message": "Perfect alignment"}
+    """
+    This endpoint is kept only for compatibility.
+    The frontend now performs all face alignment and distance checks.
+    """
+    return {"alignment": "perfect", "message": "Alignment handled on frontend"}
 
 
 # -------------------------
@@ -183,7 +151,7 @@ async def register_user(
         raise HTTPException(status_code=400, detail="No images uploaded")
 
     embeddings = []
-    valid_frame_found = False  # Track at least one aligned frame
+    valid_frame_found = False  # Track at least one valid frame
 
     for file in files:
         contents = await file.read()
@@ -219,7 +187,7 @@ async def register_user(
             cv2.imwrite(tmp_path, cv2.cvtColor(img, cv2.COLOR_RGB2BGR))
 
             # ------------------------------------------------------
-            # (2) Face Position + Framing Enforcement
+            # (2) Face Detection Only — no alignment or center checks
             # ------------------------------------------------------
             detector = cv2.CascadeClassifier(
                 cv2.data.haarcascades + "haarcascade_frontalface_default.xml"
@@ -229,29 +197,6 @@ async def register_user(
 
             if len(faces) == 0:
                 raise HTTPException(status_code=400, detail="⚠️ No face detected. Please adjust camera.")
-
-            (x, y, w, h) = faces[0]
-            h_img, w_img, _ = img.shape
-            face_center_x = x + w / 2
-            face_center_y = y + h / 2
-            frame_center_x = w_img / 2
-            frame_center_y = h_img / 2
-
-            offset_x = abs(face_center_x - frame_center_x) / w_img
-            offset_y = abs(face_center_y - frame_center_y) / h_img
-            face_area_ratio = (w * h) / (w_img * h_img)
-
-            # Reject if off-center or too small
-            if offset_x > 0.25 or offset_y > 0.25:
-                raise HTTPException(
-                    status_code=400,
-                    detail="⚠️ Face not centered. Please align properly in the frame."
-                )
-            if face_area_ratio < 0.15:
-                raise HTTPException(
-                    status_code=400,
-                    detail="⚠️ Face too far. Move closer to the camera."
-                )
 
             valid_frame_found = True
 
@@ -300,7 +245,7 @@ async def register_user(
     if not valid_frame_found or not embeddings:
         raise HTTPException(
             status_code=400,
-            detail="❌ Registration failed. Ensure good lighting and centered face."
+            detail="❌ Registration failed. Ensure good lighting and visible face."
         )
 
     # ------------------------------------------------------
@@ -329,8 +274,6 @@ async def register_user(
     mean_sim = float(np.mean(upper_tri))
 
     # Dynamic threshold rule:
-    # Very stable faces → stricter (0.42)
-    # Slightly variable → looser (0.36–0.40)
     if mean_sim > 0.88:
         user_threshold = 0.42
     elif mean_sim > 0.82:
@@ -341,22 +284,19 @@ async def register_user(
         user_threshold = 0.36
 
     # ------------------------------------------------------
-    # (6) Validation — Check duplicates (by name or face)
+    # (6) Validation — Check duplicates (by face only)
     # ------------------------------------------------------
     users = db.query(User).all()
-    threshold = 0.55
+    threshold = 0.55  # similarity threshold for duplicate faces
 
-    for user in users:
-        if user.name.strip().lower() == name.strip().lower():
-            raise HTTPException(status_code=400, detail=f"⚠️ User '{name}' already exists by name.")
-
+    # 🔹 Allow same names, only block similar embeddings
     for user in users:
         stored_emb = np.array(json.loads(user.embedding), dtype=float)
         score = cosine_similarity(final_embedding, stored_emb)
         if score >= threshold:
             raise HTTPException(
                 status_code=400,
-                detail=f"⚠️ User '{user.name}' already registered with a this face!"
+                detail=f"⚠️ A similar face already exists in the system (User: {user.name})."
             )
 
     # ------------------------------------------------------
@@ -388,7 +328,6 @@ async def register_user(
         "frames_processed": len(files),
         "final_embedding_dim": len(final_embedding),
     }
-
 
 # -------------------------
 # Pydantic schema for updating user
