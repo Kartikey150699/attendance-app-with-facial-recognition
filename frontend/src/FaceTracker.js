@@ -234,10 +234,12 @@ if (distanceCm < MIN_DISTANCE) {
   label = "Move further";
   color = "rgba(59,130,246,0.9)";
   confidence = 0;
+
 } else if (distanceCm > MAX_DISTANCE) {
   label = "Move closer";
   color = "rgba(239,68,68,0.9)";
   confidence = 0;
+
 } else if (face && face.name && face.name !== "Unknown") {
   // Face recognized → update stable continuity
   const rawConf = (face.confidence || 0) * (face.confidence <= 1 ? 100 : 1);
@@ -260,6 +262,23 @@ if (distanceCm < MIN_DISTANCE) {
     x: box.x,
     y: box.y,
   });
+
+} else if (face && face.name === "Unknown") {
+  // Explicitly show "Unknown" for unrecognized faces
+  label = "Unknown";
+  color = "rgba(239,68,68,0.9)";
+  confidence = 0;
+  cached.lastSeenName = "Unknown";
+  cached.streak = 0;
+
+  // After 5s, revert to "Scanning..." for retry
+  if (!cached.unknownSince) cached.unknownSince = now;
+  if (now - cached.unknownSince > 5000) {
+    label = "Scanning...";
+    color = "rgba(56,189,248,0.9)";
+    cached.unknownSince = null;
+  }
+
 } else {
   // Unknown or lost face → region-aware anti-leak logic
   const nowFaceCenter = { x: box.x, y: box.y };
@@ -304,10 +323,11 @@ if (distanceCm < MIN_DISTANCE) {
     cached.lastSeenName !== "Unknown" &&
     now - (cached.lastVisible || 0) < HOLD_TIME_MS + GAP_TOLERANCE_MS
   ) {
-    // Retain last name briefly
+    // Retain last known name briefly
     label = `${cached.lastSeenName}`;
     color = "rgba(34,197,94,0.8)";
   } else {
+    // Fallback to scanning
     label = "Scanning...";
     color = "rgba(56,189,248,0.9)";
   }
