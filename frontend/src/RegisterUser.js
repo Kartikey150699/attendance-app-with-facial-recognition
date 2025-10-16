@@ -820,7 +820,7 @@ const resetRegistrationState = () => {
       </li>
       <li className="flex items-center gap-2">
         <FaceSmileIcon className="h-4 w-4 text-indigo-600" />
-        <span>カメラから<strong>{isMobile ? "20〜30 cm" : "30〜40 cm"}</strong>の距離を保つ</span>
+        <span>カメラから<strong>{isMobile ? "20〜25 cm" : "30〜40 cm"}</strong>の距離を保つ</span>
       </li>
       <li className="flex items-center gap-2">
         <UserIcon className="h-4 w-4 text-pink-600" />
