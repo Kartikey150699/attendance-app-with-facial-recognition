@@ -37,3 +37,5 @@ backend/server.log
 .gitignoretouch
 *.log
 backend/server.log
+backend/server.log
+*.log
