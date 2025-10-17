@@ -185,8 +185,6 @@ def get_arcface_model():
 def get_embeddings():
     """
     Returns a compact JSON of user embeddings for frontend instant recognition.
-    Example:
-    { "Kartikey": [0.0023, 0.45, ...], "Amit": [...] }
     """
     try:
         if not cached_embeddings:

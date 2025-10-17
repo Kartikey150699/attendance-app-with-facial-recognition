@@ -49,7 +49,7 @@ def background_attendance_writer():
             record_data, user_id = item
 
             with lock:
-                # 🧠 Check if record already exists (same user + date)
+                # Check if record already exists (same user + date)
                 existing = db.query(Attendance).filter(
                     Attendance.user_id == user_id,
                     Attendance.date == record_data["date"]
