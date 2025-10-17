@@ -39,3 +39,4 @@ backend/server.log
 backend/server.log
 backend/server.log
 *.log
+backend/cpp/models/arcface_r100.onnx

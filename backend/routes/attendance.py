@@ -1,4 +1,5 @@
 from fastapi import APIRouter, UploadFile, Form, Depends, Query
+import ctypes
 from sqlalchemy.orm import Session
 from utils.db import SessionLocal
 from models.User import User
@@ -18,6 +19,11 @@ import os
 import gc
 import threading
 import tensorflow as tf
+import logging
+from queue import Queue
+
+# Global queue for async attendance DB writes
+attendance_queue = Queue()
 import psutil # type: ignore
 os.environ["TF_CPP_MIN_LOG_LEVEL"] = "3"
 import tensorflow as tf
@@ -25,57 +31,74 @@ tf.get_logger().setLevel('ERROR')
 
 router = APIRouter(prefix="/attendance", tags=["Attendance"])
 
-import logging, os, time
-from datetime import datetime
+# -------------------------
+# Native C++ Face Engine (ArcFace + RetinaFace + Cosine + Matching)
+# -------------------------
 
-from queue import Queue
-attendance_queue = Queue()
+# Resolve native lib path reliably from this file's folder
+_here = os.path.dirname(os.path.abspath(__file__))
 
-def background_attendance_writer():
-    """Handles DB commits asynchronously in the background (duplicate-safe)."""
-    from models.Attendance import Attendance
-    from utils.db import SessionLocal
-    import threading
+# macOS build name
+engine_path = os.path.abspath(os.path.join(_here, "..", "cpp", "build", "libface_engine.dylib"))
 
-    db = SessionLocal()
-    lock = threading.Lock()  # 🧱 ensures thread safety
-
-    while True:
-        item = attendance_queue.get()
-        if item is None:
+# (Optional cross-platform fallback)
+if not os.path.exists(engine_path):
+    for alt in ["face_engine.so", "face_engine.dll"]:
+        _p = os.path.abspath(os.path.join(_here, "..", "cpp", "build", alt))
+        if os.path.exists(_p):
+            engine_path = _p
             break
 
-        try:
-            record_data, user_id = item
+# Try to load the unified native engine
+try:
+    face_engine = ctypes.CDLL(engine_path)
+    print(f"✅ Loaded C++ Face Engine: {engine_path}")
 
-            with lock:
-                # Check if record already exists (same user + date)
-                existing = db.query(Attendance).filter(
-                    Attendance.user_id == user_id,
-                    Attendance.date == record_data["date"]
-                ).first()
+    # Optional: verify model presence
+    try:
+        face_engine.test_arcface_model()
+    except Exception:
+        print("⚠️ ArcFace model check skipped (optional).")
 
-                if existing:
-                    # Update existing record fields (in-place)
-                    for k, v in record_data.items():
-                        setattr(existing, k, v)
-                    db.commit()
-                    print(f"🔁 Updated record for user {user_id} ({record_data['date']})")
-                else:
-                    # Create a new record if not present
-                    record = Attendance(**record_data)
-                    db.add(record)
-                    db.commit()
-                    print(f"🆕 Created new record for user {user_id} ({record_data['date']})")
+    # Reuse the same lib for cosine + matcher
+    cosine_lib = face_engine
+    vector_lib = face_engine
 
-        except Exception as e:
-            print(f"⚠️ Background DB write failed: {e}")
-            db.rollback()
-        finally:
-            attendance_queue.task_done()
+    # --- Define all exported function signatures ---
+    # detect_and_embed → const char* (JSON)
+    face_engine.detect_and_embed.restype = ctypes.c_char_p
+    face_engine.detect_and_embed.argtypes = [ctypes.c_char_p]
 
-# Start the background writer thread (runs forever in daemon mode)
-threading.Thread(target=background_attendance_writer, daemon=True).start()
+    # cosine_similarity → double
+    cosine_lib.cosine_similarity.restype = ctypes.c_double
+    cosine_lib.cosine_similarity.argtypes = [
+        ctypes.POINTER(ctypes.c_double),
+        ctypes.POINTER(ctypes.c_double),
+        ctypes.c_int
+    ]
+
+    # best_match → int
+    vector_lib.best_match.restype = ctypes.c_int
+    vector_lib.best_match.argtypes = [
+        ctypes.POINTER(ctypes.c_double),  # input
+        ctypes.POINTER(ctypes.c_double),  # all embeddings
+        ctypes.c_int,                     # n_users
+        ctypes.c_int,                     # dim
+        ctypes.POINTER(ctypes.c_double)   # best_score
+    ]
+
+    # Quick test to ensure functions are callable
+    v1 = np.array([1.0, 2.0, 3.0], dtype=np.float64)
+    v2 = np.array([1.0, 2.0, 3.0], dtype=np.float64)
+    ptr1 = v1.ctypes.data_as(ctypes.POINTER(ctypes.c_double))
+    ptr2 = v2.ctypes.data_as(ctypes.POINTER(ctypes.c_double))
+    test_result = cosine_lib.cosine_similarity(ptr1, ptr2, len(v1))
+    print(f"✅ C++ cosine self-test OK: {test_result:.6f}")
+    print("✅ Unified C++ Face Engine functions ready.")
+
+except Exception as e:
+    print(f"❌ Failed to load C++ Face Engine: {e}")
+    face_engine = None
 
 # -------------------------
 # Smart Log Management (auto-truncate when file > 5 MB)
@@ -96,6 +119,54 @@ logger.addHandler(file_handler)
 console_handler = logging.StreamHandler()
 console_handler.setFormatter(formatter)
 logger.addHandler(console_handler)
+
+# =====================================================
+# Background Attendance Writer Thread (Async DB Commits)
+# =====================================================
+def background_attendance_writer():
+    """Continuously saves attendance records from the queue to the DB."""
+    from models.Attendance import Attendance
+    from utils.db import SessionLocal
+    import threading
+
+    db = SessionLocal()
+    lock = threading.Lock()
+
+    while True:
+        item = attendance_queue.get()
+        if item is None:
+            break
+
+        try:
+            record_data, user_id = item
+
+            with lock:
+                existing = db.query(Attendance).filter(
+                    Attendance.user_id == user_id,
+                    Attendance.date == record_data["date"]
+                ).first()
+
+                if existing:
+                    # Update existing record fields (in-place)
+                    for k, v in record_data.items():
+                        setattr(existing, k, v)
+                    db.commit()
+                    print(f"🔁 Updated record for user {user_id} ({record_data['date']})")
+                else:
+                    # Create new record
+                    record = Attendance(**record_data)
+                    db.add(record)
+                    db.commit()
+                    print(f"🆕 Created new record for user {user_id} ({record_data['date']})")
+
+        except Exception as e:
+            print(f"⚠️ Background DB write failed: {e}")
+            db.rollback()
+        finally:
+            attendance_queue.task_done()
+
+# Start the thread (daemon=True so it runs in background)
+threading.Thread(target=background_attendance_writer, daemon=True).start()
 
 # -------------------------
 # Background thread to clean log if it grows too large
@@ -196,9 +267,19 @@ AUTO_TRAIN_ENABLED = False  # default OFF
 # Cosine similarity (vectorized version will be used inside)
 # -------------------------
 def cosine_similarity(vec1, vec2):
-    v1, v2 = np.array(vec1, dtype=float), np.array(vec2, dtype=float)
-    v1, v2 = v1 / np.linalg.norm(v1), v2 / np.linalg.norm(v2)
-    return float(np.dot(v1, v2))
+    v1 = np.array(vec1, dtype=np.float64)
+    v2 = np.array(vec2, dtype=np.float64)
+
+    # normalize both (safe)
+    n1 = np.linalg.norm(v1)
+    n2 = np.linalg.norm(v2)
+    if n1 > 0: v1 = v1 / n1
+    if n2 > 0: v2 = v2 / n2
+
+    ptr1 = v1.ctypes.data_as(ctypes.POINTER(ctypes.c_double))
+    ptr2 = v2.ctypes.data_as(ctypes.POINTER(ctypes.c_double))
+
+    return cosine_lib.cosine_similarity(ptr1, ptr2, len(v1))
 
 
 # -------------------------
@@ -247,139 +328,53 @@ def calculate_total_work(record: Attendance):
 LAST_DETECTION = {"time": 0, "faces": []}
 DETECTION_INTERVAL = 1.0  # seconds to reuse last detection
 
-def detect_faces(tmp_path):
-    global LAST_DETECTION
-
-    now = time.time()
-    # ⏳ If last detection was recent, reuse results
-    if (now - LAST_DETECTION["time"]) < DETECTION_INTERVAL:
-        logger.info(f"⚡ Using cached detection results (Δt={now - LAST_DETECTION['time']:.2f}s)")
-        return LAST_DETECTION["faces"]
-
-    faces = []
+# =====================================================
+# C++ Face Detection + Embedding Wrapper
+# =====================================================
+def cpp_detect_and_embed(image_path: str):
+    """Use the native C++ engine (ArcFace only) to get embeddings for a cropped face."""
     try:
-        # Step 1: Preprocess image (lighting normalization)
-        img = cv2.imread(tmp_path)
-        if img is not None:
-            img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
-
-            # Slight brightness & contrast boost
-            img = cv2.convertScaleAbs(img, alpha=1.2, beta=10)
-
-            # Optional: CLAHE (Adaptive histogram equalization)
-            lab = cv2.cvtColor(img, cv2.COLOR_RGB2LAB)
-            l, a, b = cv2.split(lab)
-            clahe = cv2.createCLAHE(clipLimit=2.0, tileGridSize=(8, 8))
-            l = clahe.apply(l)
-            lab = cv2.merge((l, a, b))
-            img = cv2.cvtColor(lab, cv2.COLOR_LAB2RGB)
-
-            # Save preprocessed image temporarily
-            normalized_path = tmp_path.replace(".jpg", "_norm.jpg")
-            cv2.imwrite(normalized_path, cv2.cvtColor(img, cv2.COLOR_RGB2BGR))
-            use_path = normalized_path
-        else:
-            use_path = tmp_path
-
-        # Step 2: Extract embeddings using DeepFace (ArcFace + MTCNN)
-        reps = DeepFace.represent(
-            img_path=use_path,
-            model_name="ArcFace",
-            detector_backend="mtcnn",
-            enforce_detection=False
-        )
-
-        # Always wrap in list for consistency
-        if isinstance(reps, dict):
-            reps = [reps]
-
-        # Step 3: Process each detected face safely (deep-copied embeddings)
-        for rep in reps:
-            try:
-                box = rep.get("facial_area", {})
-                w, h = box.get("w", 0), box.get("h", 0)
-                confidence = rep.get("confidence", 1.0)
-                emb = rep.get("embedding")
-
-                # Basic filters
-                if emb is None or w < 50 or h < 50 or confidence < 0.90:
-                    continue
-                ratio = w / (h + 1e-6)
-                if ratio < 0.6 or ratio > 1.6:
-                    continue
-
-                # Deep-copy embedding so each face has its own array
-                emb_array = np.array(emb, dtype=np.float32).copy()
-                emb_list = emb_array.tolist()
-
-                faces.append({
-                    "embedding": emb_list,
-                    "facial_area": {
-                        "x": int(box.get("x", 0)),
-                        "y": int(box.get("y", 0)),
-                        "w": int(w),
-                        "h": int(h)
-                    }
-                })
-
-            except Exception as e:
-                logger.warning(f"⚠️ Error processing detected face: {e}")
-                continue
-
+        # Call the C++ function
+        result = face_engine.detect_and_embed(image_path.encode("utf-8"))
+        if not result:
+            return []
+        data = json.loads(result.decode("utf-8"))
+        return data  # [{"embedding": [...], "facial_area": {...}}, ...]
     except Exception as e:
-        logger.warning(f"⚠️ MTCNN failed: {e}")
+        logger.warning(f"⚠️ C++ detect_and_embed failed: {e}")
+        return []
 
-    # Step 4: Fallback to OpenCV Haar if DeepFace fails
+def detect_faces(tmp_path):
+    """
+    Detect faces and generate embeddings using the native C++ engine.
+    Falls back to DeepFace if C++ engine fails or detects nothing.
+    """
+    # Blaze already gives cropped face — directly use ArcFace embedding
+    faces = cpp_detect_and_embed(tmp_path) if face_engine else []
+
+    # --- Fallback to DeepFace if C++ engine found nothing ---
     if not faces:
+        logger.warning("⚠️ ArcFace embedding failed, fallback to DeepFace")
         try:
-            img = cv2.imread(tmp_path)
-            modelFile = cv2.data.haarcascades + "haarcascade_frontalface_default.xml"
-            face_cascade = cv2.CascadeClassifier(modelFile)
+            reps = DeepFace.represent(
+                img_path=tmp_path,
+                model_name="ArcFace",
+                detector_backend="mtcnn",
+                enforce_detection=False
+            )
 
-            gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
-            detected = face_cascade.detectMultiScale(gray, 1.1, 4)
+            if isinstance(reps, dict):
+                reps = [reps]
 
-            for (x, y, fw, fh) in detected:
-                face_crop = img[y:y+fh, x:x+fw]
-                if face_crop.size == 0:
-                    continue
+            faces = []
+            for rep in reps:
+                emb = rep.get("embedding", [])
+                box = rep.get("facial_area", {})
+                faces.append({"embedding": emb, "facial_area": box})
 
-                rep = DeepFace.represent(
-                    img_path=face_crop,
-                    model_name="ArcFace",
-                    detector_backend="skip",
-                    enforce_detection=False
-                )
-
-                if isinstance(rep, dict):
-                    rep = [rep]
-
-                for r in rep:
-                    emb = r.get("embedding")
-                    if emb is None:
-                        continue
-                    emb_array = np.array(emb, dtype=np.float32).copy()
-                    emb_list = emb_array.tolist()
-
-                    faces.append({
-                        "embedding": emb_list,
-                        "facial_area": {
-                            "x": int(x),
-                            "y": int(y),
-                            "w": int(fw),
-                            "h": int(fh)
-                        }
-                    })
         except Exception as e:
-            logger.warning(f"❌ OpenCV fallback failed: {e}")
-
-    # Save to cache
-    LAST_DETECTION["time"] = now
-    LAST_DETECTION["faces"] = faces
-
-    # Release any temporary TensorFlow sessions
-    gc.collect()
-    tf.keras.backend.clear_session()
+            logger.error(f"❌ DeepFace fallback failed: {e}")
+            faces = []
 
     return faces
 
@@ -478,57 +473,63 @@ except Exception as e:
 # -------------------------
 def find_best_match(embedding, default_threshold=0.38, fallback_threshold=0.35):
     """
-    Find best match using per-user adaptive threshold (μ - 2σ rule).
-    Falls back to global threshold if user threshold missing.
+    Super-fast C++ vectorized matching — finds the most similar embedding.
     """
-    global embedding_cache
-    if not embedding_cache:
+    global all_embeddings, user_names, user_ids
+    if all_embeddings is None or len(all_embeddings) == 0:
         return None, -1, "unknown"
 
-    emb = np.array(embedding, dtype=float)
-    emb = emb / np.linalg.norm(emb)
+    # --- Normalize the input embedding safely ---
+    emb = np.array(embedding, dtype=np.float64)
+    norm = np.linalg.norm(emb)
+    if norm == 0:
+        return None, -1, "unknown"
+    emb /= norm
 
-    best_match = None
-    best_score = -1
-    best_threshold = default_threshold
-    status = "unknown"
+    # --- Prepare pointers for C++ ---
+    emb_ptr = emb.ctypes.data_as(ctypes.POINTER(ctypes.c_double))
+    all_ptr = all_embeddings.ctypes.data_as(ctypes.POINTER(ctypes.c_double))
+    n_users = all_embeddings.shape[0]
+    dim = all_embeddings.shape[1]
 
-    # Iterate through users in cache
-    for data in embedding_cache:
-        user_threshold = data.get("threshold", default_threshold)
-        np_embs = data["np_embeddings"]
+    best_score = ctypes.c_double()
+    best_index = vector_lib.best_match(emb_ptr, all_ptr, n_users, dim, ctypes.byref(best_score))
+    best_score = best_score.value
 
-        # Cosine similarities for all embeddings of this user
-        sims = np.dot(np_embs, emb)
-        mean_sim = float(np.mean(sims))
+    # --- Interpret result ---
+    if best_index < 0 or best_index >= len(user_names):
+        return None, -1, "unknown"
 
-        if mean_sim > best_score:
-            best_score = mean_sim
-            best_match = {"id": data["id"], "name": data["name"]}
-            best_threshold = user_threshold
+    name = user_names[best_index]
+    user_id = user_ids[best_index]
 
-    # Decision logic
-    if best_score >= best_threshold:
+    # --- Decision logic ---
+    if best_score >= default_threshold:
         status = "match"
     elif best_score >= fallback_threshold:
         status = "maybe"
     else:
         status = "unknown"
 
-    return best_match, best_score, status
+    return {"id": user_id, "name": name}, best_score, status
 
 # -------------------------
 # Temporary face session cache for live preview
 # -------------------------
 active_faces = {}  # {face_id: {"embedding": list, "name": str, "pending_name": str, "confirmed": bool, "last_seen": float}}
 FACE_EXPIRY_SECONDS = 5.0
-CONFIRM_THRESHOLD = 0.88  # similarity to confirm the same face
+CONFIRM_THRESHOLD = 0.75  # similarity to confirm the same face
 
 # -------------------------
-# Preview API (with confidence % and smart recheck logic)
+# Preview API (multi-face, stable IDs, smart recheck logic)
 # -------------------------
 @router.post("/preview")
-async def preview_faces(file: UploadFile = None):
+async def preview_faces(
+    file: UploadFile = None,
+    action: str = Form("preview"),
+    employee_id: str = Form(""),
+    face_index: int = Form(0)  # ✅ new: support multi-face from frontend
+):
     if not file:
         return {"error": "No image uploaded"}
 
@@ -540,51 +541,87 @@ async def preview_faces(file: UploadFile = None):
         tmp.write(contents)
         tmp_path = tmp.name
 
-    # --- Run detection ---
-    faces = detect_faces(tmp_path)
+    # =========================================================
+    # 🧠 STEP 1: Compute embedding (ArcFace only)
+    # =========================================================
+    try:
+        import cv2
+        from deepface import DeepFace
+
+        img = cv2.imread(tmp_path)
+        rep = DeepFace.represent(
+            img_path=img,
+            model_name="ArcFace",
+            enforce_detection=False  # trust frontend crop
+        )[0]["embedding"]
+
+        faces = [{"embedding": rep, "facial_area": {}}]
+    except Exception as e:
+        logger.error(f"❌ ArcFace direct embedding failed: {e}")
+        faces = []
+
+    # =========================================================
+    # 🧱 STEP 2: Handle no face
+    # =========================================================
     if not faces:
         duration = time.time() - start_time
         logger.info(f"⚡ Recognition completed in {duration:.3f}s (no faces found)")
         return {"results": []}
 
-    # --- Cleanup expired faces ---
+    # =========================================================
+    # ♻️ STEP 3: Prepare cache
+    # =========================================================
     now = time.time()
+    global active_faces
+    if "active_faces" not in globals():
+        active_faces = {}
+
+    FACE_EXPIRY_SECONDS = globals().get("FACE_EXPIRY_SECONDS", 60)
+    CONFIRM_THRESHOLD = globals().get("CONFIRM_THRESHOLD", 0.40)
+
+    # Cleanup expired
     expired = [
         fid for fid, data in active_faces.items()
-        if now - data["last_seen"] > FACE_EXPIRY_SECONDS
+        if now - data.get("last_seen", 0) > FACE_EXPIRY_SECONDS
     ]
     for fid in expired:
         del active_faces[fid]
-        logger.info(f"🧹 Expired face removed: {fid} — will be rechecked if seen again")
+        logger.info(f"🧹 Expired face removed: {fid}")
 
     results = []
-    threshold = 40
+    threshold = 0.38
     fallback_threshold = 0.35
 
-    # --- Loop through all detected faces ---
+    # =========================================================
+    # 🔍 STEP 4: Process detected (single uploaded) face
+    # =========================================================
     for idx, face in enumerate(faces):
-        face_id = f"face_{idx + 1}"
+        # ✅ use frontend-provided index for stable multi-face IDs
+        face_id = f"face_{face_index + 1}"
         embedding = face.get("embedding")
         box = face.get("facial_area", {})
 
-        # --- Check if this face matches any cached one ---
         matched_id = None
         for fid, data in active_faces.items():
-            sim = cosine_similarity(embedding, data["embedding"])
-            if sim > CONFIRM_THRESHOLD:
-                matched_id = fid
-                break
+            try:
+                sim = cosine_similarity(embedding, data["embedding"])
+                if sim > CONFIRM_THRESHOLD:
+                    matched_id = fid
+                    break
+            except Exception:
+                continue
 
         confidence = 0.0
         name = "Unknown"
         result_status = "verifying"
 
-        # --- Existing face already in cache ---
+        # =====================================================
+        # 🔁 STEP 4A: Previously seen faces
+        # =====================================================
         if matched_id:
             data = active_faces[matched_id]
             data["last_seen"] = now
 
-            # --- If confirmed or permanent unknown, skip recheck ---
             if data.get("confirmed"):
                 name = data["name"]
                 confidence = 100.0
@@ -598,97 +635,117 @@ async def preview_faces(file: UploadFile = None):
                 logger.warning(f"🛑 Skipping permanently unknown face {matched_id}")
 
             else:
-                # --- Silent internal verification (until 3x) ---
+                try:
+                    best_match, best_score, status = find_best_match(
+                        embedding, threshold, fallback_threshold
+                    )
+                    confidence = round(best_score * 100, 2)
+
+                    if status == "match" and best_match["name"] == data["pending_name"]:
+                        data["confirm_count"] = data.get("confirm_count", 1) + 1
+                        if data["confirm_count"] >= 3:
+                            data["confirmed"] = True
+                            data["name"] = best_match["name"]
+                            logger.info(
+                                f"✅ Face {matched_id} verified internally as {data['name']} "
+                                f"(3x match, {confidence:.2f}%)"
+                            )
+                        else:
+                            logger.info(
+                                f"🔁 Internal recheck {data['confirm_count']}/3 for "
+                                f"{data['pending_name']} ({confidence:.2f}%)"
+                            )
+
+                        name = data["pending_name"]
+                        result_status = "verifying"
+
+                    else:
+                        data["unknown_count"] = data.get("unknown_count", 0) + 1
+                        if data["unknown_count"] >= 3:
+                            data["permanent_unknown"] = True
+                            data["name"] = "Unknown"
+                            logger.warning(
+                                f"🚫 Face {matched_id} locked as Unknown after 3 failed checks"
+                            )
+                            name = "Unknown"
+                            confidence = 0.0
+                            result_status = "unknown"
+                        else:
+                            logger.warning(
+                                f"🔁 Unknown recheck {data['unknown_count']}/3 "
+                                f"({confidence:.2f}%)"
+                            )
+                            name = data["pending_name"]
+
+                except Exception as e:
+                    logger.error(f"⚠️ Recheck failed: {e}")
+                    name = data.get("pending_name", "Unknown")
+                    confidence = 0.0
+                    result_status = "unknown"
+
+        # =====================================================
+        # 🆕 STEP 4B: New faces (first-time seen)
+        # =====================================================
+        else:
+            try:
                 best_match, best_score, status = find_best_match(
                     embedding, threshold, fallback_threshold
                 )
+                pending_name = (
+                    best_match["name"] if status in ["match", "maybe"] else "Unknown"
+                )
                 confidence = round(best_score * 100, 2)
 
-                if status == "match" and best_match["name"] == data["pending_name"]:
-                    data["confirm_count"] = data.get("confirm_count", 1) + 1
+                # ✅ Use face_index to keep identity separate per person
+                active_faces[face_id] = {
+                    "embedding": embedding,
+                    "name": pending_name if status == "match" else "Unknown",
+                    "pending_name": pending_name,
+                    "confirmed": False,
+                    "permanent_unknown": False,
+                    "confirm_count": 1 if status == "match" else 0,
+                    "unknown_count": 1 if status != "match" else 0,
+                    "last_seen": now,
+                }
 
-                    if data["confirm_count"] >= 3:
-                        data["confirmed"] = True
-                        data["name"] = best_match["name"]
-                        logger.info(
-                            f"✅ Face {matched_id} verified internally as {data['name']} "
-                            f"(3x match, {confidence:.2f}%)"
-                        )
-                    else:
-                        logger.info(
-                            f"🔁 Internal recheck {data['confirm_count']}/3 for "
-                            f"{data['pending_name']} ({confidence:.2f}%)"
-                        )
+                logger.info(
+                    f"⚡ New face {face_id} recognized instantly as {pending_name} "
+                    f"({confidence:.2f}%)"
+                )
+                name = pending_name
+                result_status = "new_face"
 
-                    name = data["pending_name"]
-                    result_status = "verifying"
+            except Exception as e:
+                logger.error(f"⚠️ New face comparison failed: {e}")
+                name = "Unknown"
+                confidence = 0.0
+                result_status = "error"
 
-                else:
-                    # --- Unknown or mismatched face ---
-                    data["unknown_count"] = data.get("unknown_count", 0) + 1
-                    if data["unknown_count"] >= 3:
-                        data["permanent_unknown"] = True
-                        data["name"] = "Unknown"
-                        logger.warning(
-                            f"🚫 Face {matched_id} locked as Unknown after 3 failed checks"
-                        )
-                        name = "Unknown"
-                        confidence = 0.0
-                        result_status = "unknown"
-                    else:
-                        logger.warning(
-                            f"🔁 Unknown recheck {data['unknown_count']}/3 "
-                            f"({confidence:.2f}%)"
-                        )
-                        name = data["pending_name"]
-
-        # --- New face (not seen before) ---
-        else:
-            best_match, best_score, status = find_best_match(
-                embedding, threshold, fallback_threshold
-            )
-            pending_name = (
-                best_match["name"] if status in ["match", "maybe"] else "Unknown"
-            )
-            confidence = round(best_score * 100, 2)
-
-            active_faces[face_id] = {
-                "embedding": embedding,
-                "name": pending_name if status == "match" else "Unknown",
-                "pending_name": pending_name,
-                "confirmed": False,
-                "permanent_unknown": False,
-                "confirm_count": 1 if status == "match" else 0,
-                "unknown_count": 1 if status != "match" else 0,
-                "last_seen": now,
-            }
-
-            logger.info(
-                f"⚡ New face {face_id} recognized instantly as {pending_name} "
-                f"({confidence:.2f}%)"
-            )
-            name = pending_name
-            result_status = "new_face"
-
-        # --- Gender/Age (still disabled for speed) ---
-        gender = "unknown"
-        age = "N/A"
-
-        # --- Append final result for frontend ---
+        # =====================================================
+        # 📦 STEP 5: Package results for frontend
+        # =====================================================
         results.append(
             {
                 "face_id": face_id,
                 "name": name,
+                "employee_id": employee_id,
                 "confidence": confidence,
-                "box": [box.get("x"), box.get("y"), box.get("w"), box.get("h")],
+                "box": [
+                    box.get("x"),
+                    box.get("y"),
+                    box.get("w"),
+                    box.get("h"),
+                ],
                 "status": result_status,
-                "gender": gender,
-                "age": age,
+                "gender": "unknown",
+                "age": "N/A",
                 "embedding": embedding,
             }
         )
 
-    # --- Rest condition (backend can sleep until new face appears) ---
+    # =========================================================
+    # 💤 STEP 6: Final logging
+    # =========================================================
     all_done = all(
         d.get("confirmed") or d.get("permanent_unknown")
         for d in active_faces.values()
@@ -696,7 +753,16 @@ async def preview_faces(file: UploadFile = None):
 
     duration = time.time() - start_time
     if any(r["status"] in ("new_face", "verifying", "known") for r in results):
-        logger.info(f"⚡ Recognition event in {duration:.3f}s | Active faces: {len(active_faces)}")
+        logger.info(
+            f"⚡ Recognition event in {duration:.3f}s | Active faces: {len(active_faces)}"
+        )
+
+    # Optional — clearer debug summary
+    if len(active_faces) > 1:
+        logger.info(
+            "Current active faces → "
+            + ", ".join(f"{fid}:{d['name']}" for fid, d in active_faces.items())
+        )
 
     return {"results": results, "stop_preview": all_done}
 
@@ -806,88 +872,57 @@ def maybe_update_user_embedding(db: Session, user_id: int, new_embedding, simila
 
 
 # -------------------------
-# Mark Attendance API (aligned with Preview recognition + Work Application)
+# Mark Attendance API (multi-face safe + synced with Preview)
 # -------------------------
+from fastapi import Request, UploadFile, Form, Depends
+from sqlalchemy.orm import Session
+from datetime import datetime, date
+import tempfile
+import time
+
 @router.post("/mark")
 async def mark_attendance(
-    action: str = Form(...),
+    request: Request,
+    action: str = Form(None),
     file: UploadFile = None,
-    employee_id: str = Form(None),
+    employee_id: str = Form(""),
+    face_index: int = Form(0),  # ✅ keep consistent with /preview
     db: Session = Depends(get_db),
 ):
-    if not file:
-        return {"error": "No image uploaded"}
+    """
+    Handles:
+    1️⃣ Work Application JSON login (face_name + employee_id)
+    2️⃣ Normal Attendance (Check-in / Check-out / Breaks)
+    3️⃣ Multi-face frame recognition (each face handled separately)
+    """
+    try:
+        # Try parsing JSON (used in Work Application login)
+        data = await request.json()
+        action = data.get("action", action)
+        employee_id = data.get("employee_id", employee_id)
+        face_name = data.get("face_name")
+        confidence = data.get("confidence", 0)
+    except Exception:
+        data = {}
+        face_name = None
+        confidence = 0
 
-    contents = await file.read()
-    with tempfile.NamedTemporaryFile(delete=False, suffix=".jpg") as tmp:
-        tmp.write(contents)
-        tmp_path = tmp.name
-
-    faces = detect_faces(tmp_path)
-    if not faces:
-        return {"results": []}
-
-    results = []
     today = date.today()
-    action = action.lower().strip()
-    threshold = 0.35
-    fallback_threshold = 0.30
+    strict_threshold = 0.40
+    fallback_threshold = 0.35
     aging_update_threshold = 0.90
+    now_jst = datetime.now(JST)
 
-    for face in faces:
-        embedding = face.get("embedding")
-        box = face.get("facial_area", {})
+    # ------------------------------------------------------------
+    # CASE 1: Work Application (JSON only, no image)
+    # ------------------------------------------------------------
+    if action == "work-application" and not file:
+        user = db.query(User).filter(User.employee_id == employee_id).first()
+        if not user:
+            return {"results": [{"status": "invalid_employee_id"}]}
 
-        gender = "unknown"
-        age = "N/A"
-
-        # --- Recognition (shared logic) ---
-        best_match, best_score, status = find_best_match(
-            embedding, threshold, fallback_threshold
-        )
-        confidence = round(best_score * 100, 2)
-
-        # ---------------------------------------------------------------------
-        #  WORK APPLICATION LOGIN — face + employee_id verification
-        # ---------------------------------------------------------------------
-        if action == "work-application":
-            if not employee_id:
-                return {"results": [{"status": "invalid_employee_id"}]}
-
-            user = db.query(User).filter(User.employee_id == employee_id).first()
-            if not user:
-                return {"results": [{"status": "invalid_employee_id"}]}
-
-            # if face is unknown or not matched
-            if status != "match":
-                return {
-                    "results": [
-                        {
-                            "status": "face_mismatch",
-                            "name": "Unknown",
-                            "employee_id": employee_id,
-                            "confidence": confidence,
-                            "box": [box.get("x"), box.get("y"), box.get("w"), box.get("h")],
-                        }
-                    ]
-                }
-
-            # valid match but ensure the face belongs to this employee
-            if best_match["id"] != user.id:
-                return {
-                    "results": [
-                        {
-                            "status": "face_mismatch",
-                            "name": best_match["name"],
-                            "employee_id": employee_id,
-                            "confidence": confidence,
-                            "box": [box.get("x"), box.get("y"), box.get("w"), box.get("h")],
-                        }
-                    ]
-                }
-
-            # Face and Employee ID match
-            logger.info(f"🟢 Work Application login verified for {user.name} ({employee_id})")
+        if face_name and user.name.lower() in face_name.lower() and confidence >= 50:
+            logger.info(f"🟢 Verified WorkApp login for {user.name} ({employee_id}) [{confidence}%]")
             return {
                 "results": [
                     {
@@ -895,70 +930,201 @@ async def mark_attendance(
                         "name": user.name,
                         "employee_id": employee_id,
                         "confidence": confidence,
-                        "box": [box.get("x"), box.get("y"), box.get("w"), box.get("h")],
+                    }
+                ]
+            }
+        else:
+            logger.warning(
+                f"⚠️ Face/ID mismatch — detected {face_name} vs expected {user.name} ({employee_id})"
+            )
+            return {
+                "results": [
+                    {
+                        "status": "face_mismatch",
+                        "name": face_name or "Unknown",
+                        "employee_id": employee_id,
+                        "confidence": confidence,
                     }
                 ]
             }
 
-        # ---------------------------------------------------------------------
-        #  NORMAL ATTENDANCE ACTIONS (checkin, checkout, break, etc.)
-        # ---------------------------------------------------------------------
+    # ------------------------------------------------------------
+    # CASE 2: Normal Attendance (FormData + Uploaded Frame)
+    # ------------------------------------------------------------
+    if not file:
+        return {"error": "No image uploaded"}
+
+    # Save uploaded frame
+    contents = await file.read()
+    with tempfile.NamedTemporaryFile(delete=False, suffix=".jpg") as tmp:
+        tmp.write(contents)
+        tmp_path = tmp.name
+
+    # Run face detection/embedding
+    try:
+        faces = detect_faces(tmp_path)
+    except Exception as e:
+        logger.error(f"❌ detect_faces failed: {e}")
+        return {"results": []}
+
+    if not faces:
+        return {"results": []}
+
+    # ------------------------------------------------------------
+    # Multi-face consistency
+    # ------------------------------------------------------------
+    global active_faces
+    if "active_faces" not in globals():
+        active_faces = {}
+
+    results = []
+    action = (action or "").lower().strip()
+
+    for idx, face in enumerate(faces):
+        # ✅ Use provided index or fallback to sequential
+        face_id = f"face_{face_index + idx + 1}"
+        embedding = face.get("embedding")
+        box = face.get("facial_area", {})
+        gender = "unknown"
+        age = "N/A"
+
+        # --------------------------------------------------------
+        # Compute match using strict + fallback thresholds
+        # --------------------------------------------------------
+        try:
+            best_match, best_score, status = find_best_match(
+                embedding, strict_threshold, fallback_threshold
+            )
+            confidence = round(best_score * 100, 2)
+        except Exception as e:
+            logger.error(f"⚠️ find_best_match failed: {e}")
+            results.append({
+                "face_id": face_id,
+                "name": "Unknown",
+                "employee_id": None,
+                "status": "error_comparing_embeddings",
+                "confidence": 0.0,
+            })
+            continue
+
+        # Prevent low-score false positives
+        if best_score < fallback_threshold:
+            logger.info(f"🚫 Low-score face ({confidence:.2f}%) — ignored")
+            results.append({
+                "face_id": face_id,
+                "name": "Unknown",
+                "employee_id": None,
+                "status": "unknown",
+                "confidence": confidence,
+                "box": [box.get("x"), box.get("y"), box.get("w"), box.get("h")],
+            })
+            continue
+
+        # Maintain cache stability
+        prev_face = active_faces.get(face_id, {})
+        prev_name = prev_face.get("name")
+        prev_conf = prev_face.get("confidence", 0)
+        if prev_name and prev_name != best_match["name"]:
+            if confidence - prev_conf < 10:
+                best_match["name"] = prev_name
+                confidence = prev_conf
+
+        # Update cache
+        active_faces[face_id] = {
+            "name": best_match["name"],
+            "confidence": confidence,
+            "last_seen": now_jst,
+        }
+
+        # --------------------------------------------------------
+        # Work Application fallback (with uploaded frame)
+        # --------------------------------------------------------
+        if action == "work-application":
+            user = db.query(User).filter(User.employee_id == employee_id).first()
+            if not user:
+                return {"results": [{"status": "invalid_employee_id"}]}
+
+            name_ok = (
+                best_match["name"].lower() in user.name.lower()
+                or user.name.lower() in best_match["name"].lower()
+            )
+            if name_ok and best_score >= 0.35:
+                logger.info(f"🟢 Work Application login verified for {user.name} ({employee_id})")
+                results.append({
+                    "face_id": face_id,
+                    "name": user.name,
+                    "employee_id": employee_id,
+                    "status": "logged_in",
+                    "confidence": confidence,
+                    "box": [box.get("x"), box.get("y"), box.get("w"), box.get("h")],
+                })
+            else:
+                logger.warning(f"⚠️ Face mismatch for {user.name} ({employee_id})")
+                results.append({
+                    "face_id": face_id,
+                    "name": best_match["name"],
+                    "employee_id": employee_id,
+                    "status": "face_mismatch",
+                    "confidence": confidence,
+                    "box": [box.get("x"), box.get("y"), box.get("w"), box.get("h")],
+                })
+            continue
+
+        # --------------------------------------------------------
+        # Attendance: Check-in / Check-out / Break
+        # --------------------------------------------------------
         if status == "match":
             user = db.query(User).filter(User.id == best_match["id"]).first()
             if not user:
                 results.append({
+                    "face_id": face_id,
                     "name": "Unknown",
                     "employee_id": None,
-                    "box": [box.get("x"), box.get("y"), box.get("w"), box.get("h")],
                     "status": "unknown",
                     "confidence": confidence,
-                    "gender": gender,
-                    "age": age,
-                    "embedding": embedding,
                 })
                 continue
 
-            record = db.query(Attendance).filter(
-                Attendance.user_id == best_match["id"],
-                Attendance.date == today
-            ).first()
-
+            record = (
+                db.query(Attendance)
+                .filter(Attendance.user_id == user.id, Attendance.date == today)
+                .first()
+            )
             if not record:
                 record = Attendance(
-                    user_id=best_match["id"],
-                    user_name_snapshot=best_match["name"],
-                    date=today
+                    user_id=user.id,
+                    user_name_snapshot=user.name,
+                    date=today,
                 )
                 db.add(record)
 
-            now_jst = datetime.now(JST)
-
+            # ----- Attendance flow -----
             if action == "checkin":
-                if record.check_out:
-                    status = "already_checked_out"
-                elif record.check_in:
+                if record.check_in:
                     status = "already_checked_in"
                 else:
                     record.check_in = now_jst
                     status = "checked_in"
 
-            elif action == "break_start":
+            elif action == "checkout":
                 if not record.check_in:
                     status = "checkin_missing"
                 elif record.check_out:
                     status = "already_checked_out"
-                elif record.break_start and not record.break_end:
+                else:
+                    record.check_out = now_jst
+                    status = "checked_out"
+                    calculate_total_work(record)
+
+            elif action == "break_start":
+                if record.break_start and not record.break_end:
                     status = "already_on_break"
                 else:
                     record.break_start = now_jst
                     status = "break_started"
 
             elif action == "break_end":
-                if not record.check_in:
-                    status = "checkin_missing"
-                elif record.check_out:
-                    status = "already_checked_out"
-                elif not record.break_start:
+                if not record.break_start:
                     status = "break_not_started"
                 elif record.break_end:
                     status = "already_break_ended"
@@ -966,25 +1132,10 @@ async def mark_attendance(
                     record.break_end = now_jst
                     status = "break_ended"
                     calculate_total_work(record)
-
-            elif action == "checkout":
-                if not record.check_in:
-                    status = "checkin_missing"
-                elif record.check_out:
-                    status = "already_checked_out"
-                elif record.break_start and not record.break_end:
-                    status = "cannot_checkout_on_break"
-                else:
-                    record.check_out = now_jst
-                    status = "checked_out"
-                    calculate_total_work(record)
             else:
                 status = "invalid_action"
 
-            # db.commit()
-            # db.refresh(record)
-
-            # Instant async write to background queue
+            # Save to DB queue
             record_data = {
                 "user_id": record.user_id,
                 "user_name_snapshot": record.user_name_snapshot,
@@ -996,51 +1147,42 @@ async def mark_attendance(
             }
             attendance_queue.put((record_data, record.user_id))
 
-            # --- Auto-Train (median + threshold update) ---
+            # Optional adaptive update
             if AUTO_TRAIN_ENABLED and best_score >= aging_update_threshold:
                 maybe_update_user_embedding(db, user.id, embedding, best_score)
 
             results.append({
+                "face_id": face_id,
                 "name": best_match["name"],
                 "employee_id": f"IFNT{best_match['id']:03d}",
-                "box": [box.get("x"), box.get("y"), box.get("w"), box.get("h")],
                 "status": status,
                 "confidence": confidence,
-                "total_work": record.total_work,
-                "gender": gender,
-                "age": age,
-                "embedding": embedding,
-            })
-
-        elif status == "maybe":
-            results.append({
-                "name": best_match["name"],
-                "employee_id": f"IFNT{best_match['id']:03d}",
                 "box": [box.get("x"), box.get("y"), box.get("w"), box.get("h")],
-                "status": "maybe_match",
-                "confidence": confidence,
-                "gender": gender,
-                "age": age,
-                "embedding": embedding,
             })
 
         else:
             results.append({
+                "face_id": face_id,
                 "name": "Unknown",
                 "employee_id": None,
-                "box": [box.get("x"), box.get("y"), box.get("w"), box.get("h")],
                 "status": "unknown",
                 "confidence": confidence,
-                "gender": gender,
-                "age": age,
-                "embedding": embedding,
+                "box": [box.get("x"), box.get("y"), box.get("w"), box.get("h")],
             })
 
-    # --- Reset preview cache after mark ---
+    # ------------------------------------------------------------
+    # Cleanup cache (expire faces older than 60s)
+    # ------------------------------------------------------------
+    for fid, data in list(active_faces.items()):
+        if (now_jst - data["last_seen"]).seconds > 60:
+            del active_faces[fid]
+
+    db.commit()
+
+    # Clear cache after successful mark
     try:
-        global active_faces
         active_faces.clear()
-        logger.info("Cleared active_faces cache after attendance mark")
+        logger.info("🧹 Cleared active_faces cache after mark")
     except Exception as e:
         logger.warning(f"⚠️ Cache clear skipped: {e}")
 

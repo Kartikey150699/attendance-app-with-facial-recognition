@@ -1,4 +1,4 @@
-// cosineMatcher.js — lightning-fast & ultra-strict (zero-false-match bias + temporal stability mode)
+// cosineMatcher.js — lightning-fast & safe adaptive matcher (relaxed stability mode)
 
 // =========================
 // L2 normalize (safe)
@@ -27,17 +27,17 @@ export function cosine(a, b) {
 // Global stability tracker (across frames)
 // =========================
 let lastStable = { name: "Unknown", confidence: 0, frames: 0 };
-const STABILITY_FRAMES = 4; // must appear stable for N frames
+const STABILITY_FRAMES = 1; // ⚡ show faster (was 4)
 
 // =========================
-// Strict adaptive match (Zero-False-Accept version)
+// Strict adaptive match (Safe + Responsive version)
 // =========================
 export function strictMatch(input, cache, threshOverride, reverifyEmbedding = null) {
   if (!input || !cache?.length) return { name: "Unknown", confidence: 0 };
 
-  // Threshold parameters (tuned for zero false-accepts)
-  const VERY_STRICT = 0.65;              // auto-accept if ≥ this (extremely confident)
-  const THRESH = threshOverride ?? 0.46; // main strict threshold
+  // Threshold parameters (tuned for balanced safety)
+  const VERY_STRICT = 0.65;              // auto-accept if ≥ this
+  const THRESH = threshOverride ?? 0.46; // main threshold
   const MIN_SIM = 0.40;                  // absolute floor
   const MARGIN = 0.08;                   // top-1 must beat top-2 by ≥ this
   const STABILITY_DELTA = 0.05;          // must be stable across 2 frames
@@ -54,7 +54,7 @@ export function strictMatch(input, cache, threshOverride, reverifyEmbedding = nu
 
   if (normCache.length === 0) return { name: "Unknown", confidence: 0 };
 
-  // Compute cosine similarities in a single pass
+  // Compute cosine similarities
   const sims = new Float32Array(normCache.length);
   for (let i = 0; i < normCache.length; i++) {
     const emb = normCache[i].emb;
@@ -78,7 +78,7 @@ export function strictMatch(input, cache, threshOverride, reverifyEmbedding = nu
 
   const bestName = bestIdx >= 0 ? normCache[bestIdx].name : "Unknown";
 
-  // Fast-path: ultra-confident match
+  // ✅ Fast-path: confident match
   if (bestSim >= VERY_STRICT) {
     lastStable = { name: bestName, confidence: bestSim, frames: STABILITY_FRAMES };
     return { name: bestName, confidence: bestSim };
@@ -96,13 +96,13 @@ export function strictMatch(input, cache, threshOverride, reverifyEmbedding = nu
     }
   }
 
-  // Final strict decision
+  // Main decision logic
   let result = "Unknown";
   if (strongEnough && marginOk) {
     result = bestName;
   }
 
-  // Temporal stability — hold last stable identity for a few frames
+  // Temporal stability memory
   if (result === lastStable.name) {
     lastStable.frames++;
     if (lastStable.frames >= STABILITY_FRAMES) {
@@ -111,19 +111,17 @@ export function strictMatch(input, cache, threshOverride, reverifyEmbedding = nu
     }
   } else {
     if (result === "Unknown") {
-      // decay confidence slowly if losing track
       lastStable.frames = Math.max(0, lastStable.frames - 1);
     } else {
-      // new candidate detected — must persist for few frames
       lastStable = { name: result, confidence: bestSim, frames: 1 };
     }
   }
 
-  // only return name if stability accumulated
-  if (lastStable.frames >= STABILITY_FRAMES) {
-    return { name: lastStable.name, confidence: lastStable.confidence };
+  // ✅ Relaxed fallback — show best valid name immediately if above threshold
+  if (result !== "Unknown") {
+    return { name: bestName, confidence: bestSim };
   }
 
-  // Otherwise fallback to Unknown (prefer safe)
+  // fallback to Unknown
   return { name: "Unknown", confidence: bestSim };
 }

@@ -33,6 +33,7 @@ function WorkApplicationLogin() {
   }, []);
 
 // capture frame for recognition (Work Application auto-confirm)
+// eslint-disable-next-line
 const captureAndSendFrame = async () => {
   try {
     if (!webcamRef.current) {
@@ -68,7 +69,7 @@ if (trimmedId !== trimmedId.toUpperCase()) {
     const formData = new FormData();
     formData.append("file", blob, "frame.jpg");
     formData.append("action", "work-application");
-    formData.append("employee_id", employeeId.trim());
+    formData.append("employee_id", employeeId.trim().toUpperCase());
 
     const response = await fetch(`${API_BASE}/attendance/mark`, {
       method: "POST",
@@ -132,16 +133,32 @@ useEffect(() => {
       return;
     }
 
-    const blob = await (await fetch(imageSrc)).blob();
-    const formData = new FormData();
-    formData.append("file", blob, "frame.jpg");
-
     try {
+      const blob = await (await fetch(imageSrc)).blob();
+      const formData = new FormData();
+      formData.append("file", blob, "frame.jpg");
+      formData.append("action", "work-application");
+
+// ✅ Always send employee_id (even if blank)
+const trimmedId = (employeeId || "").trim().toUpperCase();
+formData.append("employee_id", trimmedId);
+console.log("🧾 Sending employee_id to backend:", trimmedId || "(empty)");
+
+      // ✅ Send preview frame to backend
       const res = await fetch(`${API_BASE}/attendance/preview`, {
         method: "POST",
         body: formData,
       });
+
       const data = await res.json();
+
+      // ✅ Log full backend recognition result (for debugging)
+      if (data && data.results && data.results.length > 0) {
+        const face = data.results[0];
+        console.log("🧠 Backend recognized:", face);
+      } else {
+        console.log("👀 No face recognized in this frame");
+      }
 
       // Update FaceTracker with backend recognition results
       previewFacesRef.current = data.results || [];
@@ -158,33 +175,99 @@ useEffect(() => {
   // Then send one every second
   interval = setInterval(sendPreviewFrame, 1000);
 
+  // Cleanup
   return () => clearInterval(interval);
-}, [selectedCamera]);
+}, [selectedCamera, employeeId]);
 
-
+// Instant Login
 const handleInstantLogin = async () => {
-  const trimmedId = employeeId.trim();
+  const trimmedId = employeeId.trim().toUpperCase();
 
-  // Secret Dev Console Shortcut
-  if (["devcon", "DEVCON", "Devcon"].includes(trimmedId)) {
+    // Special shortcut for developers
+  if (trimmedId === "DEVCON") {
     navigate("/devcon");
     return;
   }
 
-  // Normal face recognition flow
-  const instantFaces = previewFacesRef.current || [];
-  if (instantFaces.length > 0) {
-    const face = instantFaces[0];
-    if (face.name && face.name !== "Unknown") {
-      console.log(`✅ ${face.name} detected — sending to backend...`);
-    } else {
-      console.log("❌ Unknown face — sending to backend...");
-    }
-  } else {
-    console.log("🔍 Scanning face...");
+  // Validate Employee ID
+  if (!trimmedId) {
+    setStatusMessages(["⚠️ Please enter your Employee ID"]);
+    setTimeout(() => setStatusMessages([]), 1500);
+    return;
   }
 
-  captureAndSendFrame();
+  // Validate Employee ID
+  if (!trimmedId) {
+    setStatusMessages(["⚠️ Please enter your Employee ID"]);
+    setTimeout(() => setStatusMessages([]), 1500);
+    return;
+  }
+
+  // Use recognized face from preview
+  const instantFaces = previewFacesRef.current || [];
+  if (instantFaces.length === 0) {
+    setStatusMessages(["👀 No face detected. Please look at the camera."]);
+    setTimeout(() => setStatusMessages([]), 1500);
+    return;
+  }
+
+  const face = instantFaces[0];
+  console.log("🔗 Using recognized face:", face);
+
+  // Clear any previous messages instantly (prevents flicker)
+  setStatusMessages([]);
+
+  // Prepare request
+  const payload = {
+    action: "work-application",
+    employee_id: trimmedId,
+    face_name: face.name,
+    confidence: face.confidence,
+  };
+
+  try {
+    const res = await fetch(`${API_BASE}/attendance/mark`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+    });
+
+    const data = await res.json();
+    console.log("🧠 Backend response:", data);
+
+    const result = data.results?.[0];
+    if (!result) {
+      setStatusMessages(["❌ No response from backend"]);
+      return;
+    }
+
+    // Smooth UI: clear any old text before updating
+    setStatusMessages([]);
+
+    if (result.status === "logged_in") {
+      setStatusMessages([`✅ Welcome ${result.name} (${result.employee_id})`]);
+      localStorage.setItem("employeeId", result.employee_id);
+      localStorage.setItem("user", result.name);
+
+      // Small delay for smooth UI transition
+      setTimeout(() => navigate("/work-application"), 600);
+    } else if (result.status === "face_mismatch") {
+      setStatusMessages([`❌ Face does not match ID ${trimmedId}`]);
+    } else if (result.status === "invalid_employee_id") {
+      setStatusMessages(["❌ Invalid Employee ID"]);
+    } else {
+      setStatusMessages([`⚠️ ${result.status || "Login failed"}`]);
+    }
+
+    // Auto-clear message after 2s (except during redirect)
+    if (result.status !== "logged_in") {
+      setTimeout(() => setStatusMessages([]), 2000);
+    }
+  } catch (err) {
+    console.error("🚨 Error verifying face:", err);
+    setStatusMessages(["⚠️ Server error during verification"]);
+    setTimeout(() => setStatusMessages([]), 2000);
+  }
 };
 
   return (
@@ -237,13 +320,10 @@ const handleInstantLogin = async () => {
 </header>
 
       {/* Camera + Input Section (wrapped in a form for Enter support) */}
-      <form
-        onSubmit={(e) => {
-          e.preventDefault();
-          captureAndSendFrame();
-        }}
-        className="flex flex-col items-center w-full gap-6 mt-10"
-      >
+<form
+  onSubmit={(e) => e.preventDefault()} // disables Enter key
+  className="flex flex-col items-center w-full gap-6 mt-10"
+>
 {/* Employee ID + Camera Selection Row */}
 <div className="flex flex-col sm:flex-row items-center justify-center sm:justify-between w-full max-w-6xl mx-auto mb-10 px-6 gap-8">
 

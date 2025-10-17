@@ -24,6 +24,32 @@ function FaceTracker({ selectedCamera, onDetectionsChange, facesRef }, ref) {
   const faceCache = useRef({});
   const { embeddings, loading } = useEmbeddingsCache(); // cached user embeddings
 
+  // --- Crop and resize the detected face to 112x112 (ArcFace standard) ---
+async function cropAndPrepareFace(video, detection) {
+  const box = detection.boundingBox;
+  const pad = 0.15; // add 15% margin
+
+  const sx = Math.max(0, box.originX - box.width * pad);
+  const sy = Math.max(0, box.originY - box.height * pad);
+  const sw = Math.min(video.videoWidth - sx, box.width * (1 + 2 * pad));
+  const sh = Math.min(video.videoHeight - sy, box.height * (1 + 2 * pad));
+
+  // make a small 112x112 canvas (ArcFace format)
+  const canvas = document.createElement("canvas");
+  canvas.width = 112;
+  canvas.height = 112;
+  const ctx = canvas.getContext("2d");
+  ctx.drawImage(video, sx, sy, sw, sh, 0, 0, 112, 112);
+
+  return new Promise((resolve) => {
+    canvas.toBlob(
+      (blob) => resolve({ blob, preview: URL.createObjectURL(blob) }),
+      "image/jpeg",
+      0.95
+    );
+  });
+}
+
   useImperativeHandle(ref, () => ({
     // eslint-disable-next-line react-hooks/exhaustive-deps
     getScreenshot: () => webcamRef.current?.getScreenshot(),
@@ -112,31 +138,23 @@ const drawDetections = (detections, backendFaces) => {
     const distanceCm = estimateDistance(w, video.videoWidth);
 
     // Safe multi-person assignment
-    let face = null;
-    if (backendFaces && backendFaces.length > 0) {
-      if (!window.__ASSIGNED_FACES__) window.__ASSIGNED_FACES__ = new Set();
+// ✅ Index-based backend face assignment (1:1 mapping with backend)
+let face = null;
 
-      let bestFace = null;
-      let bestDist = Infinity;
+if (backendFaces && backendFaces.length > 0) {
+  const detectionIndex = detections.indexOf(d); // find which detection this is
+  const targetFace = backendFaces.find(
+    (f) => f.face_id === `face_${detectionIndex + 1}`
+  );
 
-      backendFaces.forEach((f) => {
-        const [fx, fy] = f.box || [];
-        const dist = Math.sqrt((fx - mirroredX) ** 2 + (fy - y) ** 2);
-        const uniqueId = f.employee_id || f.name || f._id || `temp-${Math.random()}`;
-        if (window.__ASSIGNED_FACES__.has(uniqueId)) return;
-        if (dist < bestDist && dist < 80) {
-          bestDist = dist;
-          bestFace = f;
-        }
-      });
-
-      if (bestFace) {
-        face = { ...bestFace };
-        const uniqueId = face.employee_id || face.name || face._id || `temp-${Math.random()}`;
-        window.__ASSIGNED_FACES__.add(uniqueId);
-        face._frameId = now;
-      }
-    }
+  if (targetFace) {
+    face = targetFace;
+    face._frameId = now;
+    console.log(
+      `✅ Matched detection ${detectionIndex + 1} → ${face.face_id} (${face.name})`
+    );
+  }
+}
 
     if (face) face._frameId = now;
 
@@ -148,6 +166,22 @@ const drawDetections = (detections, backendFaces) => {
     let color = "rgba(56,189,248,0.9)";
     let confidence = 0;
     let foundKey = null;
+
+// ✅ Use backend face name instantly if available
+if (face && face.name && face.name !== "Unknown") {
+  label = `${face.name} (${Math.round(face.confidence || 0)}%)`;
+  color = "rgba(34,197,94,0.9)";
+  confidence = Math.round(face.confidence || 0);
+  faceCache.current[`backend-${face.name}`] = {
+    label,
+    color,
+    time: now,
+    box,
+    streak: 3,
+    lastSeenName: face.name,
+    smoothedConf: confidence,
+  };
+}
 
 for (const key of Object.keys(faceCache.current)) {
   if (now - faceCache.current[key].time > MEMORY_MS) {
@@ -178,25 +212,19 @@ for (const key of Object.keys(faceCache.current)) {
       };
     }
 
-    if (face && face.embedding) {
-      const currentEmbedding = face.embedding;
-      const prevEmbedding = faceCache.current[foundKey]?.lastEmbedding;
-      // eslint-disable-next-line
-      const firstMatch = strictMatch(currentEmbedding, embeddings);
-
-      setTimeout(() => {
-        const reverify = strictMatch(currentEmbedding, embeddings, null, prevEmbedding);
-        if (reverify.name === "Unknown") {
-          face.name = "Unknown";
-          face.confidence = reverify.confidence;
-        } else {
-          face.name = reverify.name;
-          face.confidence = reverify.confidence;
-        }
-      }, 120);
-
-      faceCache.current[foundKey].lastEmbedding = currentEmbedding;
-    }
+// Prevent reverify spam + run reverify
+if (
+  (!faceCache.current[foundKey]?.lastReverify || now - faceCache.current[foundKey].lastReverify > 500) &&
+  face?.embedding &&
+  face.name === "Unknown"
+) {
+  const reverify = strictMatch(face.embedding, embeddings);
+  if (reverify.name !== "Unknown" && reverify.confidence > 50) {
+    face.name = reverify.name;
+    face.confidence = reverify.confidence;
+  }
+  faceCache.current[foundKey].lastReverify = now;
+}
 
     // --- Distance-based label override (adaptive by device type) ---
     const cached = faceCache.current[foundKey];
@@ -332,6 +360,14 @@ if (distanceCm < MIN_DISTANCE) {
     color = "rgba(56,189,248,0.9)";
   }
 }
+// ✅ Final overwrite — always show backend-recognized name if available
+if (face && face.name && face.name !== "Unknown") {
+  label = `${face.name} (${Math.round(face.confidence || 0)}%)`;
+  color = "rgba(34,197,94,0.9)";
+  confidence = Math.round(face.confidence || 0);
+  cached.lastSeenName = face.name;
+  cached.smoothedConf = confidence;
+}
 
 faceCache.current[foundKey] = { ...cached, label, color, time: now, box };
 
@@ -418,49 +454,87 @@ ctx.shadowBlur = 0;
       try {
         const results = await detectorRef.current.detectForVideo(video, now);
         const detections = results?.detections || [];
-        const backendFaces = facesRef?.current || [];
-        // --- HUD stats update ---
-        const facesCount = detections.length;
+if (detections.length > 0) {
 
-        // estimate average lighting (simple brightness)
-        let avgBrightness = 0;
-        if (video.videoWidth && video.videoHeight) {
-          const tmpCanvas = document.createElement("canvas");
-          const tmpCtx = tmpCanvas.getContext("2d");
-          tmpCanvas.width = 32;
-          tmpCanvas.height = 18;
-          tmpCtx.drawImage(video, 0, 0, 32, 18);
-          const pixels = tmpCtx.getImageData(0, 0, 32, 18).data;
-          for (let i = 0; i < pixels.length; i += 4) {
-            avgBrightness += 0.299 * pixels[i] + 0.587 * pixels[i + 1] + 0.114 * pixels[i + 2];
-          }
-          avgBrightness /= pixels.length / 4;
-        }
-        let lighting = "Good";
-        if (avgBrightness > 170) lighting = "Too Bright";
-        else if (avgBrightness < 70) lighting = "Too Dark";
-        else if (avgBrightness < 90 || avgBrightness > 140) lighting = "Slightly Uneven";
+// --- Run all face uploads in parallel ---
+const facePromises = detections.map(async (det, i) => {
+  const { blob } = await cropAndPrepareFace(video, det);
+  const formData = new FormData();
+  formData.append("file", blob);
+  formData.append("face_index", i);
 
-        setHudStats({ faces: facesCount, lighting });
-        drawDetections(detections, backendFaces);
+  try {
+    const res = await fetch("http://127.0.0.1:8000/attendance/preview", {
+      method: "POST",
+      body: formData,
+    });
+    return await res.json();
+  } catch (err) {
+    console.warn(`⚠️ Preview fetch failed for face ${i}:`, err);
+    return { results: [] };
+  }
+});
 
-        const delta = now - lastTimeRef.current;
-        setFps(Math.round(1000 / delta));
-        lastTimeRef.current = now;
+const allResults = await Promise.all(facePromises);
+const allFacesData = allResults.flatMap((r) => r.results || []);
 
-        if (onDetectionsChange) onDetectionsChange(detections);
-      } catch (err) {
-        console.warn("⚠️ Detection error:", err);
-      }
-    }
-    rafRef.current = requestAnimationFrame(loop);
-  };
+  // ✅ Merge results from all backend detections
+  if (facesRef?.current) {
+    facesRef.current = allFacesData;
+  }
 
-  loop();
-  return () => {
-    running = false;
-    cancelAnimationFrame(rafRef.current);
-  };
+  console.log("🧠 Multi-face backend recognized:", allFacesData);
+}
+
+const backendFaces = facesRef?.current || [];
+
+// --- HUD stats update ---
+const facesCount = detections.length;
+
+// estimate average lighting (simple brightness)
+let avgBrightness = 0;
+if (video.videoWidth && video.videoHeight) {
+  const tmpCanvas = document.createElement("canvas");
+  const tmpCtx = tmpCanvas.getContext("2d");
+  tmpCanvas.width = 32;
+  tmpCanvas.height = 18;
+  tmpCtx.drawImage(video, 0, 0, 32, 18);
+  const pixels = tmpCtx.getImageData(0, 0, 32, 18).data;
+  for (let i = 0; i < pixels.length; i += 4) {
+    avgBrightness +=
+      0.299 * pixels[i] + 0.587 * pixels[i + 1] + 0.114 * pixels[i + 2];
+  }
+  avgBrightness /= pixels.length / 4;
+}
+
+let lighting = "Good";
+if (avgBrightness > 170) lighting = "Too Bright";
+else if (avgBrightness < 70) lighting = "Too Dark";
+else if (avgBrightness < 90 || avgBrightness > 140)
+  lighting = "Slightly Uneven";
+
+setHudStats({ faces: facesCount, lighting });
+
+// ✅ Now draw with latest backend names (Kartikey etc.)
+drawDetections(detections, backendFaces);
+
+const delta = now - lastTimeRef.current;
+setFps(Math.round(1000 / delta));
+lastTimeRef.current = now;
+
+if (onDetectionsChange) onDetectionsChange(detections);
+} catch (err) {
+  console.warn("⚠️ Detection error:", err);
+}
+}
+rafRef.current = requestAnimationFrame(loop);
+};
+
+loop();
+return () => {
+  running = false;
+  cancelAnimationFrame(rafRef.current);
+};
 }, [videoReady, onDetectionsChange, facesRef, loading, embeddings]);
 
 // ======================================================
