@@ -513,18 +513,24 @@ const handleInstantCapture = async (subAction = null) => {
              shadow-[0_0_25px_rgba(56,189,248,0.3)] bg-white/10 backdrop-blur-xl 
              transition-all duration-300 hover:shadow-[0_0_35px_rgba(56,189,248,0.5)] 
              overflow-hidden"
-  style={{
-    width: /Android|iPhone|iPod/i.test(navigator.userAgent)
-      ? "320px" // Square view for mobile
-      : "580px", // Default desktop width
-    height: /Android|iPhone|iPod/i.test(navigator.userAgent)
-      ? "320px" // same height for perfect square
-      : "355px", // landscape height
-    margin: "0 auto", // centers the camera nicely
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "center",
-  }}
+ style={{
+  width: /Android|iPhone|iPod/i.test(navigator.userAgent)
+    ? "100%" // use full screen width on phone
+    : "580px", // unchanged for Mac/PC
+  height: /Android|iPhone|iPod/i.test(navigator.userAgent)
+    ? "auto" // let browser decide correct height
+    : "355px", // unchanged for Mac/PC
+  aspectRatio: /Android|iPhone|iPod/i.test(navigator.userAgent)
+    ? "4 / 3" // keep correct camera proportion
+    : "16 / 9", // unchanged for Mac/PC
+  maxWidth: /Android|iPhone|iPod/i.test(navigator.userAgent)
+    ? "360px" // fits any phone screen nicely
+    : "unset",
+  margin: "0 auto",
+  display: "flex",
+  alignItems: "center",
+  justifyContent: "center",
+}}
 >
   <FaceTracker
     ref={webcamRef}
