@@ -321,7 +321,7 @@ def calculate_total_work(record: Attendance):
         record.actual_work = "-"
 
 # -------------------------
-# Detect faces using Neural Networks (MTCNN + ArcFace, fallback OpenCV Haar for masks and sunglasses)
+# Detect faces using Neural Networks (C++ engine + MTCNN + ArcFace, fallback OpenCV Haar for masks and sunglasses)
 # -------------------------
 
 # Detection cache to skip redundant MTCNN runs
@@ -528,7 +528,7 @@ async def preview_faces(
     file: UploadFile = None,
     action: str = Form("preview"),
     employee_id: str = Form(""),
-    face_index: int = Form(0)  # ✅ new: support multi-face from frontend
+    face_index: int = Form(0)  # support multi-face from frontend
 ):
     if not file:
         return {"error": "No image uploaded"}
