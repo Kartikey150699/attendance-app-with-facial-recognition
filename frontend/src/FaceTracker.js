@@ -3,6 +3,7 @@ import Webcam from "react-webcam";
 import { getGlobalDetector } from "./hooks/globalDetector";
 import { strictMatch } from "./hooks/cosineMatcher"; // use your safe matcher
 import { useEmbeddingsCache } from "./hooks/useEmbeddingsCache";
+import { API_BASE } from "./config";
 
 
 // --- Estimate distance from face box width (approx) ---
@@ -464,7 +465,7 @@ const facePromises = detections.map(async (det, i) => {
   formData.append("face_index", i);
 
   try {
-    const res = await fetch("http://127.0.0.1:8000/attendance/preview", {
+    const res = await fetch(`${API_BASE}/attendance/preview`, {
       method: "POST",
       body: formData,
     });
